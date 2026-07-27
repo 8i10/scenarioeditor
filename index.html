@@ -47,9 +47,8 @@
 
   /* ── format bar ── */
   .fbar{background:var(--card);border-bottom:1px solid var(--line)}
-  .fbar-in{max-width:none;width:100%;margin:0;padding:7px 16px;display:flex;align-items:center;gap:9px;flex-wrap:nowrap;overflow-x:auto}
-  .fbar-in::-webkit-scrollbar{height:6px}
-  .fbar-in::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .fbar-in{max-width:none;width:100%;margin:0;padding:6px 16px;display:flex;flex-direction:column;gap:6px}
+  .frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .fbar-toggle{display:none}
   .fbar .lb{font-size:11px;color:var(--muted);letter-spacing:.08em;white-space:nowrap;flex:none}
   .fbar .sepline{width:1px;height:18px;background:var(--line);flex:none}
@@ -161,8 +160,8 @@
   .menu .dv{height:1px;background:var(--line);margin:5px 2px}
 
   /* ── しおり（左サイドバー・開閉可） ── */
-  .outline{position:fixed;top:0;left:0;width:236px;height:100vh;overflow:auto;background:var(--card);
-    border-right:1px solid var(--line);z-index:90;padding:56px 4px 30px;transform:translateX(-100%);
+  .outline{position:fixed;top:var(--topbar-h,92px);left:0;width:236px;height:calc(100vh - var(--topbar-h,92px));overflow:auto;background:var(--card);
+    border-right:1px solid var(--line);z-index:90;padding:12px 4px 30px;transform:translateX(-100%);
     transition:transform .18s;box-shadow:2px 0 14px rgba(0,0,0,.05)}
   .outline.open{transform:none}
   .outline .ol-ttl{font-size:11px;letter-spacing:.2em;color:var(--muted);padding:4px 12px 9px;
@@ -270,19 +269,23 @@
 <div class="fbar" id="fbar">
   <button class="fbar-toggle" id="fbarToggle">書式 ▾</button>
   <div class="fbar-in" id="fbarIn">
-    <span class="grp" id="palStyle">
-      <button class="fb" data-cmd="bold" title="太字"><b>B</b></button>
-      <button class="fb" data-cmd="italic" title="斜体"><i>I</i></button>
-      <button class="fb" data-cmd="underline" title="下線"><u>U</u></button>
-    </span>
-    <span class="sepline"></span>
-    <span class="lb">文字色</span><span class="grp" id="palText"></span>
-    <span class="sepline"></span>
-    <span class="lb">文字背景</span><span class="grp" id="palMark"></span>
-    <span class="sepline"></span>
-    <span class="lb">行背景</span><span class="grp" id="palRow"></span>
-    <span class="sepline"></span>
-    <span class="lb">行下線</span><span class="grp" id="palUl"></span>
+    <div class="frow">
+      <span class="grp" id="palStyle">
+        <button class="fb" data-cmd="bold" title="太字"><b>B</b></button>
+        <button class="fb" data-cmd="italic" title="斜体"><i>I</i></button>
+        <button class="fb" data-cmd="underline" title="下線"><u>U</u></button>
+        <button class="fb" data-cmd="strikeThrough" title="取り消し線"><s>S</s></button>
+      </span>
+      <span class="sepline"></span>
+      <span class="lb">文字色</span><span class="grp" id="palText"></span>
+      <span class="sepline"></span>
+      <span class="lb">文字背景</span><span class="grp" id="palMark"></span>
+    </div>
+    <div class="frow">
+      <span class="lb">行背景</span><span class="grp" id="palRow"></span>
+      <span class="sepline"></span>
+      <span class="lb">行下線</span><span class="grp" id="palUl"></span>
+    </div>
   </div>
 </div>
 
@@ -385,7 +388,7 @@
       kids.forEach(function(n){
         if(n.nodeType===1){
           var tag=n.tagName.toLowerCase();
-          if(['span','b','i','u','strong','em','br'].indexOf(tag)<0){
+          if(['span','b','i','u','strong','em','br','s','strike','del'].indexOf(tag)<0){
             while(n.firstChild) node.insertBefore(n.firstChild,n);
             node.removeChild(n); return;
           }
@@ -853,8 +856,10 @@
     persist();
   }
   buildPalettes();
-  (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); }; })();
-  render(); applyOutline(); updateDocName(); saveInd.textContent='自動保存 有効';
+  function setTopbar(){ var hd=document.querySelector('.head'), fb2=document.querySelector('.fbar'); var h=(hd?hd.offsetHeight:0)+(fb2?fb2.offsetHeight:0); if(h>0) document.documentElement.style.setProperty('--topbar-h', h+'px'); }
+  window.addEventListener('resize', setTopbar);
+  (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); setTopbar(); }; })();
+  render(); applyOutline(); updateDocName(); setTopbar(); saveInd.textContent='自動保存 有効';
 
   window.__ed={ state:state, TYPES:TYPES, newBlock:newBlock, render:render, persist:persist, load:load,
     IDX:IDX, DOCP:DOCP, CUR:CUR, readIndex:readIndex, openDoc:openDoc, newDoc:newDoc, deleteDoc:deleteDoc,
