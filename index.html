@@ -200,6 +200,7 @@
   .fitem button:hover{background:var(--hover);color:var(--text)}
 
   /* ── 印刷（PDF書き出し） ── */
+  .print-toc{display:none}
   @media print{
     .head,.fbar,.outline,.menu,.ovl{display:none!important}
     body{background:#fff}
@@ -208,6 +209,14 @@
     .be{outline:0}
     .block.collapsed>.children{display:block!important}
     .block,.be{page-break-inside:avoid}
+    .print-toc{display:block;margin:0 0 24px;padding-bottom:16px;border-bottom:1px solid #bbb;page-break-after:always}
+    .print-toc .pt-h{font-weight:800;font-size:1.5em;margin-bottom:12px;letter-spacing:.04em}
+    .print-toc .pt-i{font-size:.98em;line-height:1.95;color:#333}
+    .print-toc .pt-i.lv1{font-weight:700}
+    .print-toc .pt-i.lv2{padding-left:1.3em}
+    .print-toc .pt-i.lv3{padding-left:2.6em}
+    .print-toc .pt-i.lv4{padding-left:3.9em}
+    .print-toc .pt-i.lv5{padding-left:5.2em}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 
@@ -261,7 +270,7 @@
   </div>
 </div>
 
-<div class="wrap"><div class="doc" id="doc"></div></div>
+<div class="wrap"><div class="print-toc" id="printToc"></div><div class="doc" id="doc"></div></div>
 <div class="menu" id="menu"></div>
 
 <script>
@@ -671,13 +680,22 @@
   var outlineEl=document.getElementById('outline');
   var HL={h1:1,h2:2,h3:3,h4:4,h5:5,th1:1,th2:2,th3:3,th4:4,th5:5};
   function plainText(html){ var d=document.createElement('div'); d.innerHTML=html||''; return (d.textContent||'').trim(); }
-  function renderOutline(){
+  function outlineItems(){
     var items=[];
     (function walk(arr){ arr.forEach(function(b){ if(HL[b.type]) items.push({id:b.id,lv:HL[b.type],t:plainText(b.html)}); if(b.children) walk(b.children); }); })(state.blocks);
+    return items;
+  }
+  function outlineInnerHTML(items){
     var h='<div class="ol-ttl">しおり<button class="ol-x" id="olX" title="閉じる">×</button></div>';
     if(!items.length){ h+='<div class="ol-empty">見出しがありません</div>'; }
     else items.forEach(function(it){ h+='<a class="lv'+it.lv+'" data-goto="'+it.id+'">'+esc(it.t||'(無題)')+'</a>'; });
-    outlineEl.innerHTML=h;
+    return h;
+  }
+  function renderOutline(){
+    var items=outlineItems();
+    outlineEl.innerHTML=outlineInnerHTML(items);
+    var pt=document.getElementById('printToc');
+    if(pt){ var p=''; if(items.length){ p='<div class="pt-h">しおり</div>'; items.forEach(function(it){ p+='<div class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</div>'; }); } pt.innerHTML=p; }
   }
   function applyOutline(){ outlineEl.classList.toggle('open',!!state.outlineOpen); document.body.classList.toggle('ol-open',!!state.outlineOpen); }
   function expandTo(id){
@@ -744,11 +762,38 @@
   }
   function exportHTML(){
     var css=document.querySelector('style').textContent;
-    var body='<div class="wrap" style="--fs:'+FS[state.fs]+';--head-bg:'+state.headBg+'"><div class="doc">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
+    var items=outlineItems();
+    var olHTML=outlineInnerHTML(items);
+    var fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
+    var themeLabel=(state.theme==='dark'?'☀ ライト':'🌙 ダーク');
+    var vhead='<div class="v-head">'
+      +'<button class="hbtn" id="vOutline">☰ しおり</button>'
+      +'<span class="v-title">'+esc(state.name)+'</span>'
+      +'<span class="v-sp"></span>'
+      +'<div class="seg" id="vFs"><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
+      +'<button class="hbtn" id="vTheme">'+themeLabel+'</button></div>';
+    var nav='<nav class="outline open" id="vOutlineNav">'+olHTML+'</nav>';
+    var ptHTML='<div class="print-toc">'+(items.length?('<div class="pt-h">しおり</div>'+items.map(function(it){return '<div class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</div>';}).join('')):'')+'</div>';
+    var body='<div class="wrap" style="--fs:'+FS[state.fs]+';--head-bg:'+state.headBg+'">'+ptHTML+'<div class="doc">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
+    var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
+      +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
+      +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'
+      +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
+      +' .v-head .v-sp{margin-left:auto}'
+      +' body>.wrap{padding-top:66px}'
+      +' @media print{.v-head,.outline{display:none!important} body>.wrap{padding-top:0}}';
+    var vjs='<'+'script>(function(){var root=document.documentElement,nav=document.getElementById("vOutlineNav"),wrap=document.querySelector(".wrap");'
+      +'function setOpen(o){nav.classList.toggle("open",o);document.body.classList.toggle("ol-open",o);}'
+      +'document.getElementById("vOutline").onclick=function(){setOpen(!nav.classList.contains("open"));};'
+      +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var a=e.target.closest("a[data-goto]");if(a){var el=document.querySelector(\'.block[data-id="\'+a.dataset.goto+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}});'
+      +'var FS={sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
+      +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
+      +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
-      +'<style>'+css+' .head,.fbar,.outline,.menu,.ovl{display:none!important}</style></head><body>'+body+'</body></html>';
+      +'<style>'+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+'</style></head>'
+      +'<body class="ol-open">'+vhead+nav+body+vjs+'</body></html>';
     var blob=new Blob([html],{type:'text/html'}); var a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'.html'; a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
