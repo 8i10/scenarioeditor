@@ -13,7 +13,7 @@
     --bg:#fdfcfa; --card:#ffffff; --box:#f4f1ea; --line:#e4ded2;
     --text:#2b2724; --muted:#8a8175; --accent:#5b5348; --accent2:#8c8375;
     --red:#8b0000; --blue:#0000ff;
-    --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e;
+    --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e; --secret:#8b0000;
     --hover:#f0ece3; --sel:rgba(139,0,0,.10);
     --header-bg:#2b2724; --header-text:#f6f2ea;
   }
@@ -21,7 +21,7 @@
     --bg:#1b1916; --card:#26231f; --box:#302c26; --line:#3c372f;
     --text:#ece7df; --muted:#a89e90; --accent:#cabfae; --accent2:#9a8f7e;
     --red:#e0685c; --blue:#7f9bff;
-    --kp-bg:#3a352e; --kp-text:#efe9df; --pl-edge:#0b0b0b;
+    --kp-bg:#3a352e; --kp-text:#efe9df; --pl-edge:#0b0b0b; --secret:#cf5b52;
     --hover:#332e28; --sel:rgba(224,104,92,.16);
     --header-bg:#100e0c; --header-text:#f2ede4;
   }
@@ -47,10 +47,11 @@
 
   /* ── format bar ── */
   .fbar{background:var(--card);border-bottom:1px solid var(--line)}
-  .fbar-in{max-width:none;width:100%;margin:0;padding:6px 16px;display:flex;flex-direction:column;gap:6px}
-  .frow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .fbar-in{max-width:none;width:100%;margin:0;padding:6px 16px;display:flex;flex-direction:column;gap:7px}
+  .fbrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .fcell{display:flex;align-items:center;gap:6px}
   .fbar-toggle{display:none}
-  .fbar .lb{font-size:11px;color:var(--muted);letter-spacing:.08em;white-space:nowrap;flex:none}
+  .fbar .lb{font-size:11px;color:var(--muted);letter-spacing:.06em;white-space:nowrap;flex:none;display:inline-block;width:4.4em;box-sizing:border-box}
   .fbar .sepline{width:1px;height:18px;background:var(--line);flex:none}
   .fbar .fb{width:26px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);
     color:var(--text);cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
@@ -60,11 +61,15 @@
   .sw:hover{transform:scale(1.1)}
   .sw.none::after{content:"╱";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
   .grp{display:inline-flex;align-items:center;gap:5px}
-  input.ci{width:26px;height:24px;border:1px solid var(--line);border-radius:5px;padding:0;background:none;cursor:pointer}
-  input.hex{width:76px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--text);font-size:11.5px;font-family:"Cascadia Code",ui-monospace,monospace;padding:0 6px}
+  input.ci{-webkit-appearance:none;-moz-appearance:none;appearance:none;box-sizing:border-box;flex:none;
+    width:34px;height:20px;border:1px solid var(--line);border-radius:4px;padding:0;background:var(--card);
+    cursor:pointer;vertical-align:middle;overflow:hidden}
+  input.ci::-webkit-color-swatch-wrapper{padding:0}
+  input.ci::-webkit-color-swatch{border:0;border-radius:3px}
+  input.ci::-moz-color-swatch{border:0;border-radius:3px}
   .grp .mini{width:16px;height:16px;border-radius:4px;border:1px solid var(--line);cursor:pointer;padding:0}
   .grp .mini:hover{transform:scale(1.12)}
-  .grp .clr{font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:5px;padding:2px 6px;cursor:pointer}
+  .grp .clr{font-size:14px;line-height:1;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:5px;padding:3px 6px;cursor:pointer}
   .grp .clr:hover{background:var(--hover);color:var(--text)}
 
   /* ── page ── */
@@ -123,14 +128,14 @@
   .block[data-type="th5"]>.chead .be{font-weight:700;font-size:1em;color:var(--muted)}
 
   /* callout（KP情報 / PL情報 / 技能情報）：左上バッジ + 本文 */
-  .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"]{
+  .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="secret"]{
     position:relative;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
-  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl{
+  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{
     position:absolute;top:-10px;left:12px;min-height:0;font-weight:700;font-size:11.5px;
     letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px}
-  .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl{font-size:13.5px;top:-12px}
-  .block[data-type="kp"] .lbl:empty::before,.block[data-type="info"] .lbl:empty::before,.block[data-type="skill"] .lbl:empty::before{opacity:.85}
-  .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children{
+  .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{font-size:13.5px;top:-12px}
+  .block[data-type="kp"] .lbl:empty::before,.block[data-type="info"] .lbl:empty::before,.block[data-type="skill"] .lbl:empty::before,.block[data-type="secret"] .lbl:empty::before{opacity:.85}
+  .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="secret"]>.children{
     margin:0;border-left:0;padding-left:0}
 
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
@@ -147,6 +152,10 @@
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
   .block[data-type="skill"] .lbl{background:var(--blue);color:#fff}
+
+  /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
+  .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px}
+  .block[data-type="secret"] .lbl{background:var(--secret);color:#fff}
 
   /* ── menu ── */
   .menu{position:absolute;z-index:200;width:264px;max-height:340px;overflow:auto;background:var(--card);
@@ -225,8 +234,10 @@
       color:var(--text);font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;text-align:left}
     .fbar-toggle::after{content:"▾";margin-left:auto;color:var(--muted)}
     .fbar.open .fbar-toggle::after{content:"▴"}
-    .fbar-in{display:none;flex-wrap:wrap;overflow:visible;padding:0 16px 12px;gap:8px 10px}
+    .fbar-in{display:none;overflow:visible;padding:4px 16px 12px;gap:4px}
     .fbar.open .fbar-in{display:flex}
+    .fbar.open .fbrow{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbar.open .fcell{width:100%;flex-wrap:wrap}
   }
   @media (max-width:640px){
     .wrap{padding:22px 14px 45vh}
@@ -269,22 +280,19 @@
 <div class="fbar" id="fbar">
   <button class="fbar-toggle" id="fbarToggle">書式 ▾</button>
   <div class="fbar-in" id="fbarIn">
-    <div class="frow">
-      <span class="grp" id="palStyle">
+    <div class="fbrow">
+      <div class="fcell"><span class="grp" id="palStyle">
         <button class="fb" data-cmd="bold" title="太字"><b>B</b></button>
         <button class="fb" data-cmd="italic" title="斜体"><i>I</i></button>
         <button class="fb" data-cmd="underline" title="下線"><u>U</u></button>
         <button class="fb" data-cmd="strikeThrough" title="取り消し線"><s>S</s></button>
-      </span>
-      <span class="sepline"></span>
-      <span class="lb">文字色</span><span class="grp" id="palText"></span>
-      <span class="sepline"></span>
-      <span class="lb">文字背景</span><span class="grp" id="palMark"></span>
+      </span></div>
+      <div class="fcell"><span class="lb">文字色</span><span class="grp" id="palText"></span></div>
+      <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
     </div>
-    <div class="frow">
-      <span class="lb">行背景</span><span class="grp" id="palRow"></span>
-      <span class="sepline"></span>
-      <span class="lb">行下線</span><span class="grp" id="palUl"></span>
+    <div class="fbrow">
+      <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
+      <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span></div>
     </div>
   </div>
 </div>
@@ -318,6 +326,7 @@
     {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', cat:'情報枠', ctn:1, dl:'KP情報'},
     {t:'info',    ic:'▼', nm:'PL情報',                ph:'PL情報', ctn:1, dl:'PL情報'},
     {t:'skill',   ic:'技', nm:'技能情報',              ph:'＜技能＞', ctn:1, dl:'＜技能＞'},
+    {t:'secret',  ic:'秘', nm:'秘匿情報',              ph:'秘匿情報', ctn:1, dl:'秘匿情報'},
     {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト', cat:'リスト'},
     {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'quote',   ic:'❝', nm:'引用',                 ph:'引用', cat:'その他'},
@@ -326,7 +335,7 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return !!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='secret'; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
   var IDX='scn_index_v3', DOCP='scn_doc_v3_', CUR='scn_cur_v3';
@@ -677,25 +686,20 @@
   function setRowUl(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.ul=c||''; var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.borderBottom=c?('2px solid '+c):''; persist(); }
 
   function hexRgba(hex,a){ hex=(hex||'').replace('#',''); if(hex.length===3){hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];} var r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
-  var QUICK_TEXT=['#000000','#ffffff','#666666','#ff0000','#0000ff','#22a022','#f1c40f'];
+  var QUICK_TEXT=['#000000','#ffffff','#4d4d4d','#ff0000','#0000ff','#22a022','#f1c40f'];
   var QUICK_MARK=QUICK_TEXT.map(function(c){return hexRgba(c,0.5);});
   var QUICK_ROW =QUICK_TEXT.slice();
   var QUICK_UL  =QUICK_TEXT.slice();
   function makeColorGroup(hostId,quick,onColor,onClear,initial){
     var host=document.getElementById(hostId); if(!host) return;
     var ci=document.createElement('input'); ci.type='color'; ci.className='ci'; ci.value=initial||'#000000';
-    var hx=document.createElement('input'); hx.type='text'; hx.className='hex'; hx.placeholder='#rrggbb'; hx.value='';
-    ci.oninput=function(){ hx.value=ci.value; };
+    ci.title='カラーピッカー';
     ci.onchange=function(){ onColor(ci.value); };
-    function applyHex(){ var n=normHex(hx.value); if(n){ ci.value=n; hx.value=n; onColor(n); } }
-    hx.onmousedown=function(e){ e.stopPropagation(); };
-    hx.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); applyHex(); } };
-    hx.onchange=applyHex;
-    host.appendChild(ci); host.appendChild(hx);
+    host.appendChild(ci);
     quick.forEach(function(c){ var b=document.createElement('button'); b.className='mini'; b.style.background=c; b.title=c;
-      b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ ci.value=c; hx.value=c; onColor(c); }; host.appendChild(b); });
-    if(onClear){ var cl=document.createElement('button'); cl.className='clr'; cl.textContent='なし';
-      cl.onmousedown=function(e){e.preventDefault();}; cl.onclick=function(){ hx.value=''; onClear(); }; host.appendChild(cl); }
+      b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ ci.value=(/^#/.test(c)?c:'#000000'); onColor(c); }; host.appendChild(b); });
+    if(onClear){ var cl=document.createElement('button'); cl.className='clr'; cl.textContent='☒'; cl.title='解除';
+      cl.onmousedown=function(e){e.preventDefault();}; cl.onclick=function(){ onClear(); }; host.appendChild(cl); }
   }
   function buildPalettes(){
     var ps=document.getElementById('palStyle');
