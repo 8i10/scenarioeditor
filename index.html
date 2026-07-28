@@ -779,7 +779,7 @@
     var ps=document.getElementById('palStyle');
     if(ps) ps.querySelectorAll('button[data-cmd]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ applyCmd(b.dataset.cmd); }; });
     var bl=document.getElementById('btnHlink');
-    if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(){ if(!savedRange || savedRange.toString()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
+    if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(e){ if(e){ e.stopPropagation(); e.preventDefault(); } if(!savedRange || String(savedRange).trim()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
     makeColorGroup('palText',QUICK_TEXT,function(c){applyInline('fore',c);},function(){applyInline('fore','');},'#000000');
     makeColorGroup('palMark',QUICK_MARK,function(c){applyInline('mark',c);},function(){applyInline('mark','');},'#ffff00');
     makeColorGroup('palRow', QUICK_ROW, function(c){setRowBg(c);},       function(){setRowBg('');},       '#000000');
