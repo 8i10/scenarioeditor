@@ -2,7 +2,7 @@
 <html lang="ja" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>シナリオエディタ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,7 +10,7 @@
 <style>
   :root{
     --fs:1;
-    --bg:#fdfcfa; --card:#ffffff; --box:#f4f1ea; --line:#e4ded2;
+    --bg:#ffffff; --card:#ffffff; --box:#f4f1ea; --line:#e4ded2;
     --text:#2b2724; --muted:#8a8175; --accent:#5b5348; --accent2:#8c8375;
     --red:#8b0000; --blue:#0000ff;
     --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e; --secret:#8b0000;
@@ -33,13 +33,28 @@
 
   /* ── header ── */
   .head{position:sticky;top:0;z-index:100;background:var(--header-bg)}
-  .head-in{max-width:920px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .head-in{max-width:920px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative}
   .htitle{font-size:15px;font-weight:800;color:var(--header-text);letter-spacing:.3em;font-family:Arial,Helvetica,sans-serif}
   .save-ind{font-size:11.5px;color:rgba(255,255,255,.5);letter-spacing:.05em;min-width:118px}
   .head .sp{margin-left:auto}
+  .hmenu{position:absolute;top:46px;right:8px;width:250px;background:var(--card);color:var(--text);
+    border:1px solid var(--line);border-radius:11px;box-shadow:0 14px 36px rgba(0,0,0,.28);padding:8px;display:none;z-index:200}
+  .hmenu.show{display:block}
+  .hm-sec{font-size:10px;letter-spacing:.14em;color:var(--muted);padding:9px 8px 3px}
+  .hm-item{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;
+    padding:9px 10px;cursor:pointer;color:var(--text);font-size:13px}
+  .hm-item:hover{background:var(--hover)}
+  .hm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;font-size:12.5px}
+  .hm-row #acctLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seg2{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none}
+  .seg2 button{font-family:inherit;font-size:12.5px;color:var(--text);background:transparent;border:0;padding:5px 12px;cursor:pointer}
+  .seg2 button.on{background:var(--accent);color:var(--card);font-weight:700}
+  .seg2 button+button{border-left:1px solid var(--line)}
   .hbtn{font-family:inherit;font-size:12.5px;color:#eee;background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:6px 11px;cursor:pointer;transition:.14s}
   .hbtn:hover{background:rgba(255,255,255,.18)}
+  .hbtn.ico{padding:6px 9px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1}
+  .hbtn.ico svg{display:block}
   .seg{display:inline-flex;border:1px solid rgba(255,255,255,.16);border-radius:7px;overflow:hidden}
   .seg button{font-family:inherit;font-size:12.5px;color:#eee;background:transparent;border:0;padding:6px 12px;cursor:pointer}
   .seg button.on{background:rgba(255,255,255,.2);font-weight:700}
@@ -77,7 +92,7 @@
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px}
-  .block>.gutter{position:absolute;left:-46px;top:2px;display:flex;gap:2px;opacity:0;transition:.12s;height:1.7em;align-items:center}
+  .block>.gutter{position:absolute;left:-52px;top:2px;display:flex;gap:2px;opacity:0;transition:.12s;height:1.7em;align-items:center}
   .block:hover>.gutter,.block:focus-within>.gutter{opacity:1}
   .gutter button{width:20px;height:20px;border:0;background:transparent;color:var(--muted);
     border-radius:5px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
@@ -112,6 +127,7 @@
 
   /* container (toggle / toggle-heading / callout) */
   .chead{display:flex;align-items:center;gap:4px}
+  .hlink{color:var(--blue);text-decoration:underline;cursor:pointer}
   .tri{flex:none;width:22px;height:1.5em;border:0;background:transparent;cursor:pointer;color:var(--accent2);font-size:calc(16px * var(--fs) - 1px);line-height:1;display:flex;align-items:center;justify-content:center;transition:transform .12s}
   .block.collapsed>.chead .tri{transform:rotate(-90deg)}
   .chead .be{flex:1}
@@ -230,6 +246,7 @@
   }
 
   @media (max-width:820px){
+    .fbar{position:sticky;top:var(--head-h,44px);z-index:95}
     .fbar-toggle{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:0;
       color:var(--text);font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;text-align:left}
     .fbar-toggle::after{content:"▾";margin-left:auto;color:var(--muted)}
@@ -240,8 +257,10 @@
     .fbar.open .fcell{width:100%;flex-wrap:wrap}
   }
   @media (max-width:640px){
-    .wrap{padding:22px 14px 45vh}
-    .block>.gutter{left:-28px}
+    .wrap{padding:22px 10px 45vh 34px}
+    .block>.gutter{flex-direction:column;left:-30px;gap:2px;height:auto;top:0}
+    .gutter button{width:22px;height:22px}
+    .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="secret"]>.children{padding-left:10px}
     .htitle{letter-spacing:.18em;font-size:13px}
     .save-ind{display:none}
   }
@@ -250,20 +269,43 @@
 <body>
 <div class="head">
   <div class="head-in">
-    <button class="hbtn" id="btnOutline">☰ しおり</button>
+    <button class="hbtn ico" id="btnOutline" title="しおり" aria-label="しおり"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></button>
     <button class="hbtn" id="btnFile">📄 <span id="docName">無題</span></button>
     <span class="save-ind" id="saveInd"></span>
     <span class="sp"></span>
-    <div class="seg" id="segFs">
-      <button data-fs="sm">小</button>
-      <button data-fs="md" class="on">中</button>
+    <button class="hbtn ico" id="btnMenu" title="メニュー" aria-label="メニュー">☰</button>
+    <div class="hmenu" id="hmenu">
+      <div class="hm-sec">出力</div>
+      <button class="hm-item" id="btnHtml">HTMLで保存</button>
+      <button class="hm-item" id="btnPdf">PDF・印刷</button>
+      <div class="hm-sec">文字サイズ</div>
+      <div class="hm-row"><span>大きさ</span>
+        <div class="seg2" id="segFs"><button data-fs="sm" class="on">小</button><button data-fs="md">中</button></div>
+      </div>
+      <div class="hm-sec">テーマ</div>
+      <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
+      <div class="hm-sec">アカウント（GitHub同期）</div>
+      <div class="hm-row"><span id="acctLabel">未接続</span><button class="hb2" id="btnAuth">GitHub連携</button></div>
     </div>
-    <button class="hbtn" id="btnHtml">HTML</button>
-    <button class="hbtn" id="btnPdf">PDF</button>
-    <button class="hbtn" id="btnTheme">🌙 ダーク</button>
   </div>
 </div>
 <nav class="outline" id="outline"></nav>
+
+<div class="ovl" id="loginOvl">
+  <div class="dlg">
+    <div class="dlg-h">GitHub連携（ID＋トークンで複数人・別端末同期）</div>
+    <div class="dlg-b">
+      <div class="frow"><input type="text" id="ghId" placeholder="ID / 名前（任意）" autocomplete="off"></div>
+      <div class="frow"><input type="password" id="ghToken" placeholder="GitHub Personal Access Token（gist権限）" autocomplete="off"></div>
+      <div class="fhint" id="loginHint">同じトークンを共有し、各自が異なるIDを入れると、1つのGist内でIDごとに分かれて保存されます（カレンダー方式）。別端末でも同じID＋トークンで同じシナリオを編集できます。</div>
+      <div class="frow" style="gap:8px">
+        <a class="hb2" href="https://github.com/settings/tokens/new?scopes=gist&description=scenario-editor" target="_blank" rel="noopener">トークンを作成</a>
+        <button class="hb2 pri" id="loginGo" style="flex:1">接続</button>
+      </div>
+    </div>
+    <div class="dlg-f"><button class="hb2" id="loginClose">閉じる</button></div>
+  </div>
+</div>
 
 <div class="ovl" id="fileOvl">
   <div class="dlg">
@@ -286,6 +328,7 @@
         <button class="fb" data-cmd="italic" title="斜体"><i>I</i></button>
         <button class="fb" data-cmd="underline" title="下線"><u>U</u></button>
         <button class="fb" data-cmd="strikeThrough" title="取り消し線"><s>S</s></button>
+        <button class="fb" id="btnHlink" title="選択文字に見出しリンク"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
       </span></div>
       <div class="fcell"><span class="lb">文字色</span><span class="grp" id="palText"></span></div>
       <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
@@ -322,9 +365,9 @@
     {t:'th4',     ic:'▸4', nm:'トグル見出し4',         ph:'トグル見出し4', ctn:1},
     {t:'th5',     ic:'▸5', nm:'トグル見出し5',         ph:'トグル見出し5', ctn:1},
     {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', cat:'情報枠', ctn:1, dl:'KP情報'},
-    {t:'info',    ic:'▼', nm:'PL情報',                ph:'PL情報', ctn:1, dl:'PL情報'},
+    {t:'info',    ic:'▼', nm:'情報',                  ph:'情報', ctn:1, dl:'▼情報'},
     {t:'skill',   ic:'技', nm:'技能情報',              ph:'＜技能＞', ctn:1, dl:'＜技能＞'},
-    {t:'secret',  ic:'秘', nm:'秘匿情報',              ph:'秘匿情報', ctn:1, dl:'秘匿情報'},
+    {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿'},
     {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト', cat:'リスト'},
     {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'quote',   ic:'❝', nm:'引用',                 ph:'引用', cat:'その他'},
@@ -337,7 +380,14 @@
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
   var IDX='scn_index_v3', DOCP='scn_doc_v3_', CUR='scn_cur_v3';
-  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'md', outlineOpen:true, headBg:'#000000', blocks:[] };
+  var account=(function(){ try{ return localStorage.getItem('scn_account')||'local'; }catch(e){ return 'local'; } })();
+  function K_IDX(){ return IDX+'::'+account; }
+  function K_CUR(){ return CUR+'::'+account; }
+  function K_DOC(id){ return DOCP+account+'::'+id; }
+  function hashPw(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return 'h'+h.toString(16); }
+  function readUsers(){ try{ return JSON.parse(localStorage.getItem('scn_users'))||{}; }catch(e){ return {}; } }
+  function writeUsers(u){ try{ localStorage.setItem('scn_users', JSON.stringify(u)); }catch(e){} }
+  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', blocks:[] };
   var uid=0; function nid(){ return 'b'+(++uid)+'_'+Math.random().toString(36).slice(2,7); }
   function docId(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -347,33 +397,34 @@
   var saveTimer=null;
   function pad(n){ return (n<10?'0':'')+n; }
   function now(){ var d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
-  function readIndex(){ try{ return JSON.parse(localStorage.getItem(IDX))||[]; }catch(e){ return []; } }
-  function writeIndex(a){ try{ localStorage.setItem(IDX, JSON.stringify(a)); }catch(e){} }
+  function readIndex(){ try{ return JSON.parse(localStorage.getItem(K_IDX()))||[]; }catch(e){ return []; } }
+  function writeIndex(a){ try{ localStorage.setItem(K_IDX(), JSON.stringify(a)); }catch(e){} }
   function persist(){
     try{
       if(!state.id) state.id=docId();
       state.updated=Date.now();
-      localStorage.setItem(DOCP+state.id, JSON.stringify(state));
+      localStorage.setItem(K_DOC(state.id), JSON.stringify(state));
       var idx=readIndex(), e=null;
       for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
       if(e){ e.name=state.name; e.updated=state.updated; } else idx.push({id:state.id,name:state.name,updated:state.updated});
       writeIndex(idx);
-      localStorage.setItem(CUR, state.id);
+      localStorage.setItem(K_CUR(), state.id);
       saveInd.textContent='保存済み '+now();
+      if(typeof cloudPush==='function') cloudPush();
     }catch(err){ saveInd.textContent='セッション内のみ保持'; }
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'md'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; return o; }
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; return o; }
   function load(){
-    var cur=null; try{ cur=localStorage.getItem(CUR); }catch(e){}
+    var cur=null; try{ cur=localStorage.getItem(K_CUR()); }catch(e){}
     var idx=readIndex();
     var id = (cur && idx.some(function(x){return x.id===cur;})) ? cur : (idx[0] && idx[0].id);
     if(!id) return false;
-    try{ var o=JSON.parse(localStorage.getItem(DOCP+id)); if(o&&o.blocks){ state=normalizeState(o); state.id=id; return true; } }catch(e){}
+    try{ var o=JSON.parse(localStorage.getItem(K_DOC(id))); if(o&&o.blocks){ state=normalizeState(o); state.id=id; return true; } }catch(e){}
     return false;
   }
   function openDoc(id){
-    try{ var o=JSON.parse(localStorage.getItem(DOCP+id)); if(o&&o.blocks){ state=normalizeState(o); state.id=id; try{localStorage.setItem(CUR,id);}catch(e){} render(); applyOutline(); updateDocName(); } }catch(e){}
+    try{ var o=JSON.parse(localStorage.getItem(K_DOC(id))); if(o&&o.blocks){ state=normalizeState(o); state.id=id; try{localStorage.setItem(K_CUR(),id);}catch(e){} render(); applyOutline(); updateDocName(); } }catch(e){}
   }
   function freshDoc(name){
     return { id:docId(), name:name||'無題のシナリオ', theme:state.theme, fs:state.fs, outlineOpen:state.outlineOpen, headBg:'#000000',
@@ -381,7 +432,7 @@
   }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
   function deleteDoc(id){
-    try{ localStorage.removeItem(DOCP+id); }catch(e){}
+    try{ localStorage.removeItem(K_DOC(id)); }catch(e){}
     var idx=readIndex().filter(function(x){return x.id!==id;}); writeIndex(idx);
     if(state.id===id){ if(idx[0]) openDoc(idx[0].id); else newDoc('無題のシナリオ'); }
   }
@@ -395,7 +446,7 @@
       kids.forEach(function(n){
         if(n.nodeType===1){
           var tag=n.tagName.toLowerCase();
-          if(['span','b','i','u','strong','em','br','s','strike','del'].indexOf(tag)<0){
+          if(['span','b','i','u','strong','em','br','s','strike','del','a'].indexOf(tag)<0){
             while(n.firstChild) node.insertBefore(n.firstChild,n);
             node.removeChild(n); return;
           }
@@ -406,8 +457,10 @@
             var k=m[0].trim().toLowerCase(), v=m.slice(1).join(':').trim();
             if(k==='color'||k==='background-color'||k==='text-decoration'||k==='font-weight'||k==='font-style') keep.push(k+':'+v);
           });
+          var dataH=(tag==='a')?n.getAttribute('data-h'):null;
           for(var a=n.attributes.length-1;a>=0;a--){ n.removeAttribute(n.attributes[a].name); }
           if(keep.length) n.setAttribute('style',keep.join(';'));
+          if(tag==='a'){ n.setAttribute('class','hlink'); if(dataH) n.setAttribute('data-h',dataH); }
           walk(n);
         }
       });
@@ -621,6 +674,15 @@
   }
   function openMenu(a,f){ menuMode='slash'; buildMenuItems(f); posMenu(a); menu.classList.add('show'); }
   function openBlockMenu(id,a){ menuMode='block'; menuTargetId=id; buildMenuItems(''); posMenu(a); menu.classList.add('show'); }
+  function openHlinkMenu(anchor){
+    var items=outlineItems();
+    if(!items.length){ alert('リンク先の見出しがありません。先に見出しを作成してください。'); return; }
+    menuMode='hlink';
+    var h='<div class="mcat">見出しへリンク</div>';
+    items.forEach(function(it){ h+='<button data-hgoto="'+it.id+'"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t||'(無題)')+'</span></button>'; });
+    menu.innerHTML=h; var f=menu.querySelector('button'); if(f) f.classList.add('sel');
+    posMenu(anchor); menu.classList.add('show');
+  }
   function hideMenu(){ menu.classList.remove('show'); slash.active=false; }
   function moveSel(dir){
     var btns=[].slice.call(menu.querySelectorAll('button')); var cur=menu.querySelector('button.sel'); var i=btns.indexOf(cur);
@@ -629,6 +691,7 @@
   menu.addEventListener('mousedown',function(e){ e.preventDefault(); });
   menu.addEventListener('click',function(e){
     var btn=e.target.closest('button'); if(!btn) return;
+    var hg=btn.getAttribute('data-hgoto'); if(hg){ wrapSelectionLink(hg); hideMenu(); return; }
     if(btn.dataset.act){ blockAction(btn.dataset.act); hideMenu(); return; }
     var t=btn.dataset.t;
     if(menuMode==='slash' && slash.b){
@@ -681,6 +744,19 @@
     if(be){ var c=ctx(focusedId); if(c) c.b.html=sanitize(be.innerHTML); }
     persist();
   }
+  function wrapSelectionLink(id){
+    var be=focusedId?doc.querySelector('.block[data-id="'+focusedId+'"] .be'):null;
+    if(be) be.focus();
+    restoreSel();
+    var sel=window.getSelection(); if(!sel.rangeCount) return false;
+    var r=sel.getRangeAt(0); if(r.collapsed || r.toString()==='') return false;
+    var a=document.createElement('a'); a.className='hlink'; a.setAttribute('data-h',id);
+    try{ r.surroundContents(a); }catch(e){ try{ var frag=r.extractContents(); a.appendChild(frag); r.insertNode(a); }catch(e2){ return false; } }
+    if(be){ var c=ctx(focusedId); if(c) c.b.html=sanitize(be.innerHTML); }
+    persist(); return true;
+  }
+  function gotoHeading(id){ expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  doc.addEventListener('click',function(e){ var a=e.target.closest('.hlink'); if(a){ e.preventDefault(); var id=a.getAttribute('data-h'); if(id) gotoHeading(id); } });
   function setRowUl(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.ul=c||''; var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.borderBottom=c?('2px solid '+c):''; persist(); }
 
   function hexRgba(hex,a){ hex=(hex||'').replace('#',''); if(hex.length===3){hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];} var r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
@@ -702,6 +778,8 @@
   function buildPalettes(){
     var ps=document.getElementById('palStyle');
     if(ps) ps.querySelectorAll('button[data-cmd]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ applyCmd(b.dataset.cmd); }; });
+    var bl=document.getElementById('btnHlink');
+    if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(){ if(!savedRange || savedRange.toString()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
     makeColorGroup('palText',QUICK_TEXT,function(c){applyInline('fore',c);},function(){applyInline('fore','');},'#000000');
     makeColorGroup('palMark',QUICK_MARK,function(c){applyInline('mark',c);},function(){applyInline('mark','');},'#ffff00');
     makeColorGroup('palRow', QUICK_ROW, function(c){setRowBg(c);},       function(){setRowBg('');},       '#000000');
@@ -800,7 +878,7 @@
     var fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
     var themeLabel=(state.theme==='dark'?'☀ ライト':'🌙 ダーク');
     var vhead='<div class="v-head">'
-      +'<button class="hbtn" id="vOutline">☰ しおり</button>'
+      +'<button class="hbtn ico" id="vOutline" title="しおり"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></button>'
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
@@ -821,7 +899,7 @@
       +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var a=e.target.closest("a[data-goto]");if(a){var el=document.querySelector(\'.block[data-id="\'+a.dataset.goto+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}});'
       +'var FS={sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
-      +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}});'
+      +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}});'
       +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
@@ -835,6 +913,94 @@
   document.getElementById('btnHtml').onclick=exportHTML;
   document.getElementById('btnPdf').onclick=function(){ window.print(); };
 
+  /* ---- 右メニュー ---- */
+  var hmenu=document.getElementById('hmenu');
+  document.getElementById('btnMenu').onclick=function(e){ e.stopPropagation(); hmenu.classList.toggle('show'); };
+  document.addEventListener('click',function(e){ if(hmenu.classList.contains('show') && !hmenu.contains(e.target) && e.target.id!=='btnMenu') hmenu.classList.remove('show'); });
+  document.getElementById('btnHtml').addEventListener('click',function(){ hmenu.classList.remove('show'); });
+  document.getElementById('btnPdf').addEventListener('click',function(){ hmenu.classList.remove('show'); });
+
+  /* ---- アカウント / GitHub同期（共有Gist＋ID別ファイル：カレンダー方式） ---- */
+  var SHARED_DESC='scenario-editor-shared';
+  var ghToken=(function(){ try{ return localStorage.getItem('scn_gh_token')||''; }catch(e){ return ''; } })();
+  var ghGist=(function(){ try{ return localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){ return ''; } })();
+  function ghId(){ return account.indexOf('id_')===0 ? account.slice(3) : ''; }
+  function ghConnected(){ return account.indexOf('id_')===0 && !!ghToken; }
+  function ghFile(){ return 'user-'+ghId()+'.json'; }
+  function ghFetch(path,opts){ opts=opts||{}; opts.headers=Object.assign({'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},opts.headers||{}); return fetch('https://api.github.com'+path,opts); }
+  function exportCloud(){ var idx=readIndex(),docs={}; idx.forEach(function(e){ try{ docs[e.id]=JSON.parse(localStorage.getItem(K_DOC(e.id))); }catch(_){} }); return {index:idx,docs:docs}; }
+  function importCloud(data){ if(!data) return; writeIndex(data.index||[]); (data.index||[]).forEach(function(e){ if(data.docs&&data.docs[e.id]){ try{ localStorage.setItem(K_DOC(e.id), JSON.stringify(data.docs[e.id])); }catch(_){}}}); }
+  var pushTimer=null;
+  function cloudPush(){
+    if(!ghConnected()||!ghGist) return;
+    if(pushTimer) clearTimeout(pushTimer);
+    pushTimer=setTimeout(function(){
+      var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
+      ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})})
+        .then(function(r){ saveInd.textContent=r.ok?('同期済 '+now()):'同期失敗(ローカルは保存済)'; })
+        .catch(function(){ saveInd.textContent='同期失敗(ローカルは保存済)'; });
+    },1500);
+  }
+  function updateAcct(){
+    var lb=document.getElementById('acctLabel'), btn=document.getElementById('btnAuth');
+    if(!ghConnected()){ lb.textContent='未接続（ローカル保存）'; btn.textContent='GitHub連携'; }
+    else{ lb.textContent='ID: '+ghId(); btn.textContent='連携解除'; }
+  }
+  function findSharedGist(){
+    if(ghGist) return Promise.resolve(ghGist);
+    return ghFetch('/gists?per_page=100').then(function(r){ return r.json(); }).then(function(gists){
+      var g=(gists||[]).filter(function(x){ return (x.description===SHARED_DESC) || (x.files && x.files['user-'+ghId()+'.json']); })[0];
+      return g?g.id:'';
+    });
+  }
+  function ghConnect(id,token){
+    var hint=document.getElementById('loginHint'); hint.textContent='接続中…';
+    id=(id||'').trim().replace(/[^0-9A-Za-z_\-一-龠ぁ-んァ-ヶ]/g,'') || 'default';
+    ghToken=token; account='id_'+id;
+    return ghFetch('/user').then(function(r){ if(!r.ok) throw new Error('認証に失敗しました。トークンを確認してください。'); return r.json(); })
+      .then(function(){ try{ localStorage.setItem('scn_account',account); localStorage.setItem('scn_gh_token',token); }catch(e){}
+        ghGist=(function(){ try{ return localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){ return ''; } })();
+        return findSharedGist(); })
+      .then(function(gid){
+        if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){}
+          return ghFetch('/gists/'+gid).then(function(r){ return r.json(); }).then(function(gd){
+            var f=gd.files&&gd.files[ghFile()]; if(f&&f.content){ importCloud(JSON.parse(f.content)); }
+          });
+        }
+        var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
+        return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:files})})
+          .then(function(r){ return r.json(); }).then(function(gd){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} });
+      })
+      .then(function(){
+        if(!load()){ newDoc('無題のシナリオ'); } else { render(); applyOutline(); updateDocName(); }
+        updateAcct(); setTopbar(); loginOvl.classList.remove('show'); saveInd.textContent='GitHub同期 有効';
+      });
+  }
+  function ghRefresh(){
+    if(!ghConnected()) return;
+    if(!ghGist){ ghGist=(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})(); }
+    if(!ghGist){ findSharedGist().then(function(gid){ if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} ghRefresh(); } }); return; }
+    ghFetch('/gists/'+ghGist).then(function(r){ return r.ok?r.json():null; }).then(function(gd){
+      if(!gd) return; var f=gd.files&&gd.files[ghFile()]; if(f&&f.content){ importCloud(JSON.parse(f.content)); if(load()){ render(); applyOutline(); updateDocName(); } }
+    }).catch(function(){});
+  }
+  var loginOvl=document.getElementById('loginOvl');
+  document.getElementById('btnAuth').onclick=function(){
+    hmenu.classList.remove('show');
+    if(ghConnected()){ if(confirm('連携を解除しますか？（この端末はローカル保存に戻ります。Gistのデータは残ります）')){ ghToken=''; ghGist=''; try{localStorage.removeItem('scn_gh_token');}catch(e){} account='local'; try{localStorage.setItem('scn_account','local');}catch(e){} if(!load()){ newDoc('無題のシナリオ'); } else { render(); applyOutline(); updateDocName(); } updateAcct(); setTopbar(); } return; }
+    document.getElementById('ghId').value=ghId()||''; document.getElementById('ghToken').value=ghToken||'';
+    document.getElementById('loginHint').textContent='同じトークンを共有し、各自が異なるIDを入れると、IDごとに分かれて保存されます。';
+    loginOvl.classList.add('show'); document.getElementById('ghId').focus();
+  };
+  document.getElementById('loginClose').onclick=function(){ loginOvl.classList.remove('show'); };
+  loginOvl.onclick=function(e){ if(e.target===loginOvl) loginOvl.classList.remove('show'); };
+  document.getElementById('loginGo').onclick=function(){
+    var id=document.getElementById('ghId').value.trim(); var tk=document.getElementById('ghToken').value.trim();
+    if(!id){ document.getElementById('loginHint').textContent='IDを入力してください。'; return; }
+    if(!tk){ document.getElementById('loginHint').textContent='トークンを入力してください。'; return; }
+    ghConnect(id,tk).catch(function(err){ document.getElementById('loginHint').textContent=(err&&err.message)||'接続に失敗しました。'; });
+  };
+
   /* ---- 初期化 ---- */
   if(!load()){
     var sk=newBlock('skill','＜目星＞');
@@ -843,25 +1009,25 @@
     sk.children[1].children=[ newBlock('p','失敗時の描写をここに。') ];
     var kp=newBlock('kp','KP情報');
     kp.children=[ newBlock('p','ここにKPのみ知る情報。塗りつぶしの枠に白抜きで表示されます。') ];
-    var pl=newBlock('info','PL情報');
-    pl.children=[ newBlock('p','PLに公開する情報。左端だけ黒のライト枠です。') ];
+    var sec=newBlock('secret','▊秘匿');
+    sec.children=[ newBlock('p','ここに秘匿情報') ];
     state.id=docId(); state.name='サンプルシナリオ';
     state.blocks=[
-      newBlock('title','天泣の吟'),
-      newBlock('tagline','雨 × 煙草 × 未亡人'),
+      newBlock('title','サンプルシナリオ'),
+      newBlock('tagline','サンプル×シナリオ×です'),
       newBlock('h1','あらすじ'),
-      newBlock('p','寒い冬の日――世間は一週間、雨の予報が続いていた。'),
-      newBlock('h1','本編'),
-      sk, kp, pl,
+      newBlock('p','ここにあらすじなどを入力'),
+      newBlock('p','Notionと似た感覚で編集可能'),
+      sk, kp, sec,
       newBlock('p','')
     ];
     persist();
   }
   buildPalettes();
-  function setTopbar(){ var hd=document.querySelector('.head'), fb2=document.querySelector('.fbar'); var h=(hd?hd.offsetHeight:0)+(fb2?fb2.offsetHeight:0); if(h>0) document.documentElement.style.setProperty('--topbar-h', h+'px'); }
+  function setTopbar(){ var hd=document.querySelector('.head'), fb2=document.querySelector('.fbar'); var hh=hd?hd.offsetHeight:0; var h=hh+(fb2?fb2.offsetHeight:0); if(hh>0) document.documentElement.style.setProperty('--head-h', hh+'px'); if(h>0) document.documentElement.style.setProperty('--topbar-h', h+'px'); }
   window.addEventListener('resize', setTopbar);
   (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); setTopbar(); }; })();
-  render(); applyOutline(); updateDocName(); setTopbar(); saveInd.textContent='自動保存 有効';
+  render(); applyOutline(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
 
   window.__ed={ state:state, TYPES:TYPES, newBlock:newBlock, render:render, persist:persist, load:load,
     IDX:IDX, DOCP:DOCP, CUR:CUR, readIndex:readIndex, openDoc:openDoc, newDoc:newDoc, deleteDoc:deleteDoc,
