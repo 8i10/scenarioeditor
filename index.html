@@ -319,7 +319,7 @@
     <div class="dlg-b">
       <div class="frow"><input type="text" id="ghId" placeholder="ID / 名前（任意）" autocomplete="off"></div>
       <div class="frow"><input type="password" id="ghToken" placeholder="GitHub Personal Access Token（gist権限）" autocomplete="off"></div>
-      <div class="fhint" id="loginHint">同じトークンを共有し、各自が異なるIDを入れると、1つのGist内でIDごとに分かれて保存されます（カレンダー方式）。別端末でも同じID＋トークンで同じシナリオを編集できます。</div>
+      <div class="fhint" id="loginHint">GitHubの「classic」トークンを作成し「gist」にチェックを入れて貼り付けてください（fine-grained トークンはGist非対応の場合があります）。同じトークン＋別IDで複数人が使え、別端末でも同じID＋同じトークンで同期できます。</div>
       <div class="frow" style="gap:8px">
         <a class="hb2" href="https://github.com/settings/tokens/new?scopes=gist&description=scenario-editor" target="_blank" rel="noopener">トークンを作成</a>
         <button class="hb2 pri" id="loginGo" style="flex:1">接続</button>
@@ -1164,30 +1164,42 @@
   }
   function findSharedGist(){
     if(ghGist) return Promise.resolve(ghGist);
-    return ghFetch('/gists?per_page=100').then(function(r){ return r.json(); }).then(function(gists){
-      var g=(gists||[]).filter(function(x){ return (x.description===SHARED_DESC) || (x.files && x.files['user-'+ghId()+'.json']); })[0];
+    return ghFetch('/gists?per_page=100').then(function(r){ return r.ok?r.json():null; }).then(function(gists){
+      if(!Array.isArray(gists)) return '';
+      var g=gists.filter(function(x){ return (x.description===SHARED_DESC) || (x.files && x.files['user-'+ghId()+'.json']); })[0];
       return g?g.id:'';
-    });
+    }).catch(function(){ return ''; });
   }
   function ghConnect(id,token){
     var hint=document.getElementById('loginHint'); hint.textContent='接続中…';
     id=(id||'').trim().replace(/[^0-9A-Za-z_\-一-龠ぁ-んァ-ヶ]/g,'') || 'default';
+    var prevAccount=account, prevToken=ghToken, prevGist=ghGist;
     ghToken=token; account='id_'+id;
-    return ghFetch('/user').then(function(r){ if(!r.ok) throw new Error('認証に失敗しました。トークンを確認してください。'); return r.json(); })
-      .then(function(){ try{ localStorage.setItem('scn_account',account); localStorage.setItem('scn_gh_token',token); }catch(e){}
-        ghGist=(function(){ try{ return localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){ return ''; } })();
-        return findSharedGist(); })
+    function fail(msg){ account=prevAccount; ghToken=prevToken; ghGist=prevGist; throw new Error(msg); }
+    var SCOPE_HELP='このトークンではGistを読み書きできません（404）。\n・GitHubの「classic」トークン作成時に「gist」のチェックを必ず入れてください（これが未チェックだと必ず404になります）。\n・複数人／複数端末では全員が「同じトークン」を使ってください（別トークンだと他人のGistは編集できません）。';
+    function createGist(){
+      var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
+      return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:files})}).then(function(r){
+        if(!r.ok){ if(r.status===404||r.status===403) return fail(SCOPE_HELP); return fail('Gistの作成に失敗しました（'+statusMsg(r.status)+'）。'); }
+        return r.json();
+      }).then(function(gd){ if(!gd||!gd.id) return fail('Gistの作成に失敗しました。'); ghGist=gd.id; });
+    }
+    return ghFetch('/user').then(function(r){ if(!r.ok) return fail('認証に失敗しました。トークンが正しいか確認してください。'); return r.json(); })
+      .then(function(){ ghGist=''; return findSharedGist(); })   /* キャッシュは使わず、現トークンのGistを再解決 */
       .then(function(gid){
-        if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){}
-          return ghFetch('/gists/'+gid).then(function(r){ return r.json(); }).then(function(gd){
-            var f=gd.files&&gd.files[ghFile()]; if(f&&f.content){ importCloud(JSON.parse(f.content)); }
+        if(!gid) return createGist();
+        ghGist=gid;
+        return ghFetch('/gists/'+gid).then(function(r){ return r.ok?r.json():null; }).then(function(gd){
+          var f=gd&&gd.files&&gd.files[ghFile()]; if(f&&f.content){ try{ importCloud(JSON.parse(f.content)); }catch(e){} }
+          var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
+          return ghFetch('/gists/'+gid,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(rr){
+            if(rr.ok) return;
+            ghGist=''; return createGist();   /* 見つかったGistに書けない → 現トークンで作り直す */
           });
-        }
-        var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
-        return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:files})})
-          .then(function(r){ return r.json(); }).then(function(gd){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} });
+        });
       })
       .then(function(){
+        try{ localStorage.setItem('scn_account',account); localStorage.setItem('scn_gh_token',token); localStorage.setItem('scn_gh_gist_shared',ghGist); }catch(e){}
         if(!load()){ newDoc('無題のシナリオ'); } else { render(); applyOutline(); updateDocName(); }
         updateAcct(); setTopbar(); loginOvl.classList.remove('show'); saveInd.textContent='GitHub同期 有効';
       });
