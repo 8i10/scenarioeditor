@@ -26,7 +26,7 @@
     --header-bg:#100e0c; --header-text:#f2ede4;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
+  html,body{margin:0}
   body{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
     background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
   ::selection{background:var(--sel)}
@@ -50,6 +50,9 @@
   .seg2 button{font-family:inherit;font-size:12.5px;color:var(--text);background:transparent;border:0;padding:5px 12px;cursor:pointer}
   .seg2 button.on{background:var(--accent);color:var(--card);font-weight:700}
   .seg2 button+button{border-left:1px solid var(--line)}
+  .hm-select{width:100%;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;padding:0 8px;cursor:pointer}
+  .hm-check{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12.5px;color:var(--text)}
+  .hm-check input{cursor:pointer}
   .hbtn{font-family:inherit;font-size:12.5px;color:#eee;background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:6px 11px;cursor:pointer;transition:.14s}
   .hbtn:hover{background:rgba(255,255,255,.18)}
@@ -71,6 +74,8 @@
   .fbar .fb{width:26px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);
     color:var(--text);cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
   .fbar .fb:hover{background:var(--hover)}
+  .fbar .fb:disabled{opacity:.3;cursor:default}
+  .fb-select{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;padding:0 6px;max-width:120px;cursor:pointer}
   .grp{flex:none}
   .sw{width:20px;height:20px;border-radius:5px;border:1px solid var(--line);cursor:pointer;padding:0;position:relative}
   .sw:hover{transform:scale(1.1)}
@@ -88,7 +93,7 @@
   .grp .clr:hover{background:var(--hover);color:var(--text)}
 
   /* ── page ── */
-  .wrap{max-width:920px;margin:0 auto;padding:30px 24px 45vh;font-size:calc(16px * var(--fs))}
+  .wrap{max-width:920px;margin:0 auto;padding:30px 24px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px}
@@ -203,7 +208,7 @@
   .outline a.lv4{padding-left:48px;font-size:11.5px;color:var(--accent2)}
   .outline a.lv5{padding-left:60px;font-size:11.5px;color:var(--accent2)}
   .outline .ol-empty{padding:12px;color:var(--muted);font-size:12px}
-  @media (min-width:1240px){ body.ol-open .wrap{margin-left:236px} }
+  @media (min-width:821px){ body.ol-open .wrap{margin-left:300px;margin-right:auto;max-width:min(920px,calc(100vw - 340px))} }
 
   /* ── ファイル管理ダイアログ ── */
   .ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:18px}
@@ -293,6 +298,10 @@
       <div class="hm-row"><span>大きさ</span>
         <div class="seg2" id="segFs"><button data-fs="sm" class="on">小</button><button data-fs="md">中</button></div>
       </div>
+      <div class="hm-sec">フォント</div>
+      <div class="hm-row"><select id="fontSel" class="hm-select"></select></div>
+      <div class="hm-row"><button class="hb2" id="btnLocalFonts" style="width:100%">端末のフォントを読み込む</button></div>
+      <div class="hm-row"><label class="hm-check"><input type="checkbox" id="embedFonts"> HTMLにフォントを埋め込む</label></div>
       <div class="hm-sec">テーマ</div>
       <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
       <div class="hm-sec">アカウント（GitHub同期）</div>
@@ -335,12 +344,15 @@
   <div class="fbar-in" id="fbarIn">
     <div class="fbrow">
       <div class="fcell"><span class="grp" id="palStyle">
+        <button class="fb" id="btnUndo" title="元に戻す (Ctrl+Z)">↶</button>
+        <button class="fb" id="btnRedo" title="やり直す (Ctrl+Y)">↷</button>
         <button class="fb" data-cmd="bold" title="太字"><b>B</b></button>
         <button class="fb" data-cmd="italic" title="斜体"><i>I</i></button>
         <button class="fb" data-cmd="underline" title="下線"><u>U</u></button>
         <button class="fb" data-cmd="strikeThrough" title="取り消し線"><s>S</s></button>
         <button class="fb" id="btnHlink" title="選択文字に見出しリンク"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
       </span></div>
+      <div class="fcell"><span class="lb">書体</span><select id="fontInline" class="fb-select" title="選択文字の書体"></select></div>
       <div class="fcell"><span class="lb">文字色</span><span class="grp" id="palText"></span></div>
       <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
@@ -398,7 +410,7 @@
   function hashPw(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return 'h'+h.toString(16); }
   function readUsers(){ try{ return JSON.parse(localStorage.getItem('scn_users'))||{}; }catch(e){ return {}; } }
   function writeUsers(u){ try{ localStorage.setItem('scn_users', JSON.stringify(u)); }catch(e){} }
-  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', blocks:[] };
+  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', font:'', embedFonts:false, blocks:[] };
   var uid=0; function nid(){ return 'b'+(++uid)+'_'+Math.random().toString(36).slice(2,7); }
   function docId(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -410,7 +422,32 @@
   function now(){ var d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
   function readIndex(){ try{ return JSON.parse(localStorage.getItem(K_IDX()))||[]; }catch(e){ return []; } }
   function writeIndex(a){ try{ localStorage.setItem(K_IDX(), JSON.stringify(a)); }catch(e){} }
+  /* ---- Undo / Redo ---- */
+  var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
+  function snapshot(){ return JSON.stringify({blocks:state.blocks,name:state.name}); }
+  function commitUndo(){
+    if(applyingSnap) return;
+    var s=snapshot();
+    if(lastSnap!==null && lastSnap!==s){ undoStack.push(lastSnap); if(undoStack.length>120) undoStack.shift(); redoStack.length=0; updateUndoBtns(); }
+    lastSnap=s;
+  }
+  function scheduleUndo(){ if(applyingSnap) return; if(undoTimer) clearTimeout(undoTimer); undoTimer=setTimeout(commitUndo,450); }
+  function applySnap(s){
+    var o; try{ o=JSON.parse(s); }catch(e){ return; }
+    applyingSnap=true;
+    state.blocks=o.blocks; if(o.name!=null) state.name=o.name;
+    render(); applyOutline(); updateDocName();
+    lastSnap=snapshot();
+    try{ localStorage.setItem(K_DOC(state.id), JSON.stringify(state)); }catch(e){}
+    if(typeof cloudPush==='function') cloudPush();
+    applyingSnap=false;
+  }
+  function undo(){ if(undoTimer){ clearTimeout(undoTimer); commitUndo(); } if(!undoStack.length) return; redoStack.push(snapshot()); applySnap(undoStack.pop()); updateUndoBtns(); }
+  function redo(){ if(!redoStack.length) return; undoStack.push(snapshot()); applySnap(redoStack.pop()); updateUndoBtns(); }
+  function updateUndoBtns(){ var u=document.getElementById('btnUndo'),r=document.getElementById('btnRedo'); if(u)u.disabled=!undoStack.length; if(r)r.disabled=!redoStack.length; }
+
   function persist(){
+    scheduleUndo();
     try{
       if(!state.id) state.id=docId();
       state.updated=Date.now();
@@ -466,7 +503,7 @@
           style.split(';').forEach(function(p){
             var m=p.split(':'); if(m.length<2) return;
             var k=m[0].trim().toLowerCase(), v=m.slice(1).join(':').trim();
-            if(k==='color'||k==='background-color'||k==='text-decoration'||k==='font-weight'||k==='font-style') keep.push(k+':'+v);
+            if(k==='color'||k==='background-color'||k==='text-decoration'||k==='font-weight'||k==='font-style'||k==='font-family') keep.push(k+':'+v);
           });
           var dataH=(tag==='a')?n.getAttribute('data-h'):null;
           for(var a=n.attributes.length-1;a>=0;a--){ n.removeAttribute(n.attributes[a].name); }
@@ -561,7 +598,7 @@
     bindBe(be,b);
     return be;
   }
-  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); renderOutline(); }
+  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); renderOutline(); }
   function reType(b){
     var wrap=doc.querySelector('.block[data-id="'+b.id+'"]'); if(!wrap) return;
     var nw=blockEl(b); wrap.parentNode.replaceChild(nw,wrap);
@@ -629,6 +666,21 @@
           prev.html=(prev.html||'')+ (b.html||''); pe.innerHTML=prev.html;
           c2.arr.splice(c2.i,1); doc.querySelector('.block[data-id="'+b.id+'"]').remove();
           setCaretEnd(pe); prev.html=sanitize(pe.innerHTML); persist(); return;
+        }
+      }
+    }
+    if(e.key==='Delete'&&atEnd(be)&&!isCtn(b.type)){
+      var c4=ctx(b.id); if(!c4) return;
+      if(c4.i < c4.arr.length-1){
+        var next=c4.arr[c4.i+1];
+        if(next.type==='divider'){ e.preventDefault(); c4.arr.splice(c4.i+1,1); var de=doc.querySelector('.block[data-id="'+next.id+'"]'); if(de) de.remove(); persist(); return; }
+        if(!isCtn(next.type)){
+          e.preventDefault();
+          var selD=window.getSelection(); var rngD=selD.rangeCount?selD.getRangeAt(0).cloneRange():null;
+          if(next.html){ var frag=document.createRange().createContextualFragment(next.html); be.appendChild(frag); }
+          if(rngD){ selD.removeAllRanges(); selD.addRange(rngD); }
+          c4.arr.splice(c4.i+1,1); var ne=doc.querySelector('.block[data-id="'+next.id+'"]'); if(ne) ne.remove();
+          b.html=sanitize(be.innerHTML); persist(); return;
         }
       }
     }
@@ -702,10 +754,10 @@
     if(btn.dataset.act){ blockAction(btn.dataset.act); hideMenu(); return; }
     var t=btn.dataset.t;
     if(menuMode==='slash' && slash.b){
-      var b=slash.b; b.type=t; b.html=''; if(isCtn(t)){ b.children=b.children||[]; b.html=defLabel(t); }
+      var b=slash.b; b.type=t; b.html=''; if(isCtn(t)){ b.children=b.children||[]; b.html=defLabel(t); if(isCallout(t)&&b.children.length===0) b.children.push(newBlock('p','')); }
       hideMenu(); reType(b); persist();
     }else if(menuMode==='block' && menuTargetId){
-      var c=ctx(menuTargetId); if(c){ var b2=c.b; var was=isCtn(b2.type); b2.type=t; if(isCtn(t)&&!b2.children) b2.children=[]; if(isCtn(t)&&!b2.html) b2.html=defLabel(t); reType(b2); persist(); }
+      var c=ctx(menuTargetId); if(c){ var b2=c.b; var was=isCtn(b2.type); b2.type=t; if(isCtn(t)&&!b2.children) b2.children=[]; if(isCtn(t)&&!b2.html) b2.html=defLabel(t); if(isCallout(t)&&b2.children.length===0) b2.children.push(newBlock('p','')); reType(b2); persist(); }
       hideMenu();
     }
   });
@@ -764,6 +816,17 @@
   }
   function gotoHeading(id){ expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
   doc.addEventListener('click',function(e){ var a=e.target.closest('.hlink'); if(a){ e.preventDefault(); var id=a.getAttribute('data-h'); if(id) gotoHeading(id); } });
+  function wrapSelectionFont(fontValue){
+    var be=focusedId?doc.querySelector('.block[data-id="'+focusedId+'"] .be'):null;
+    if(be) be.focus();
+    restoreSel();
+    var sel=window.getSelection(); if(!sel.rangeCount) return false;
+    var r=sel.getRangeAt(0); if(r.collapsed || r.toString()==='') return false;
+    var span=document.createElement('span'); span.style.fontFamily=fontValue;
+    try{ r.surroundContents(span); }catch(e){ try{ var frag=r.extractContents(); span.appendChild(frag); r.insertNode(span); }catch(e2){ return false; } }
+    if(be){ var c=ctx(focusedId); if(c) c.b.html=sanitize(be.innerHTML); }
+    persist(); return true;
+  }
   function setRowUl(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.ul=c||''; var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.borderBottom=c?('2px solid '+c):''; persist(); }
 
   function hexRgba(hex,a){ hex=(hex||'').replace('#',''); if(hex.length===3){hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];} var r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
@@ -785,6 +848,10 @@
   function buildPalettes(){
     var ps=document.getElementById('palStyle');
     if(ps) ps.querySelectorAll('button[data-cmd]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ applyCmd(b.dataset.cmd); }; });
+    var ub=document.getElementById('btnUndo'), rb=document.getElementById('btnRedo');
+    if(ub){ ub.onmousedown=function(e){e.preventDefault();}; ub.onclick=function(){ undo(); }; }
+    if(rb){ rb.onmousedown=function(e){e.preventDefault();}; rb.onclick=function(){ redo(); }; }
+    updateUndoBtns();
     var bl=document.getElementById('btnHlink');
     if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(e){ if(e){ e.stopPropagation(); e.preventDefault(); } if(!savedRange || String(savedRange).trim()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
     makeColorGroup('palText',QUICK_TEXT,function(c){applyInline('fore',c);},function(){applyInline('fore','');},'#000000');
@@ -840,6 +907,88 @@
   function applyTheme(){ root.setAttribute('data-theme',state.theme); document.getElementById('btnTheme').textContent=state.theme==='dark'?'☀ ライト':'🌙 ダーク'; }
   var FS={sm:0.8,md:1};
   function applyFs(){ document.querySelector('.wrap').style.setProperty('--fs',FS[state.fs]); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
+  var GOTHIC='"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif';
+  var FONTS=[
+    {n:'ゴシック（既定）', v:GOTHIC},
+    {n:'明朝', v:'"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif'},
+    {n:'游ゴシック', v:'"Yu Gothic","游ゴシック",YuGothic,sans-serif'},
+    {n:'游明朝', v:'"Yu Mincho","游明朝",YuMincho,serif'},
+    {n:'ヒラギノ角ゴ', v:'"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif'},
+    {n:'ヒラギノ明朝', v:'"Hiragino Mincho ProN","Hiragino Mincho Pro",serif'},
+    {n:'メイリオ', v:'Meiryo,"メイリオ",sans-serif'},
+    {n:'MS ゴシック', v:'"MS Gothic","ＭＳ ゴシック",monospace'},
+    {n:'MS 明朝', v:'"MS Mincho","ＭＳ 明朝",serif'},
+    {n:'システムフォント', v:'system-ui,-apple-system,sans-serif'}
+  ];
+  function applyFont(){
+    var w=document.querySelector('.wrap'); if(w) w.style.setProperty('--doc-font', state.font||GOTHIC);
+    var sel=document.getElementById('fontSel'); if(sel && [].some.call(sel.options,function(o){return o.value===(state.font||GOTHIC);})) sel.value=state.font||GOTHIC;
+    var eb=document.getElementById('embedFonts'); if(eb) eb.checked=!!state.embedFonts;
+  }
+  function buildFontSelect(){
+    var sel=document.getElementById('fontSel'); if(!sel) return;
+    sel.innerHTML='';
+    FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; sel.appendChild(o); });
+    localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=fam; sel.appendChild(o); });
+    if(state.font && !FONTS.some(function(f){return f.v===state.font;}) && localFontList.indexOf(state.font.replace(/"/g,''))<0){
+      var o=document.createElement('option'); o.value=state.font; o.textContent=state.font.replace(/"/g,''); sel.insertBefore(o, sel.firstChild);
+    }
+    sel.value=state.font||GOTHIC;
+    sel.onchange=function(){ state.font=sel.value; applyFont(); persist(); };
+
+    var fi=document.getElementById('fontInline');
+    if(fi){
+      fi.innerHTML='';
+      var ph0=document.createElement('option'); ph0.value=''; ph0.textContent='書体…'; fi.appendChild(ph0);
+      FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; fi.appendChild(o); });
+      localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=fam; fi.appendChild(o); });
+      var rst=document.createElement('option'); rst.value='inherit'; rst.textContent='解除（既定）'; fi.appendChild(rst);
+      fi.onchange=function(){ var v=fi.value; if(v){ wrapSelectionFont(v); } fi.value=''; };
+    }
+  }
+  var localFontData={}, localFontList=[];
+  function loadLocalFonts(){
+    if(!window.queryLocalFonts){ alert('この環境では端末フォントの取得に対応していません。\nChrome系ブラウザで、ローカルフォントアクセスの許可が必要です。'); return; }
+    window.queryLocalFonts().then(function(fonts){
+      var added=0;
+      fonts.forEach(function(f){ if(!localFontData[f.family]) localFontData[f.family]=f;
+        if(FONTS.some(function(x){return x.n===f.family;})) return;
+        if(localFontList.indexOf(f.family)>=0) return;
+        localFontList.push(f.family); added++; });
+      buildFontSelect();
+      alert(added+' 個の端末フォントを追加しました。一覧から選択してください。');
+    }).catch(function(){ alert('端末フォントを取得できませんでした（許可されなかった、または未対応です）。'); });
+  }
+  function ab2b64(buf){ var bytes=new Uint8Array(buf), bin='', chunk=0x8000; for(var i=0;i<bytes.length;i+=chunk){ bin+=String.fromCharCode.apply(null, bytes.subarray(i,i+chunk)); } return btoa(bin); }
+  function neededFontFamilies(){
+    var set={};
+    function add(str){ if(!str) return; var m=str.match(/"([^"]+)"|'([^']+)'/g)||[]; m.forEach(function(q){ set[q.replace(/["']/g,'')]=1; }); }
+    add(state.font);
+    (function walk(arr){ arr.forEach(function(b){ var re=/font-family:([^;}"]*(?:"[^"]*"|'[^']*')?[^;}]*)/g, mm; while((mm=re.exec(b.html||''))) add(mm[1]); if(b.children) walk(b.children); }); })(state.blocks);
+    var skip={'Zen Kaku Gothic New':1,'Shippori Mincho B1':1,'Noto Serif JP':1};
+    return Object.keys(set).filter(function(f){ return !skip[f]; });
+  }
+  function collectFontFaces(){
+    var families=neededFontFamilies();
+    if(!families.length) return Promise.resolve('');
+    var need=families.filter(function(f){ return !localFontData[f]; });
+    var ready=(need.length && window.queryLocalFonts)
+      ? window.queryLocalFonts().then(function(fonts){ fonts.forEach(function(fd){ if(!localFontData[fd.family]) localFontData[fd.family]=fd; }); }).catch(function(){})
+      : Promise.resolve();
+    return ready.then(function(){
+      var css='';
+      return families.reduce(function(p,fam){
+        return p.then(function(){
+          var fd=localFontData[fam]; if(!fd) return;
+          return fd.blob().then(function(blob){ return blob.arrayBuffer(); }).then(function(buf){
+            css+='@font-face{font-family:"'+fam+'";src:url(data:font/opentype;base64,'+ab2b64(buf)+')}';
+          }).catch(function(){});
+        });
+      }, Promise.resolve()).then(function(){ return css; });
+    });
+  }
+  document.getElementById('btnLocalFonts') && (document.getElementById('btnLocalFonts').onclick=loadLocalFonts);
+  (function(){ var eb=document.getElementById('embedFonts'); if(eb){ eb.checked=!!state.embedFonts; eb.onchange=function(){ state.embedFonts=eb.checked; persist(); }; } })();
   document.getElementById('segFs').addEventListener('click',function(e){ var b=e.target.closest('button[data-fs]'); if(b){ state.fs=b.dataset.fs; applyFs(); persist(); } });
   document.getElementById('btnTheme').onclick=function(){ state.theme=state.theme==='dark'?'light':'dark'; applyTheme(); persist(); };
 
@@ -879,13 +1028,15 @@
   function staticBlockHTML(b){
     var style=b.bg?(' style="background:'+esc(b.bg)+'"'):'';
     var us=b.ul?(' style="border-bottom:2px solid '+esc(b.ul)+'"'):'';
-    if(b.type==='divider') return '<div class="block" data-type="divider"><hr></div>';
-    if(isCallout(b.type)) return '<div class="block" data-type="'+b.type+'"'+style+'><div class="be lbl">'+(b.html||'')+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
-    if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+    var did=' data-id="'+b.id+'"';
+    if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
+    if(isCallout(b.type)) return '<div class="block" data-type="'+b.type+'"'+did+style+'><div class="be lbl">'+(b.html||'')+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+    if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
-    return '<div class="block'+done+'" data-type="'+b.type+'"'+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||'')+'</div></div>';
+    return '<div class="block'+done+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||'')+'</div></div>';
   }
   function exportHTML(){
+    (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
     var css=document.querySelector('style').textContent;
     var items=outlineItems();
     var olHTML=outlineInnerHTML(items, totalChars());
@@ -899,7 +1050,7 @@
       +'<button class="hbtn" id="vTheme">'+themeLabel+'</button></div>';
     var nav='<nav class="outline open" id="vOutlineNav">'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(items.length?('<div class="pt-h">しおり</div>'+items.map(function(it){return '<div class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</div>';}).join('')):'')+'</div>';
-    var body='<div class="wrap" style="--fs:'+FS[state.fs]+'">'+ptHTML+'<div class="doc">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
+    var body='<div class="wrap" style="--fs:'+FS[state.fs]+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+'<div class="doc">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
     var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
       +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
       +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'
@@ -918,11 +1069,12 @@
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
-      +'<style>'+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+'</style></head>'
+      +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+'</style></head>'
       +'<body class="ol-open">'+vhead+nav+body+vjs+'</body></html>';
     var blob=new Blob([html],{type:'text/html'}); var a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'.html'; a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+    });
   }
   document.getElementById('btnHtml').onclick=exportHTML;
   document.getElementById('btnPdf').onclick=function(){ window.print(); };
@@ -1037,7 +1189,14 @@
     ];
     persist();
   }
-  buildPalettes();
+  buildPalettes(); buildFontSelect();
+  document.addEventListener('keydown',function(e){
+    var mod=e.ctrlKey||e.metaKey; if(!mod) return;
+    var k=e.key.toLowerCase();
+    if(k==='z'&&!e.shiftKey){ e.preventDefault(); undo(); }
+    else if((k==='z'&&e.shiftKey)||k==='y'){ e.preventDefault(); redo(); }
+  });
+  lastSnap=snapshot();
   if(window.innerWidth<=820) state.outlineOpen=false;
   function setTopbar(){ var hd=document.querySelector('.head'), fb2=document.querySelector('.fbar'); var hh=hd?hd.offsetHeight:0; var h=hh+(fb2?fb2.offsetHeight:0); if(hh>0) document.documentElement.style.setProperty('--head-h', hh+'px'); if(h>0) document.documentElement.style.setProperty('--topbar-h', h+'px'); }
   window.addEventListener('resize', setTopbar);
