@@ -382,7 +382,7 @@
   var root=document.documentElement;
 
   var TYPES=[
-    {t:'p',       ic:'¶',  nm:'本文',                 ph:'「/」でコマンド / テキスト', cat:'基本'},
+    {t:'p',       ic:'¶',  nm:'本文',                 ph:'', cat:'基本'},
     {t:'title',   ic:'T',  nm:'作品タイトル',          ph:'作品タイトル'},
     {t:'tagline', ic:'×',  nm:'タグライン',            ph:'要素 × 要素'},
     {t:'h1',      ic:'H1', nm:'見出し1',               ph:'見出し1', cat:'見出し'},
@@ -819,7 +819,7 @@
     restoreSel();
     try{ document.execCommand('styleWithCSS',false,false); document.execCommand(cmd,false,null); }catch(e){}
     if(be){ var c=ctx(focusedId); if(c) c.b.html=sanitize(be.innerHTML); }
-    persist();
+    saveSel(); persist();
   }
   function wrapSelectionLink(id){
     var be=focusedId?doc.querySelector('.block[data-id="'+focusedId+'"] .be'):null;
