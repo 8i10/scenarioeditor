@@ -294,6 +294,7 @@
       <div class="hm-sec">出力</div>
       <button class="hm-item" id="btnHtml">HTMLで保存</button>
       <button class="hm-item" id="btnPdf">PDF・印刷</button>
+      <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
       <div class="hm-sec">文字サイズ</div>
       <div class="hm-row"><span>大きさ</span>
         <div class="seg2" id="segFs"><button data-fs="sm" class="on">小</button><button data-fs="md">中</button></div>
@@ -305,10 +306,11 @@
       <div class="hm-sec">テーマ</div>
       <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
       <div class="hm-sec">アカウント（GitHub同期）</div>
-      <div class="hm-row"><span id="acctLabel">未接続</span><button class="hb2" id="btnAuth">GitHub連携</button></div>
+      <div class="hm-row"><span id="acctLabel">未接続</span><span style="display:flex;gap:6px"><button class="hb2" id="btnSync" title="他端末の変更を取得" style="display:none">🔄 同期</button><button class="hb2" id="btnAuth">GitHub連携</button></span></div>
     </div>
   </div>
 </div>
+<input type="file" id="importFile" accept=".html,text/html" style="display:none">
 <nav class="outline" id="outline"></nav>
 
 <div class="ovl" id="loginOvl">
@@ -353,6 +355,13 @@
         <button class="fb" id="btnHlink" title="選択文字に見出しリンク"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
       </span></div>
       <div class="fcell"><span class="lb">書体</span><select id="fontInline" class="fb-select" title="選択文字の書体"></select></div>
+      <div class="fcell"><span class="grp" id="palAlign">
+        <button class="fb" data-align="left" title="左揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="12" y2="10"/><line x1="3" y1="15" x2="15" y2="15"/></svg></button>
+        <button class="fb" data-align="center" title="中央揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="6" y1="10" x2="14" y2="10"/><line x1="4" y1="15" x2="16" y2="15"/></svg></button>
+        <button class="fb" data-align="right" title="右揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="8" y1="10" x2="17" y2="10"/><line x1="5" y1="15" x2="17" y2="15"/></svg></button>
+      </span></div>
+    </div>
+    <div class="fbrow">
       <div class="fcell"><span class="lb">文字色</span><span class="grp" id="palText"></span></div>
       <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
@@ -595,6 +604,7 @@
     be.className='be'; be.setAttribute('contenteditable','true'); be.dataset.ph=ph(b.type); be.dataset.id=b.id;
     be.innerHTML=b.html||'';
     if(b.ul) be.style.borderBottom='2px solid '+b.ul;
+    if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
     return be;
   }
@@ -828,6 +838,7 @@
     persist(); return true;
   }
   function setRowUl(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.ul=c||''; var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.borderBottom=c?('2px solid '+c):''; persist(); }
+  function setBlockAlign(al){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.align=(al==='left'?'':al||''); var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.textAlign=ci.b.align||''; persist(); }
 
   function hexRgba(hex,a){ hex=(hex||'').replace('#',''); if(hex.length===3){hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];} var r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
   var QUICK_TEXT=['#000000','#ffffff','#4d4d4d','#ff0000','#0000ff','#22a022','#f1c40f'];
@@ -851,6 +862,8 @@
     var ub=document.getElementById('btnUndo'), rb=document.getElementById('btnRedo');
     if(ub){ ub.onmousedown=function(e){e.preventDefault();}; ub.onclick=function(){ undo(); }; }
     if(rb){ rb.onmousedown=function(e){e.preventDefault();}; rb.onclick=function(){ redo(); }; }
+    var pa=document.getElementById('palAlign');
+    if(pa) pa.querySelectorAll('button[data-align]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setBlockAlign(b.dataset.align); }; });
     updateUndoBtns();
     var bl=document.getElementById('btnHlink');
     if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(e){ if(e){ e.stopPropagation(); e.preventDefault(); } if(!savedRange || String(savedRange).trim()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
@@ -1027,7 +1040,7 @@
   /* ---- 書き出し（HTML / PDF） ---- */
   function staticBlockHTML(b){
     var style=b.bg?(' style="background:'+esc(b.bg)+'"'):'';
-    var us=b.ul?(' style="border-bottom:2px solid '+esc(b.ul)+'"'):'';
+    var us=(b.ul||b.align)?(' style="'+(b.ul?('border-bottom:2px solid '+esc(b.ul)+';'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
     var did=' data-id="'+b.id+'"';
     if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
     if(isCallout(b.type)) return '<div class="block" data-type="'+b.type+'"'+did+style+'><div class="be lbl">'+(b.html||'')+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
@@ -1070,13 +1083,34 @@
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+'</style></head>'
-      +'<body class="ol-open">'+vhead+nav+body+vjs+'</body></html>';
+      +'<body class="ol-open">'+vhead+nav+body+vjs
+      +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
+      +'</body></html>';
     var blob=new Blob([html],{type:'text/html'}); var a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'.html'; a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
     });
   }
   document.getElementById('btnHtml').onclick=exportHTML;
+  function importScenarioHTML(text){
+    var m=text.match(/<script id="scn-data"[^>]*>([\s\S]*?)<\/script>/);
+    if(!m){ alert('このHTMLには編集用データが含まれていません。\n新しい版のエディタで「HTMLで保存」したファイルを読み込んでください。'); return; }
+    var json=m[1].replace(/\\u003c/g,'<'); var o;
+    try{ o=JSON.parse(json); }catch(e){ alert('編集用データを読み取れませんでした。'); return; }
+    if(!o||!o.blocks){ alert('編集用データが不正です。'); return; }
+    state=normalizeState(o); state.id=docId();
+    state.name=(o.name||'読み込んだシナリオ');
+    persist(); render(); applyOutline(); updateDocName(); buildFontSelect(); applyTheme(); applyFs(); applyFont();
+    undoStack.length=0; redoStack.length=0; lastSnap=snapshot(); updateUndoBtns();
+    alert('「'+state.name+'」を新規シナリオとして読み込みました。');
+  }
+  (function(){
+    var bi=document.getElementById('btnImport'), fi=document.getElementById('importFile');
+    if(bi&&fi){
+      bi.onclick=function(){ hmenu.classList.remove('show'); fi.value=''; fi.click(); };
+      fi.onchange=function(){ var f=fi.files&&fi.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ importScenarioHTML(String(rd.result||'')); }; rd.readAsText(f); };
+    }
+  })();
   document.getElementById('btnPdf').onclick=function(){ window.print(); };
 
   /* ---- 右メニュー ---- */
@@ -1096,21 +1130,37 @@
   function ghFetch(path,opts){ opts=opts||{}; opts.headers=Object.assign({'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},opts.headers||{}); return fetch('https://api.github.com'+path,opts); }
   function exportCloud(){ var idx=readIndex(),docs={}; idx.forEach(function(e){ try{ docs[e.id]=JSON.parse(localStorage.getItem(K_DOC(e.id))); }catch(_){} }); return {index:idx,docs:docs}; }
   function importCloud(data){ if(!data) return; writeIndex(data.index||[]); (data.index||[]).forEach(function(e){ if(data.docs&&data.docs[e.id]){ try{ localStorage.setItem(K_DOC(e.id), JSON.stringify(data.docs[e.id])); }catch(_){}}}); }
-  var pushTimer=null;
+  var pushTimer=null, pushing=false;
+  function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
+  function doPush(retry){
+    pushing=true;
+    var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
+    return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(r){
+      if(r.ok){ saveInd.textContent='同期済 '+now(); pushing=false; return; }
+      if(r.status===404 && retry<1){
+        ghGist=''; try{localStorage.removeItem('scn_gh_gist_shared');}catch(e){}
+        return findSharedGist().then(function(gid){
+          if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} return doPush(retry+1); }
+          var f={}; f[ghFile()]={content:JSON.stringify(exportCloud())};
+          return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:f})}).then(function(rr){ return rr.ok?rr.json():null; }).then(function(gd){
+            if(gd&&gd.id){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} saveInd.textContent='同期済（Gist再作成） '+now(); }
+            else saveInd.textContent='同期失敗（Gist再作成不可／ローカルは保存済）';
+            pushing=false;
+          });
+        });
+      }
+      saveInd.textContent='同期失敗（'+statusMsg(r.status)+'／ローカルは保存済）'; pushing=false;
+    }).catch(function(){ saveInd.textContent='同期失敗（通信エラー／ローカルは保存済）'; pushing=false; });
+  }
   function cloudPush(){
     if(!ghConnected()||!ghGist) return;
     if(pushTimer) clearTimeout(pushTimer);
-    pushTimer=setTimeout(function(){
-      var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
-      ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})})
-        .then(function(r){ saveInd.textContent=r.ok?('同期済 '+now()):'同期失敗(ローカルは保存済)'; })
-        .catch(function(){ saveInd.textContent='同期失敗(ローカルは保存済)'; });
-    },1500);
+    pushTimer=setTimeout(function(){ pushTimer=null; doPush(0); },1500);
   }
   function updateAcct(){
-    var lb=document.getElementById('acctLabel'), btn=document.getElementById('btnAuth');
-    if(!ghConnected()){ lb.textContent='未接続（ローカル保存）'; btn.textContent='GitHub連携'; }
-    else{ lb.textContent='ID: '+ghId(); btn.textContent='連携解除'; }
+    var lb=document.getElementById('acctLabel'), btn=document.getElementById('btnAuth'), sy=document.getElementById('btnSync');
+    if(!ghConnected()){ lb.textContent='未接続（ローカル保存）'; btn.textContent='GitHub連携'; if(sy) sy.style.display='none'; }
+    else{ lb.textContent='ID: '+ghId(); btn.textContent='連携解除'; if(sy) sy.style.display=''; }
   }
   function findSharedGist(){
     if(ghGist) return Promise.resolve(ghGist);
@@ -1142,14 +1192,29 @@
         updateAcct(); setTopbar(); loginOvl.classList.remove('show'); saveInd.textContent='GitHub同期 有効';
       });
   }
-  function ghRefresh(){
+  var lastPullAt=0;
+  function ghPull(force){
     if(!ghConnected()) return;
+    var nowMs=Date.now();
+    if(!force && (nowMs-lastPullAt < 8000)) return; /* 8秒以内の連続取得は間引き（レート制限回避） */
     if(!ghGist){ ghGist=(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})(); }
-    if(!ghGist){ findSharedGist().then(function(gid){ if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} ghRefresh(); } }); return; }
-    ghFetch('/gists/'+ghGist).then(function(r){ return r.ok?r.json():null; }).then(function(gd){
-      if(!gd) return; var f=gd.files&&gd.files[ghFile()]; if(f&&f.content){ importCloud(JSON.parse(f.content)); if(load()){ render(); applyOutline(); updateDocName(); } }
-    }).catch(function(){});
+    if(!ghGist){ findSharedGist().then(function(gid){ if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} ghPull(force); } }); return; }
+    if((pushTimer||pushing) && !force) return; /* 未送信のローカル編集がある間は取得しない（巻き戻り防止／送信を優先） */
+    lastPullAt=nowMs;
+    ghFetch('/gists/'+ghGist).then(function(r){ if(!r.ok){ if(force) saveInd.textContent='取得失敗（'+statusMsg(r.status)+'）'; return null; } return r.json(); }).then(function(gd){
+      if(!gd) return; var f=gd.files&&gd.files[ghFile()];
+      if(f && f.content){
+        var incoming=f.content, localNow='';
+        try{ localNow=JSON.stringify(exportCloud()); }catch(e){}
+        if(incoming!==localNow){
+          importCloud(JSON.parse(incoming));
+          if(load()){ applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
+          saveInd.textContent='最新を取得 '+now();
+        } else if(force){ saveInd.textContent='同期済み（最新）'; }
+      } else if(force){ saveInd.textContent='この端末のデータはまだ未送信です'; }
+    }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
   }
+  function ghRefresh(){ ghPull(true); }
   var loginOvl=document.getElementById('loginOvl');
   document.getElementById('btnAuth').onclick=function(){
     hmenu.classList.remove('show');
@@ -1166,6 +1231,10 @@
     if(!tk){ document.getElementById('loginHint').textContent='トークンを入力してください。'; return; }
     ghConnect(id,tk).catch(function(err){ document.getElementById('loginHint').textContent=(err&&err.message)||'接続に失敗しました。'; });
   };
+  (function(){ var sb=document.getElementById('btnSync'); if(sb) sb.onclick=function(){ hmenu.classList.remove('show'); saveInd.textContent='同期中…'; ghPull(true); }; })();
+  window.addEventListener('focus',function(){ ghPull(false); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) ghPull(false); });
+  setInterval(function(){ ghPull(false); }, 30000);
 
   /* ---- 初期化 ---- */
   if(!load()){
