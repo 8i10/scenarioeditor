@@ -323,6 +323,8 @@
       <button class="hm-item" id="btnPdfBk">PDFで保存（しおり付き）</button>
       <button class="hm-item" id="btnPdf">印刷（ブラウザPDF）</button>
       <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
+      <div class="hm-sec">編集</div>
+      <button class="hm-item" id="btnSplitBr">改行を1行ずつ段落に分割</button>
       <div class="hm-sec">文字サイズ</div>
       <div class="hm-row"><span>大きさ</span>
         <div class="seg2" id="segFs"><button data-fs="sm" class="on">小</button><button data-fs="md">中</button></div>
@@ -1307,6 +1309,41 @@
   })();
   document.getElementById('btnPdf').onclick=function(){ window.print(); };
 
+  /* ---- ソフト改行(Shift+Enter)を1行ずつの段落に分割 ---- */
+  function splitHtmlByBr(html){
+    var d=document.createElement('div'); d.innerHTML=html||'';
+    var segs=[], cur=document.createElement('div');
+    [].slice.call(d.childNodes).forEach(function(n){
+      if(n.nodeType===1 && n.tagName==='BR'){ segs.push(cur.innerHTML); cur=document.createElement('div'); }
+      else { cur.appendChild(n.cloneNode(true)); }
+    });
+    segs.push(cur.innerHTML);
+    return segs;
+  }
+  function splitAllBreaks(){
+    var changed=false;
+    (function proc(arr){
+      for(var i=0;i<arr.length;i++){
+        var b=arr[i];
+        if(b.children) proc(b.children);
+        if(!b.html || !/<br\b/i.test(b.html)) continue;
+        var segs=splitHtmlByBr(b.html);
+        if(segs.length<=1) continue;
+        b.html=sanitize(segs[0]);
+        var at=i+1;
+        for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p', sanitize(segs[k]))); at++; }
+        i=at-1; changed=true;
+      }
+    })(state.blocks);
+    if(changed){ persist(); render(); }
+    return changed;
+  }
+  document.getElementById('btnSplitBr').onclick=function(){
+    hmenu.classList.remove('show');
+    var did=splitAllBreaks();
+    alert(did?'改行を1行ずつの段落に分割しました。':'分割対象の改行（Shift+Enter）は見つかりませんでした。');
+  };
+
   /* ---- しおり付きPDF出力（jsPDF outline + html2canvas） ---- */
   var pdfLibsP=null;
   function loadPdfLibs(){
@@ -1325,10 +1362,11 @@
       .then(function(){ return document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve(); })
       .then(function(){
         document.documentElement.setAttribute('data-theme','light');
-        var Wpx=760, scale=2;
+        var colPx=Math.max(360, Math.min(1100, Math.round((doc.getBoundingClientRect().width)||760)));
+        var scale=2;
         var root=document.createElement('div');
-        root.style.cssText='position:fixed;left:-99999px;top:0;width:'+Wpx+'px;background:#fff';
-        root.innerHTML='<div class="wrap" style="--fs:'+FS[state.fs]+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'"><div class="doc" style="padding:0">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
+        root.style.cssText='position:fixed;left:-99999px;top:0;width:'+colPx+'px;background:#fff';
+        root.innerHTML='<div class="wrap" style="max-width:none;width:100%;padding:0;--fs:'+FS[state.fs]+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'"><div class="doc" style="padding:0">'+state.blocks.map(staticBlockHTML).join('')+'</div></div>';
         [].forEach.call(root.querySelectorAll('.collapsed'),function(e){e.classList.remove('collapsed');});
         document.body.appendChild(root);
         var docEl=root.querySelector('.doc');
@@ -1346,9 +1384,14 @@
     var jsPDF=window.jspdf.jsPDF;
     var pdf=new jsPDF({unit:'pt',format:'a4',compress:true});
     var pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight();
-    var margin=36;
-    var contentWpt=pageW-2*margin, contentHpt=pageH-2*margin;
-    var pxPerPt=canvas.width/contentWpt;
+    var marginY=36, minMarginX=24;
+    var colPx=canvas.width/scale;                 // on-screen column width in CSS px
+    var desiredWpt=colPx*72/96;                    // same physical size as browser (96dpi)
+    var availWpt=pageW-2*minMarginX;
+    var drawWpt=Math.min(desiredWpt, availWpt);    // shrink only if wider than the page
+    var marginX=(pageW-drawWpt)/2;                 // center horizontally
+    var contentHpt=pageH-2*marginY;
+    var pxPerPt=canvas.width/drawWpt;
     var sliceH=Math.max(1,Math.floor(contentHpt*pxPerPt));
     var total=canvas.height, pages=Math.max(1,Math.ceil(total/sliceH));
     for(var p=0;p<pages;p++){
@@ -1357,7 +1400,7 @@
       var tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=sh;
       var g=tmp.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,tmp.width,tmp.height);
       g.drawImage(canvas,0,p*sliceH,canvas.width,sh,0,0,canvas.width,sh);
-      pdf.addImage(tmp.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,contentWpt,sh/pxPerPt);
+      pdf.addImage(tmp.toDataURL('image/jpeg',0.92),'JPEG',marginX,marginY,drawWpt,sh/pxPerPt);
     }
     if(pdf.outline&&pdf.outline.add){
       var last={};
