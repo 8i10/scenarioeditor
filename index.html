@@ -16,6 +16,7 @@
     --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e; --secret:#8b0000;
     --hover:#f0ece3; --sel:#2f6feb; --sel-fg:#ffffff;
     --header-bg:#2b2724; --header-text:#f6f2ea;
+    --page-h:1043px; --page-line:rgba(59,130,246,.55);
   }
   html[data-theme="dark"]{
     --bg:#1b1916; --card:#26231f; --box:#302c26; --line:#3c372f;
@@ -24,6 +25,7 @@
     --kp-bg:#3a352e; --kp-text:#efe9df; --pl-edge:#0b0b0b; --secret:#cf5b52;
     --hover:#332e28; --sel:#4b83ff; --sel-fg:#ffffff;
     --header-bg:#100e0c; --header-text:#f2ede4;
+    --page-h:1043px; --page-line:rgba(96,165,250,.5);
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -95,7 +97,8 @@
   .grp .clr:hover{background:var(--hover);color:var(--text)}
 
   /* ── page ── */
-  .wrap{max-width:920px;margin:0 auto;padding:30px 24px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
+  .wrap{width:794px;max-width:100%;margin:0 auto;padding:40px 40px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
+  .doc.pagelines{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--page-h) - 1.5px),var(--page-line) calc(var(--page-h) - 1.5px),var(--page-line) var(--page-h))}
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
@@ -298,6 +301,7 @@
     .fbar.open .fgroup-fa .fcell{width:auto}
   }
   @media (max-width:640px){
+    .doc.pagelines{background-image:none}
     .cols-row{flex-direction:column;gap:6px}
     .col-resize{display:none}
     .wrap{padding:22px 10px 45vh 34px}
@@ -324,6 +328,7 @@
       <button class="hm-item" id="btnPdf">印刷（ブラウザPDF）</button>
       <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
       <div class="hm-sec">編集</div>
+      <button class="hm-item" id="btnPageLines">ページ区切りを表示</button>
       <button class="hm-item" id="btnSplitBr">改行を1行ずつ段落に分割</button>
       <div class="hm-sec">文字サイズ</div>
       <div class="hm-row"><span>大きさ</span>
@@ -451,7 +456,7 @@
   function hashPw(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return 'h'+h.toString(16); }
   function readUsers(){ try{ return JSON.parse(localStorage.getItem('scn_users'))||{}; }catch(e){ return {}; } }
   function writeUsers(u){ try{ localStorage.setItem('scn_users', JSON.stringify(u)); }catch(e){} }
-  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', font:'', embedFonts:false, blocks:[] };
+  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', font:'', embedFonts:false, pagelines:false, blocks:[] };
   var uid=0; function nid(){ return 'b'+(++uid)+'_'+Math.random().toString(36).slice(2,7); }
   function docId(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -503,7 +508,8 @@
     }catch(err){ saveInd.textContent='セッション内のみ保持'; }
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; return o; }
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; return o; }
+  function applyPageLines(){ if(doc) doc.classList.toggle('pagelines', !!state.pagelines); var b=document.getElementById('btnPageLines'); if(b) b.textContent=(state.pagelines?'ページ区切りを非表示':'ページ区切りを表示'); }
   function load(){
     var cur=null; try{ cur=localStorage.getItem(K_CUR()); }catch(e){}
     var idx=readIndex();
@@ -673,7 +679,7 @@
     bindBe(be,b);
     return be;
   }
-  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); renderOutline(); }
+  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); renderOutline(); }
   function reType(b){
     var wrap=doc.querySelector('.block[data-id="'+b.id+'"]'); if(!wrap) return;
     var nw=blockEl(b); wrap.parentNode.replaceChild(nw,wrap);
@@ -1338,6 +1344,7 @@
     if(changed){ persist(); render(); }
     return changed;
   }
+  document.getElementById('btnPageLines').onclick=function(){ state.pagelines=!state.pagelines; applyPageLines(); persist(); };
   document.getElementById('btnSplitBr').onclick=function(){
     hmenu.classList.remove('show');
     var did=splitAllBreaks();
@@ -1384,7 +1391,7 @@
     var jsPDF=window.jspdf.jsPDF;
     var pdf=new jsPDF({unit:'pt',format:'a4',compress:true});
     var pageW=pdf.internal.pageSize.getWidth(), pageH=pdf.internal.pageSize.getHeight();
-    var marginY=36, minMarginX=24;
+    var marginY=30, minMarginX=30;
     var colPx=canvas.width/scale;                 // on-screen column width in CSS px
     var desiredWpt=colPx*72/96;                    // same physical size as browser (96dpi)
     var availWpt=pageW-2*minMarginX;
