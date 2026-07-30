@@ -99,8 +99,8 @@
   /* ── page ── */
   .wrap{position:relative;width:794px;max-width:100%;margin:0 auto;padding:40px 40px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
   #pageOverlay{position:absolute;left:0;right:0;top:0;pointer-events:none;z-index:1}
-  #pageOverlay .page-line{position:absolute;left:40px;right:40px;border-top:2px dashed var(--page-line)}
-  #pageOverlay .page-line span{position:absolute;right:0;top:2px;font-size:10px;line-height:1;color:var(--page-line);background:var(--bg);padding:1px 4px;border-radius:3px;font-family:sans-serif}
+  #pageOverlay .page-line{position:absolute;left:40px;right:40px;border-top:1px dashed var(--page-line)}
+  #pageOverlay .page-line span{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;white-space:nowrap;font-size:10px;line-height:1;color:var(--page-line);font-family:sans-serif}
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
