@@ -16,7 +16,7 @@
     --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e; --secret:#8b0000;
     --hover:#f0ece3; --sel:#2f6feb; --sel-fg:#ffffff;
     --header-bg:#2b2724; --header-text:#f6f2ea;
-    --page-h:1043px; --page-line:rgba(59,130,246,.55);
+    --page-h:1043px; --page-line:rgba(37,99,235,.7);
   }
   html[data-theme="dark"]{
     --bg:#1b1916; --card:#26231f; --box:#302c26; --line:#3c372f;
@@ -25,7 +25,7 @@
     --kp-bg:#3a352e; --kp-text:#efe9df; --pl-edge:#0b0b0b; --secret:#cf5b52;
     --hover:#332e28; --sel:#4b83ff; --sel-fg:#ffffff;
     --header-bg:#100e0c; --header-text:#f2ede4;
-    --page-h:1043px; --page-line:rgba(96,165,250,.5);
+    --page-h:1043px; --page-line:rgba(96,165,250,.75);
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -97,8 +97,10 @@
   .grp .clr:hover{background:var(--hover);color:var(--text)}
 
   /* ── page ── */
-  .wrap{width:794px;max-width:100%;margin:0 auto;padding:40px 40px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
-  .doc.pagelines{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--page-h) - 1.5px),var(--page-line) calc(var(--page-h) - 1.5px),var(--page-line) var(--page-h))}
+  .wrap{position:relative;width:794px;max-width:100%;margin:0 auto;padding:40px 40px 45vh;font-size:calc(16px * var(--fs));font-family:var(--doc-font,"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif)}
+  #pageOverlay{position:absolute;left:0;right:0;top:0;pointer-events:none;z-index:1}
+  #pageOverlay .page-line{position:absolute;left:40px;right:40px;border-top:2px dashed var(--page-line)}
+  #pageOverlay .page-line span{position:absolute;right:0;top:2px;font-size:10px;line-height:1;color:var(--page-line);background:var(--bg);padding:1px 4px;border-radius:3px;font-family:sans-serif}
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
@@ -301,7 +303,7 @@
     .fbar.open .fgroup-fa .fcell{width:auto}
   }
   @media (max-width:640px){
-    .doc.pagelines{background-image:none}
+    #pageOverlay{display:none}
     .cols-row{flex-direction:column;gap:6px}
     .col-resize{display:none}
     .wrap{padding:22px 10px 45vh 34px}
@@ -506,10 +508,25 @@
       saveInd.textContent='保存済み '+now();
       if(typeof cloudPush==='function') cloudPush();
     }catch(err){ saveInd.textContent='セッション内のみ保持'; }
+    if(state.pagelines) applyPageLines();
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
   function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; return o; }
-  function applyPageLines(){ if(doc) doc.classList.toggle('pagelines', !!state.pagelines); var b=document.getElementById('btnPageLines'); if(b) b.textContent=(state.pagelines?'ページ区切りを非表示':'ページ区切りを表示'); }
+  function applyPageLines(){
+    var b=document.getElementById('btnPageLines'); if(b) b.textContent=(state.pagelines?'ページ区切りを非表示':'ページ区切りを表示');
+    var wrap=document.querySelector('.wrap'); if(!wrap) return;
+    var ov=document.getElementById('pageOverlay');
+    if(!state.pagelines){ if(ov) ov.parentNode.removeChild(ov); wrap.style.minHeight=''; return; }
+    if(!ov){ ov=document.createElement('div'); ov.id='pageOverlay'; ov.setAttribute('contenteditable','false'); wrap.insertBefore(ov, wrap.firstChild); }
+    var PAGE_H=1043;
+    var top=doc.offsetTop||0;
+    var docH=doc.scrollHeight||Math.round(doc.getBoundingClientRect().height)||0;
+    var lines=Math.max(1, Math.floor(docH/PAGE_H)+1);
+    var h='';
+    for(var k=1;k<=lines;k++){ h+='<div class="page-line" style="top:'+(top+k*PAGE_H)+'px"><span>'+(k+1)+'ページ目</span></div>'; }
+    ov.innerHTML=h;
+    wrap.style.minHeight=(top+lines*PAGE_H+120)+'px';
+  }
   function load(){
     var cur=null; try{ cur=localStorage.getItem(K_CUR()); }catch(e){}
     var idx=readIndex();
