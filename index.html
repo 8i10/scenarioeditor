@@ -502,6 +502,17 @@
   function now(){ var d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
   function readIndex(){ try{ return JSON.parse(localStorage.getItem(K_IDX()))||[]; }catch(e){ return []; } }
   function writeIndex(a){ try{ localStorage.setItem(K_IDX(), JSON.stringify(a)); }catch(e){} }
+  /* ---- 大容量バックアップ（IndexedDB）---- */
+  var idb=(function(){
+    var dbp=null, ok=(typeof indexedDB!=='undefined' && indexedDB);
+    function open(){ if(!ok) return Promise.reject(); if(dbp) return dbp; dbp=new Promise(function(res,rej){ try{ var r=indexedDB.open('scn_db',1); r.onupgradeneeded=function(){ try{ r.result.createObjectStore('kv'); }catch(e){} }; r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); }; }catch(e){ rej(e); } }); return dbp; }
+    return {
+      set:function(k,v){ return open().then(function(db){ return new Promise(function(res,rej){ try{ var tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put(v,k); tx.oncomplete=function(){res(true);}; tx.onerror=function(){rej(tx.error);}; tx.onabort=function(){rej(tx.error);}; }catch(e){ rej(e); } }); }); },
+      get:function(k){ return open().then(function(db){ return new Promise(function(res,rej){ try{ var tx=db.transaction('kv','readonly'); var rq=tx.objectStore('kv').get(k); rq.onsuccess=function(){res(rq.result);}; rq.onerror=function(){rej(rq.error);}; }catch(e){ rej(e); } }); }); },
+      del:function(k){ return open().then(function(db){ return new Promise(function(res){ try{ var tx=db.transaction('kv','readwrite'); tx.objectStore('kv').delete(k); tx.oncomplete=function(){res(true);}; tx.onerror=function(){res(false);}; }catch(e){ res(false); } }); }); }
+    };
+  })();
+  var userInteracted=false;
   /* ---- Undo / Redo ---- */
   var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
   function snapshot(){ return JSON.stringify({blocks:state.blocks,name:state.name}); }
@@ -528,19 +539,47 @@
 
   function persist(){
     scheduleUndo();
-    try{
-      if(!state.id) state.id=docId();
-      state.updated=Date.now();
-      localStorage.setItem(K_DOC(state.id), JSON.stringify(state));
-      var idx=readIndex(), e=null;
-      for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
-      if(e){ e.name=state.name; e.updated=state.updated; } else idx.push({id:state.id,name:state.name,updated:state.updated});
-      writeIndex(idx);
-      localStorage.setItem(K_CUR(), state.id);
-      saveInd.textContent='保存済み '+now();
-      if(typeof cloudPush==='function') cloudPush();
-    }catch(err){ saveInd.textContent='セッション内のみ保持'; }
+    if(!state.id) state.id=docId();
+    state.updated=Date.now();
+    var json=null; try{ json=JSON.stringify(state); }catch(e){}
+    var idx=readIndex(), e=null;
+    for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
+    if(e){ e.name=state.name; e.updated=state.updated; } else idx.push({id:state.id,name:state.name,updated:state.updated});
+    /* 大容量・確実なバックアップ（IndexedDB） */
+    if(json){ idb.set(K_DOC(state.id), json).catch(function(){}); }
+    idb.set('scn_index', JSON.stringify(idx)).catch(function(){});
+    idb.set(K_CUR(), state.id).catch(function(){});
+    /* localStorage（従来・容量制限あり） */
+    var lsOk=true;
+    try{ localStorage.setItem(K_DOC(state.id), json); }catch(err){ lsOk=false; }
+    writeIndex(idx);
+    try{ localStorage.setItem(K_CUR(), state.id); }catch(e2){}
+    saveInd.textContent=(lsOk?'保存済み ':'保存済み（端末DB） ')+now();
+    if(typeof cloudPush==='function') cloudPush();
     if(state.pagelines) applyPageLines();
+  }
+  function reconcileFromIdb(){
+    if(userInteracted) return;
+    idb.get(K_CUR()).then(function(cur){
+      return idb.get('scn_index').then(function(idxJson){
+        var idx=[]; try{ idx=JSON.parse(idxJson)||[]; }catch(_){}
+        var targetId=(cur && idx.some(function(x){return x.id===cur;})) ? cur : state.id;
+        if(!targetId) return;
+        return idb.get(K_DOC(targetId)).then(function(json){
+          if(userInteracted) return;
+          var o; try{ o=JSON.parse(json); }catch(_){ return; }
+          if(!o||!o.blocks) return;
+          var newer=(o.updated||0)>(state.updated||0);
+          if(newer || targetId!==state.id){
+            /* localStorage の索引にも復元（次回以降のため・容量が許せば） */
+            if(!readIndex().some(function(x){return x.id===targetId;})){ var li=readIndex(); li.push({id:targetId,name:o.name||'無題',updated:o.updated||Date.now()}); writeIndex(li); }
+            state=normalizeState(o); state.id=targetId;
+            try{ localStorage.setItem(K_CUR(), targetId); }catch(_){}
+            render(); applyOutline(); updateDocName();
+          }
+        });
+      });
+    }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
   function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; return o; }
@@ -790,7 +829,7 @@
   var _composing=false;
   doc.addEventListener('compositionstart',function(){ _composing=true; });
   doc.addEventListener('compositionend',function(){ _composing=false; var cc=curCtx(); if(cc){ cc.b.html=sanitize(cc.be.innerHTML); scheduleSave(); maybeSlash(cc.be,cc.b); } });
-  doc.addEventListener('input',function(){ if(_composing) return; var cc=curCtx(); if(!cc) return; cc.b.html=cc.be.innerHTML; scheduleSave(); maybeSlash(cc.be,cc.b); });
+  doc.addEventListener('input',function(){ userInteracted=true; if(_composing) return; var cc=curCtx(); if(!cc) return; cc.b.html=cc.be.innerHTML; scheduleSave(); maybeSlash(cc.be,cc.b); });
   doc.addEventListener('keydown',function(e){ var cc=curCtx(); if(!cc) return; onKey(e,cc.be,cc.b); });
   doc.addEventListener('blur',function(){ var cc=curCtx(); if(cc){ cc.b.html=sanitize(cc.be.innerHTML); } persist(); }, true);
   function doEnter(be,b){
@@ -845,7 +884,7 @@
     }catch(err){ try{ state.blocks=JSON.parse(snap); render(); }catch(_){} }
   }
   doc.addEventListener('beforeinput',function(e){
-    if(_composing) return;
+    if(_composing) return; userInteracted=true;
     var it=e.inputType||''; var multi=selectionBes();
     if(it==='insertText'||it==='insertReplacementText'){
       if(multi){ e.preventDefault(); safeMulti(e.data||'', false); }
@@ -1852,6 +1891,7 @@
   window.addEventListener('resize', setTopbar);
   (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); setTopbar(); }; })();
   render(); applyOutline(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
+  reconcileFromIdb();
 
   window.__ed={ state:state, TYPES:TYPES, newBlock:newBlock, render:render, persist:persist, load:load,
     IDX:IDX, DOCP:DOCP, CUR:CUR, readIndex:readIndex, openDoc:openDoc, newDoc:newDoc, deleteDoc:deleteDoc,
@@ -1859,7 +1899,7 @@
     staticBlockHTML:staticBlockHTML, setRowUl:setRowUl,
     menuItems:function(f){ menuMode='slash'; buildMenuItems(f); return menu.innerHTML; },
     getState:function(){return state;},
-    applyFs:applyFs, applyTheme:applyTheme, renderOutline:renderOutline, applyOutline:applyOutline };
+    applyFs:applyFs, applyTheme:applyTheme, renderOutline:renderOutline, applyOutline:applyOutline, reconcileFromIdb:reconcileFromIdb };
 })();
 </script>
 </body>
