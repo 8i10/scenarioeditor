@@ -122,7 +122,7 @@
   #doc,#doc:focus,#doc:focus-visible{outline:none}
   .doc-img{float:left;max-width:46%;height:auto;margin:3px 16px 8px 0;border-radius:6px;border:1px solid var(--line)}
   #imgRz{position:fixed;width:14px;height:14px;background:var(--red);border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:9998;box-shadow:0 1px 4px rgba(0,0,0,.4);display:none}
-  .be:has(img.doc-img){display:flow-root}
+  .block:has(> .be .doc-img) ~ .block{display:flow-root}
   .cols-row{display:flex;gap:24px;align-items:flex-start;margin:2px 0}
   .cols-row.edit{gap:0}
   .col-resize{flex:0 0 22px;align-self:stretch;min-height:1.8em;cursor:col-resize;position:relative;touch-action:none}
@@ -193,6 +193,7 @@
 
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
   .block[data-type="kp"]{background:var(--kp-bg);color:var(--kp-text)}
+  .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
   .block[data-type="kp"] .be{color:var(--kp-text)}
   .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22)}
   .block[data-type="kp"] .addchild{color:rgba(255,255,255,.55)}
@@ -326,6 +327,8 @@
   }
   @media (max-width:640px){
     #pageOverlay{display:none}
+    .doc-img{float:none;max-width:100%;margin:8px 0}
+    .block:has(> .be .doc-img) ~ .block{display:block}
     .cols-row{display:block!important}
     .colcell{display:block!important;width:100%!important;flex:none!important}
     .col-resize{display:none}
@@ -1265,6 +1268,10 @@
   var FONTS=[
     {n:'ゴシック（既定）', v:GOTHIC},
     {n:'明朝', v:'"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif'},
+    {n:'Zen Kaku Gothic New', v:'"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif'},
+    {n:'源暎こぶり明朝 v6', v:'"源暎こぶり明朝 v6","GenEiKoburiMincho v6","GenEi Koburi Mincho v6",serif'},
+    {n:'游明朝 Demibold', v:'"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho",serif'},
+    {n:'游ゴシック Medium', v:'"Yu Gothic Medium","游ゴシック Medium","YuGothic Medium","YuGothic-Medium","Yu Gothic",sans-serif'},
     {n:'游ゴシック', v:'"Yu Gothic","游ゴシック",YuGothic,sans-serif'},
     {n:'游明朝', v:'"Yu Mincho","游明朝",YuMincho,serif'},
     {n:'ヒラギノ角ゴ', v:'"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif'},
