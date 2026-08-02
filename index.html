@@ -122,11 +122,13 @@
   #doc,#doc:focus,#doc:focus-visible{outline:none}
   .doc-img{float:left;max-width:46%;height:auto;margin:3px 16px 8px 0;border-radius:6px;border:1px solid var(--line)}
   #imgRz{position:fixed;width:14px;height:14px;background:var(--red);border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:9998;box-shadow:0 1px 4px rgba(0,0,0,.4);display:none}
-  .block:has(> .be .doc-img) ~ .block{display:flow-root}
+  .be:has(img.doc-img){display:flow-root}
   .cols-row{display:flex;gap:24px;align-items:flex-start;margin:2px 0}
   .cols-row.edit{gap:0}
   .col-resize{flex:0 0 22px;align-self:stretch;min-height:1.8em;cursor:col-resize;position:relative;touch-action:none}
-  .col-resize::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;border-radius:2px;background:var(--line);transition:background .12s}
+  .col-resize::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;border-radius:2px;background:transparent;transition:background .12s}
+  .cols-row.colline .col-resize::before{background:var(--line)}
+  .cols-row.colline>.colcell + .colcell{border-left:1px solid var(--line)}
   .col-resize::after{content:"";position:absolute;left:5px;top:50%;transform:translateY(-50%);width:12px;height:36px;border-radius:6px;background:var(--muted);opacity:0;transition:opacity .12s,background .12s}
   .col-resize:hover::before,.col-resize.rz::before{background:var(--red)}
   .col-resize:hover::after,.col-resize.rz::after{opacity:.95;background:var(--red)}
@@ -327,8 +329,6 @@
   }
   @media (max-width:640px){
     #pageOverlay{display:none}
-    .doc-img{float:none;max-width:100%;margin:8px 0}
-    .block:has(> .be .doc-img) ~ .block{display:block}
     .cols-row{display:block!important}
     .colcell{display:block!important;width:100%!important;flex:none!important}
     .col-resize{display:none}
@@ -423,6 +423,7 @@
         <button class="fb" data-align="left" title="左揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="12" y2="10"/><line x1="3" y1="15" x2="15" y2="15"/></svg></button>
         <button class="fb" data-align="center" title="中央揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="6" y1="10" x2="14" y2="10"/><line x1="4" y1="15" x2="16" y2="15"/></svg></button>
         <button class="fb" data-align="right" title="右揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="8" y1="10" x2="17" y2="10"/><line x1="5" y1="15" x2="17" y2="15"/></svg></button>
+        <button class="fb" id="btnColLine" title="二段組の中線 表示/非表示"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="12" rx="1"/><rect x="11.5" y="4" width="5.5" height="12" rx="1"/><line x1="10" y1="3" x2="10" y2="17" stroke-dasharray="2 2"/></svg></button>
       </span></div>
       </div>
     </div>
@@ -489,7 +490,7 @@
   function hashPw(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return 'h'+h.toString(16); }
   function readUsers(){ try{ return JSON.parse(localStorage.getItem('scn_users'))||{}; }catch(e){ return {}; } }
   function writeUsers(u){ try{ localStorage.setItem('scn_users', JSON.stringify(u)); }catch(e){} }
-  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', font:'', embedFonts:false, pagelines:false, blocks:[] };
+  var state={ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, headBg:'#000000', font:'', embedFonts:false, pagelines:false, colline:true, blocks:[] };
   var uid=0; function nid(){ return 'b'+(++uid)+'_'+Math.random().toString(36).slice(2,7); }
   function docId(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -542,7 +543,8 @@
     if(state.pagelines) applyPageLines();
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; return o; }
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; return o; }
+  function applyColLine(){ var on=state.colline!==false; [].forEach.call(doc.querySelectorAll('.cols-row'),function(r){ r.classList.toggle('colline',on); }); var b=document.getElementById('btnColLine'); if(b) b.classList.toggle('on',on); }
   function applyPageLines(){
     var b=document.getElementById('btnPageLines'); if(b) b.textContent=(state.pagelines?'ページ区切りを非表示':'ページ区切りを表示');
     var wrap=document.querySelector('.wrap'); if(!wrap) return;
@@ -732,7 +734,7 @@
     bindBe(be,b);
     return be;
   }
-  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); }
+  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); applyColLine(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); }
   function reType(b){
     var wrap=doc.querySelector('.block[data-id="'+b.id+'"]'); if(!wrap) return;
     var nw=blockEl(b); wrap.parentNode.replaceChild(nw,wrap);
@@ -1204,6 +1206,8 @@
     if(rb){ rb.onmousedown=function(e){e.preventDefault();}; rb.onclick=function(){ redo(); }; }
     var pa=document.getElementById('palAlign');
     if(pa) pa.querySelectorAll('button[data-align]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setBlockAlign(b.dataset.align); }; });
+    var clb=document.getElementById('btnColLine');
+    if(clb){ clb.onmousedown=function(e){e.preventDefault();}; clb.onclick=function(){ state.colline=!(state.colline!==false); applyColLine(); persist(); }; }
     updateUndoBtns();
     var bl=document.getElementById('btnHlink');
     if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(e){ if(e){ e.stopPropagation(); e.preventDefault(); } if(!savedRange || String(savedRange).trim()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
@@ -1392,7 +1396,7 @@
     var did=' data-id="'+b.id+'"';
     if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
     if(b.type==='col') return '<div class="colcell" data-type="col"'+did+' style="flex-grow:'+(+b.w||1)+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div>';
-    if(b.type==='columns') return '<div class="block" data-type="columns"'+did+'><div class="cols-row">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+    if(b.type==='columns') return '<div class="block" data-type="columns"'+did+'><div class="cols-row'+(state.colline!==false?' colline':'')+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     if(isCallout(b.type)){
       var boxStyle=style, lblStyle='';
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; boxStyle=' style="background:'+cc+'"'; lblStyle=' style="background:'+opaqueColor(cc)+';color:#fff;border-color:transparent"'; }
