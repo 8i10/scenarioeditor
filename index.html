@@ -581,6 +581,14 @@
       });
     }).catch(function(){});
   }
+  function refreshFromStore(){
+    var id=state.id; if(!id) return;
+    var lo=null; try{ lo=JSON.parse(localStorage.getItem(K_DOC(id))); }catch(e){}
+    if(lo&&lo.blocks && (lo.updated||0)>(state.updated||0)){
+      applyingSnap=true; state=normalizeState(lo); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; return;
+    }
+    idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&o.blocks&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
+  }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
   function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; return o; }
   function applyColLine(){ var on=state.colline!==false; [].forEach.call(doc.querySelectorAll('.cols-row'),function(r){ r.classList.toggle('colline',on); }); var b=document.getElementById('btnColLine'); if(b) b.classList.toggle('on',on); }
@@ -1738,6 +1746,19 @@
   function ghFetch(path,opts){ opts=opts||{}; opts.headers=Object.assign({'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},opts.headers||{}); return fetch('https://api.github.com'+path,opts); }
   function exportCloud(){ var idx=readIndex(),docs={}; idx.forEach(function(e){ try{ docs[e.id]=JSON.parse(localStorage.getItem(K_DOC(e.id))); }catch(_){} }); return {index:idx,docs:docs}; }
   function importCloud(data){ if(!data) return; writeIndex(data.index||[]); (data.index||[]).forEach(function(e){ if(data.docs&&data.docs[e.id]){ try{ localStorage.setItem(K_DOC(e.id), JSON.stringify(data.docs[e.id])); }catch(_){}}}); }
+  function mergeCloud(remote){
+    remote=remote||{index:[],docs:{}}; var local=exportCloud(); var ids={};
+    (local.docs||{})&&Object.keys(local.docs||{}).forEach(function(id){ids[id]=1;});
+    (remote.docs||{})&&Object.keys(remote.docs||{}).forEach(function(id){ids[id]=1;});
+    var merged={index:[],docs:{}};
+    Object.keys(ids).forEach(function(id){
+      var ld=(local.docs||{})[id], rd=(remote.docs||{})[id];
+      var lu=ld?(ld.updated||0):-1, ru=rd?(rd.updated||0):-1;
+      var pick=(ru>lu)?rd:ld;
+      if(pick){ merged.docs[id]=pick; merged.index.push({id:id,name:pick.name||'無題',updated:pick.updated||0}); }
+    });
+    return merged;
+  }
   var pushTimer=null, pushing=false;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
   function doPush(retry){
@@ -1827,9 +1848,18 @@
         var incoming=f.content, localNow='';
         try{ localNow=JSON.stringify(exportCloud()); }catch(e){}
         if(incoming!==localNow){
-          importCloud(JSON.parse(incoming));
-          if(load()){ applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
-          saveInd.textContent='最新を取得 '+now();
+          var rd=null; try{ rd=JSON.parse(incoming); }catch(e){}
+          if(rd){
+            var merged=mergeCloud(rd);
+            importCloud(merged);
+            var curRemote=merged.docs[state.id];
+            if(!userInteracted && curRemote && (curRemote.updated||0) > (state.updated||0)){
+              if(load()){ applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
+              saveInd.textContent='最新を取得 '+now();
+            } else if(force){ saveInd.textContent='同期済み '+now(); }
+            /* ローカルにリモートより新しい文書があればリモートへ反映（巻き戻り防止） */
+            try{ if(JSON.stringify(merged)!==incoming && typeof cloudPush==='function') cloudPush(); }catch(e){}
+          }
         } else if(force){ saveInd.textContent='同期済み（最新）'; }
       } else if(force){ saveInd.textContent='この端末のデータはまだ未送信です'; }
     }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
@@ -1852,8 +1882,9 @@
     ghConnect(id,tk).catch(function(err){ document.getElementById('loginHint').textContent=(err&&err.message)||'接続に失敗しました。'; });
   };
   (function(){ var sb=document.getElementById('btnSync'); if(sb) sb.onclick=function(){ hmenu.classList.remove('show'); saveInd.textContent='同期中…'; ghPull(true); }; })();
-  window.addEventListener('focus',function(){ ghPull(false); });
-  document.addEventListener('visibilitychange',function(){ if(!document.hidden) ghPull(false); });
+  window.addEventListener('focus',function(){ refreshFromStore(); ghPull(false); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden){ refreshFromStore(); ghPull(false); } });
+  window.addEventListener('pageshow',function(e){ if(e && e.persisted){ refreshFromStore(); ghPull(false); } });
   setInterval(function(){ ghPull(false); }, 30000);
 
   /* ---- 初期化 ---- */
