@@ -1853,7 +1853,7 @@
             var merged=mergeCloud(rd);
             importCloud(merged);
             var curRemote=merged.docs[state.id];
-            if(!userInteracted && curRemote && (curRemote.updated||0) > (state.updated||0)){
+            if(!saveTimer && curRemote && (curRemote.updated||0) > (state.updated||0)){
               if(load()){ applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
               saveInd.textContent='最新を取得 '+now();
             } else if(force){ saveInd.textContent='同期済み '+now(); }
