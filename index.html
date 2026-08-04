@@ -270,6 +270,18 @@
   .outline .ol-page .ol-pedit:hover,.outline .ol-page .ol-pdel:hover{background:var(--card);color:var(--text)}
   .outline .ol-heads{display:none}
   .outline .ol-pgroup.open>.ol-heads{display:block}
+  .outline .ol-hrow{display:flex;align-items:center;gap:3px;cursor:pointer;font-size:12.5px;line-height:1.5;color:var(--accent);padding:2px 8px}
+  .outline .ol-hrow:hover{background:var(--hover);color:var(--text)}
+  .outline .ol-hrow.lv2{padding-left:22px;font-size:12px}
+  .outline .ol-hrow.lv3{padding-left:34px;font-size:12px;color:var(--accent)}
+  .outline .ol-hrow.lv4{padding-left:46px;font-size:11.5px;color:var(--accent2)}
+  .outline .ol-hrow.lv5{padding-left:58px;font-size:11.5px;color:var(--accent2)}
+  .outline .ol-hrow .ol-tw{display:inline-block;width:12px;flex:0 0 12px;text-align:center;color:var(--muted);font-size:10px;transition:transform .12s}
+  .outline .ol-hrow .ol-tw-e{visibility:hidden}
+  .outline .ol-hgroup.open>.ol-hrow .ol-tw{transform:rotate(90deg)}
+  .outline .ol-htext{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .outline .ol-hkids{display:none}
+  .outline .ol-hgroup.open>.ol-hkids{display:block}
   .outline .ol-add{display:block;width:calc(100% - 16px);margin:6px 8px 4px;padding:4px;font-size:11.5px;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:6px;cursor:pointer}
   .outline .ol-add:hover{background:var(--hover);color:var(--text)}
   .print-toc .pt-p{font-weight:800;font-size:1.05em;margin:10px 0 4px;letter-spacing:.04em}
@@ -1319,6 +1331,21 @@
   function headingsOf(blocks){ var items=[]; (function walk(arr){ (arr||[]).forEach(function(b){ if(HL[b.type]) items.push({id:b.id,lv:HL[b.type],t:plainText(b.html)}); if(b.children) walk(b.children); }); })(blocks); return items; }
   function totalCharsAll(){ var n=0; (state.pages||[]).forEach(function(p){ (function walk(arr){ (arr||[]).forEach(function(b){ n+=plainText(b.html).replace(/\s/g,'').length; if(b.children) walk(b.children); }); })(p.blocks||[]); }); return n; }
   var olOpen={};
+  function pageById(id){ var ps=state.pages||[]; for(var i=0;i<ps.length;i++){ if(ps[i].id===id) return ps[i]; } return null; }
+  function headingTree(blocks){ var flat=headingsOf(blocks), root=[], stack=[]; flat.forEach(function(it){ var node={id:it.id,lv:it.lv,t:it.t,children:[]}; while(stack.length && stack[stack.length-1].lv>=it.lv) stack.pop(); if(stack.length) stack[stack.length-1].node.children.push(node); else root.push(node); stack.push({node:node,lv:it.lv}); }); return root; }
+  function renderHeadNodes(nodes, pid){
+    var h='';
+    nodes.forEach(function(n){
+      var hasKids=n.children.length>0, open=!!olOpen[n.id];
+      h+='<div class="ol-hgroup'+(open?' open':'')+'">';
+      h+='<div class="ol-hrow lv'+n.lv+'" data-goto="'+n.id+'" data-gpage="'+pid+'">'
+        +(hasKids?'<span class="ol-tw" data-htw="'+n.id+'">▸</span>':'<span class="ol-tw ol-tw-e"></span>')
+        +'<span class="ol-htext">'+esc(n.t||'(無題)')+'</span></div>';
+      if(hasKids) h+='<div class="ol-hkids">'+renderHeadNodes(n.children,pid)+'</div>';
+      h+='</div>';
+    });
+    return h;
+  }
   function outlineInnerHTML(){
     var h='<div class="ol-ttl">しおり<button class="ol-x" id="olX" title="閉じる">×</button></div>';
     h+='<button class="ol-add" id="olAdd">＋ ページを追加</button>';
@@ -1326,12 +1353,10 @@
     (state.pages||[]).forEach(function(p){
       var cur=(p.id===state.curPage), open=!!olOpen[p.id];
       h+='<div class="ol-pgroup'+(open?' open':'')+'">';
-      h+='<div class="ol-page'+(cur?' cur':'')+'" data-page="'+p.id+'"><span class="ol-tw">▸</span><span class="ol-pname">'+esc(p.name||'ページ')+'</span>'
+      h+='<div class="ol-page'+(cur?' cur':'')+'" data-page="'+p.id+'"><span class="ol-tw" data-ptw="'+p.id+'">▸</span><span class="ol-pname">'+esc(p.name||'ページ')+'</span>'
         +'<button class="ol-pedit" data-pedit="'+p.id+'" title="名前変更">✎</button>'
         +'<button class="ol-pdel" data-pdel="'+p.id+'" title="ページ削除">🗑</button></div>';
-      h+='<div class="ol-heads">';
-      headingsOf(p.blocks).forEach(function(it){ h+='<a class="lv'+it.lv+'" data-goto="'+it.id+'" data-gpage="'+p.id+'">'+esc(it.t||'(無題)')+'</a>'; });
-      h+='</div></div>';
+      h+='<div class="ol-heads">'+renderHeadNodes(headingTree(p.blocks), p.id)+'</div></div>';
     });
     h+='</div>';
     h+='<div class="ol-count">シナリオ文字数：'+Number(totalCharsAll()).toLocaleString()+' 字</div>';
@@ -1354,9 +1379,11 @@
     if(e.target.id==='olAdd'){ addPage(); return; }
     var ped=e.target.closest('[data-pedit]'); if(ped){ renamePage(ped.getAttribute('data-pedit')); return; }
     var pdl=e.target.closest('[data-pdel]'); if(pdl){ deletePage(pdl.getAttribute('data-pdel')); return; }
-    var a=e.target.closest('a[data-goto]');
-    if(a){ var gp=a.getAttribute('data-gpage'); if(gp && gp!==state.curPage){ switchPage(gp); } gotoHeading(a.dataset.goto); return; }
-    var pg=e.target.closest('.ol-page'); if(pg){ var pid=pg.getAttribute('data-page'); olOpen[pid]=!olOpen[pid]; if(pid!==state.curPage){ switchPage(pid); } else { renderOutline(); } return; }
+    var htw=e.target.closest('[data-htw]'); if(htw){ var hid=htw.getAttribute('data-htw'); olOpen[hid]=!olOpen[hid]; renderOutline(); return; }
+    var ptw=e.target.closest('[data-ptw]'); if(ptw){ var tid=ptw.getAttribute('data-ptw'); olOpen[tid]=!olOpen[tid]; if(tid!==state.curPage){ switchPage(tid); } else { renderOutline(); } return; }
+    var prow=e.target.closest('.ol-page');
+    if(prow){ var pid=prow.getAttribute('data-page'); olOpen[pid]=true; if(pid!==state.curPage){ switchPage(pid); } var fh=headingsOf((pageById(pid)||{}).blocks)[0]; if(fh){ gotoHeading(fh.id); } else { renderOutline(); } return; }
+    var hrow=e.target.closest('.ol-hrow'); if(hrow){ var gp=hrow.getAttribute('data-gpage'); if(gp && gp!==state.curPage){ switchPage(gp); } gotoHeading(hrow.getAttribute('data-goto')); return; }
   });
   document.getElementById('btnOutline').onclick=function(){ state.outlineOpen=!state.outlineOpen; applyOutline(); persist(); };
 
@@ -1532,7 +1559,7 @@
     var vjs='<'+'script>(function(){var root=document.documentElement,nav=document.getElementById("vOutlineNav"),wrap=document.querySelector(".wrap");'
       +'function setOpen(o){nav.classList.toggle("open",o);document.body.classList.toggle("ol-open",o);}'
       +'document.getElementById("vOutline").onclick=function(){setOpen(!nav.classList.contains("open"));};'
-      +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var a=e.target.closest("a[data-goto]");if(a){var el=document.querySelector(\'.block[data-id="\'+a.dataset.goto+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});return;}var pg=e.target.closest(".ol-page");if(pg){var grp=pg.closest(".ol-pgroup");if(grp)grp.classList.toggle("open");var s=document.getElementById("pg_"+pg.getAttribute("data-page"));if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}});'
+      +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var htw=e.target.closest("[data-htw]");if(htw){var g=htw.closest(".ol-hgroup");if(g)g.classList.toggle("open");return;}var ptw=e.target.closest("[data-ptw]");if(ptw){var pg=ptw.closest(".ol-pgroup");if(pg)pg.classList.toggle("open");return;}var hrow=e.target.closest(".ol-hrow");if(hrow){var el=document.querySelector(\'.block[data-id="\'+hrow.getAttribute("data-goto")+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});return;}var prow=e.target.closest(".ol-page");if(prow){var grp=prow.closest(".ol-pgroup");if(grp)grp.classList.add("open");var s=document.getElementById("pg_"+prow.getAttribute("data-page"));if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}});'
       +'var FS={sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}});'
