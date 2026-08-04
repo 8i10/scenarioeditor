@@ -432,6 +432,7 @@
     <div class="dlg-b">
       <div class="frow"><input type="text" id="fName" placeholder="ファイル名"><button class="hb2 pri" id="fSave">この名前で保存</button></div>
       <div class="fhint" id="fHint"></div>
+      <div class="frow"><input type="text" id="fSearch" placeholder="🔍 シナリオを検索…"></div>
       <div class="flist" id="fList"></div>
       <div class="frow"><button class="hb2" id="fNew">＋ 新規シナリオ</button></div>
     </div>
@@ -1494,8 +1495,11 @@
   function renderFileList(){
     var idx=readIndex().slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);});
     var el=document.getElementById('fList');
+    var sq=((document.getElementById('fSearch')||{}).value||'').toLowerCase().trim();
     if(!idx.length){ el.innerHTML='<div class="fhint">保存されたシナリオはありません</div>'; return; }
-    el.innerHTML=idx.map(function(x){
+    var list=sq?idx.filter(function(x){return (x.name||'').toLowerCase().indexOf(sq)>=0;}):idx;
+    if(!list.length){ el.innerHTML='<div class="fhint">「'+esc(sq)+'」に一致するシナリオはありません</div>'; return; }
+    el.innerHTML=list.map(function(x){
       var cur=x.id===state.id?' cur':''; var dt=x.updated?new Date(x.updated):null;
       var dts=dt?((dt.getMonth()+1)+'/'+dt.getDate()+' '+pad(dt.getHours())+':'+pad(dt.getMinutes())):'';
       return '<div class="fitem'+cur+'"><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+(cur?' ✓':'')+'</span><span class="fdt">'+dts+'</span><button data-del="'+x.id+'">削除</button></div>';
@@ -1514,6 +1518,7 @@
     newDoc('無題のシナリオ'); document.getElementById('fName').value=state.name; renderFileList();
     document.getElementById('fHint').textContent='新規シナリオを作成しました';
   };
+  (function(){ var fs=document.getElementById('fSearch'); if(fs) fs.addEventListener('input', renderFileList); })();
   document.getElementById('fList').addEventListener('click',function(e){
     var op=e.target.getAttribute('data-open');
     if(op){ openDoc(op); document.getElementById('fName').value=state.name; renderFileList(); document.getElementById('fHint').textContent='開きました：'+state.name; return; }
