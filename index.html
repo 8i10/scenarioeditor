@@ -270,9 +270,10 @@
   .outline .ol-page .ol-tw{display:inline-block;width:12px;text-align:center;color:var(--muted);font-size:10px;transition:transform .12s;flex:0 0 12px}
   .outline .ol-pgroup.open>.ol-page .ol-tw{transform:rotate(90deg)}
   .outline .ol-page .ol-pname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .outline .ol-page .ol-pedit,.outline .ol-page .ol-pdel{opacity:0;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 3px;border-radius:4px}
-  .outline .ol-page:hover .ol-pedit,.outline .ol-page:hover .ol-pdel{opacity:1}
-  .outline .ol-page .ol-pedit:hover,.outline .ol-page .ol-pdel:hover{background:var(--card);color:var(--text)}
+  .outline .ol-page .ol-pedit,.outline .ol-page .ol-pdel,.outline .ol-page .ol-pmv{opacity:0;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 3px;border-radius:4px}
+  .outline .ol-page .ol-pmv{font-size:9px;padding:0 1px}
+  .outline .ol-page:hover .ol-pedit,.outline .ol-page:hover .ol-pdel,.outline .ol-page:hover .ol-pmv{opacity:1}
+  .outline .ol-page .ol-pedit:hover,.outline .ol-page .ol-pdel:hover,.outline .ol-page .ol-pmv:hover{background:var(--card);color:var(--text)}
   .outline .ol-heads{display:none}
   .outline .ol-pgroup.open>.ol-heads{display:block}
   .outline .ol-hrow{display:flex;align-items:center;gap:3px;cursor:pointer;font-size:12.5px;line-height:1.5;color:var(--accent);padding:2px 8px}
@@ -561,7 +562,7 @@
   var userInteracted=false;
   /* ---- Undo / Redo ---- */
   var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
-  function snapshot(){ return JSON.stringify({blocks:state.blocks,name:state.name}); }
+  function snapshot(){ return JSON.stringify({page:state.curPage,blocks:state.blocks,name:state.name}); }
   function commitUndo(){
     if(applyingSnap) return;
     var s=snapshot();
@@ -572,13 +573,16 @@
   function applySnap(s){
     var o; try{ o=JSON.parse(s); }catch(e){ return; }
     applyingSnap=true;
+    if(o.page && o.page!==state.curPage && (state.pages||[]).some(function(p){return p.id===o.page;})) state.curPage=o.page;
     state.blocks=o.blocks; if(o.name!=null) state.name=o.name;
-    render(); applyOutline(); updateDocName();
+    render(); applyOutline(); updateDocName(); renderOutline();
     lastSnap=snapshot();
     try{ localStorage.setItem(K_DOC(state.id), JSON.stringify(state)); }catch(e){}
     if(typeof cloudPush==='function') cloudPush();
     applyingSnap=false;
   }
+  function beforePageChange(){ if(undoTimer){ clearTimeout(undoTimer); undoTimer=null; } commitUndo(); }
+  function afterPageChange(){ lastSnap=snapshot(); }
   function undo(){ if(undoTimer){ clearTimeout(undoTimer); commitUndo(); } if(!undoStack.length) return; redoStack.push(snapshot()); applySnap(undoStack.pop()); updateUndoBtns(); }
   function redo(){ if(!redoStack.length) return; undoStack.push(snapshot()); applySnap(redoStack.pop()); updateUndoBtns(); }
   function updateUndoBtns(){ var u=document.getElementById('btnUndo'),r=document.getElementById('btnRedo'); if(u)u.disabled=!undoStack.length; if(r)r.disabled=!redoStack.length; }
@@ -675,13 +679,15 @@
   }
   function addPage(){
     var np={ id:pageId(), name:'新規ページ', blocks:[ newBlock('h1',''), newBlock('p','') ] };
+    beforePageChange();
     state.pages.splice(curPageIdx()+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
-    render(); applyOutline(); renderOutline(); window.scrollTo(0,0);
+    render(); applyOutline(); renderOutline(); window.scrollTo(0,0); afterPageChange();
     var be=doc.querySelector('.be'); if(be) setCaretStart(be); persist();
   }
-  function switchPage(id){ if(id===state.curPage||!(state.pages||[]).some(function(p){return p.id===id;})) return; state.curPage=id; render(); renderOutline(); window.scrollTo(0,0); persist(); }
+  function switchPage(id){ if(id===state.curPage||!(state.pages||[]).some(function(p){return p.id===id;})) return; beforePageChange(); state.curPage=id; render(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist(); }
   function renamePage(id){ var p=null; (state.pages||[]).forEach(function(x){if(x.id===id)p=x;}); if(!p) return; var nm=prompt('ページ名を入力', p.name); if(nm==null) return; p.name=(nm.trim()||p.name); renderOutline(); persist(); }
-  function deletePage(id){ if((state.pages||[]).length<=1){ alert('最後のページは削除できません。'); return; } if(!confirm('このページを削除しますか？（元に戻せません）')) return; var i=-1; state.pages.forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; state.pages.splice(i,1); if(state.curPage===id) state.curPage=state.pages[Math.max(0,i-1)].id; render(); renderOutline(); persist(); }
+  function deletePage(id){ if((state.pages||[]).length<=1){ alert('最後のページは削除できません。'); return; } if(!confirm('このページを削除しますか？（元に戻せません）')) return; beforePageChange(); var i=-1; state.pages.forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; state.pages.splice(i,1); if(state.curPage===id) state.curPage=state.pages[Math.max(0,i-1)].id; render(); renderOutline(); afterPageChange(); persist(); }
+  function movePage(id,dir){ var i=-1; (state.pages||[]).forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; var j=i+dir; if(j<0||j>=state.pages.length) return; var t=state.pages[i]; state.pages[i]=state.pages[j]; state.pages[j]=t; renderOutline(); persist(); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
   function deleteDoc(id){
     try{ localStorage.removeItem(K_DOC(id)); }catch(e){}
@@ -1196,7 +1202,7 @@
     syncSelectionHtml();
     persist();
   }
-  function setRowBg(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+focusedId+'"]'); if(w) w.style.background=c||''; persist(); }
+  function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.background=c||''; }); persist(); }
   function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='npc') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='npc') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
@@ -1224,7 +1230,7 @@
     syncSelectionHtml();
     persist(); return true;
   }
-  function gotoHeading(id){ var pg=pageOfBlock(id); if(pg){ olOpen[pg.id]=true; if(pg.id!==state.curPage){ state.curPage=pg.id; render(); } renderOutline(); } expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function gotoHeading(id){ var pg=pageOfBlock(id); if(pg){ olOpen[pg.id]=true; if(pg.id!==state.curPage){ beforePageChange(); state.curPage=pg.id; render(); afterPageChange(); } renderOutline(); } expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
   doc.addEventListener('click',function(e){ var a=e.target.closest('.hlink'); if(a){ e.preventDefault(); var id=a.getAttribute('data-h'); if(id) gotoHeading(id); } });
   function wrapSelectionFont(fontValue){
     doc.focus();
@@ -1234,7 +1240,7 @@
     syncSelectionHtml();
     saveSel(); persist(); return true;
   }
-  function setRowUl(c){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.ul=c||''; var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.borderBottom=c?('2px solid '+c):''; persist(); }
+  function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=c?('2px solid '+c):''; }); persist(); }
   function stepFontSize(dir){
     doc.focus(); restoreSel();
     var sel=window.getSelection(); if(!sel.rangeCount){ alert('サイズを変える文字を選択してください。'); return; }
@@ -1257,7 +1263,21 @@
     sel.removeAllRanges(); var nr=document.createRange(); nr.selectNodeContents(span); sel.addRange(nr);
     syncSelectionHtml(); saveSel(); persist();
   }
-  function setBlockAlign(al){ if(!focusedId) return; var ci=ctx(focusedId); if(!ci) return; ci.b.align=(al==='left'?'':al||''); var be=doc.querySelector('.block[data-id="'+focusedId+'"] .be'); if(be) be.style.textAlign=ci.b.align||''; persist(); }
+  function selectedBlockIds(){
+    var sel=window.getSelection();
+    if(!sel || !sel.rangeCount) return focusedId?[focusedId]:[];
+    var r=sel.getRangeAt(0);
+    if(r.collapsed) return focusedId?[focusedId]:[];
+    var ids=[], seen={};
+    [].forEach.call(doc.querySelectorAll('.be'),function(be){
+      var ok=false; try{ ok=r.intersectsNode(be); }catch(_){}
+      if(ok){ var bl=be.closest?be.closest('.block'):null; if(bl){ var id=bl.getAttribute('data-id'); if(id && !seen[id]){ seen[id]=1; ids.push(id); } } }
+    });
+    if(!ids.length && focusedId) ids.push(focusedId);
+    return ids;
+  }
+  function ownBe(id){ var bl=doc.querySelector('.block[data-id="'+id+'"]'); if(!bl) return null; return bl.querySelector(':scope>.be') || bl.querySelector(':scope>.chead>.be'); }
+  function setBlockAlign(al){ var ids=selectedBlockIds(); if(!ids.length) return; var v=(al==='left'?'':al||''); ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.align=v; var be=ownBe(id); if(be) be.style.textAlign=v; }); persist(); }
   function makeResizer(handle,leftCol,rightCol,leftEl,rightEl){
     handle.addEventListener('pointerdown',function(e){
       e.preventDefault(); try{ handle.setPointerCapture(e.pointerId); }catch(_){}
@@ -1364,6 +1384,8 @@
       var cur=(p.id===state.curPage), open=!!olOpen[p.id];
       h+='<div class="ol-pgroup'+(open?' open':'')+'">';
       h+='<div class="ol-page'+(cur?' cur':'')+'" data-page="'+p.id+'"><span class="ol-tw" data-ptw="'+p.id+'">▸</span><span class="ol-pname">'+esc(p.name||'ページ')+'</span>'
+        +'<button class="ol-pmv" data-pup="'+p.id+'" title="上へ移動">▲</button>'
+        +'<button class="ol-pmv" data-pdn="'+p.id+'" title="下へ移動">▼</button>'
         +'<button class="ol-pedit" data-pedit="'+p.id+'" title="名前変更">✎</button>'
         +'<button class="ol-pdel" data-pdel="'+p.id+'" title="ページ削除">🗑</button></div>';
       h+='<div class="ol-heads">'+renderHeadNodes(headingTree(p.blocks), p.id)+'</div></div>';
@@ -1387,6 +1409,8 @@
   outlineEl.addEventListener('click',function(e){
     if(e.target.id==='olX'){ state.outlineOpen=false; applyOutline(); persist(); return; }
     if(e.target.id==='olAdd'){ addPage(); return; }
+    var pup=e.target.closest('[data-pup]'); if(pup){ movePage(pup.getAttribute('data-pup'),-1); return; }
+    var pdn=e.target.closest('[data-pdn]'); if(pdn){ movePage(pdn.getAttribute('data-pdn'),1); return; }
     var ped=e.target.closest('[data-pedit]'); if(ped){ renamePage(ped.getAttribute('data-pedit')); return; }
     var pdl=e.target.closest('[data-pdel]'); if(pdl){ deletePage(pdl.getAttribute('data-pdel')); return; }
     var htw=e.target.closest('[data-htw]'); if(htw){ var hid=htw.getAttribute('data-htw'); olOpen[hid]=!olOpen[hid]; renderOutline(); return; }
