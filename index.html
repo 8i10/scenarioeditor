@@ -86,6 +86,10 @@
   .fbar .fb{width:26px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);
     color:var(--text);cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
   .fbar .fb:hover{background:var(--hover)}
+  .ulstyle{display:inline-flex;gap:2px;margin-left:4px}
+  .ulstyle button{width:22px;height:22px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+  .ulstyle button:hover{background:var(--hover)}
+  .ulstyle button.on{background:var(--red);color:#fff;border-color:var(--red)}
   .fbar .fb#btnFsDown,.fbar .fb#btnFsUp{font-size:10px;letter-spacing:-.02em}
   .fbar .fb:disabled{opacity:.3;cursor:default}
   .fb-select{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;padding:0 6px;max-width:120px;cursor:pointer}
@@ -475,7 +479,7 @@
       <div class="fcell"><span class="lb">文字色</span><span class="grp" id="palText"></span></div>
       <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
-      <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span></div>
+      <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span><span class="ulstyle" id="ulStyle"><button data-uls="solid" class="on" title="実線">─</button><button data-uls="dotted" title="点線">┉</button><button data-uls="dashed" title="破線">╌</button></span></div>
       <div class="fcell"><span class="lb">情報枠</span><span class="grp" id="palBox"></span></div>
     </div>
   </div>
@@ -791,6 +795,7 @@
     wrap.className='block'+(b.collapsed?' collapsed':'')+(b.type==='todo'&&b.done?' done':'');
     wrap.dataset.type=b.type; wrap.dataset.id=b.id; wrap.id='b_'+b.id;
     if(b.bg) wrap.style.background=b.bg;
+    if(b.indent) wrap.style.marginLeft=(b.indent*24)+'px';
 
     var g=document.createElement('div'); g.className='gutter'; g.setAttribute('contenteditable','false');
     var add=document.createElement('button'); add.textContent='＋'; add.title='下に追加';
@@ -851,7 +856,7 @@
     var be=document.createElement('div');
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
     be.innerHTML=b.html||'';
-    if(b.ul) be.style.borderBottom='2px solid '+b.ul;
+    if(b.ul) be.style.borderBottom=ulBorder(b);
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
     return be;
@@ -1009,6 +1014,7 @@
       if(e.key==='Enter'){e.preventDefault();var s=menu.querySelector('button.sel');if(s)s.click();return;}
       if(e.key==='Escape'){e.preventDefault();hideMenu();return;}
     }
+    if(e.key==='Tab' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); indentBlocks(e.shiftKey?-1:1); return; }
     if(e.key==='ArrowUp'&&atStart(be)){ var p=adjBe(b.id,-1); if(p){e.preventDefault();setCaretEnd(p);} }
     if(e.key==='ArrowDown'&&atEnd(be)){ var n=adjBe(b.id,1); if(n){e.preventDefault();setCaretStart(n);} }
   }
@@ -1248,7 +1254,10 @@
     syncSelectionHtml();
     saveSel(); persist(); return true;
   }
-  function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=c?('2px solid '+c):''; }); persist(); }
+  function ulBorder(b){ return b&&b.ul?('1px '+(b.uls||'solid')+' '+b.ul):''; }
+  function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=ulBorder(ci.b); }); persist(); }
+  function setRowUlStyle(s){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.uls=s; var be=ownBe(id); if(be&&ci.b.ul) be.style.borderBottom=ulBorder(ci.b); }); var us=document.getElementById('ulStyle'); if(us) us.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-uls')===s);}); persist(); }
+  function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
   function stepFontSize(dir){
     doc.focus(); restoreSel();
     var sel=window.getSelection(); if(!sel.rangeCount){ alert('サイズを変える文字を選択してください。'); return; }
@@ -1355,6 +1364,8 @@
     makeColorGroup('palRow', QUICK_ROW, function(c){setRowBg(c);},       function(){setRowBg('');},       '#000000');
     makeColorGroup('palUl',  QUICK_UL,  function(c){setRowUl(c);},       function(){setRowUl('');},       '#000000');
     makeColorGroup('palBox', QUICK_BOX, function(c){setBoxColor(c);},     function(){setBoxColor('');},     '#7676e8');
+    var uls=document.getElementById('ulStyle');
+    if(uls) uls.querySelectorAll('button').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setRowUlStyle(b.getAttribute('data-uls')); }; });
     var fsd=document.getElementById('btnFsDown'), fsu=document.getElementById('btnFsUp');
     if(fsd){ fsd.onmousedown=function(e){e.preventDefault();}; fsd.onclick=function(){ stepFontSize(-1); }; }
     if(fsu){ fsu.onmousedown=function(e){e.preventDefault();}; fsu.onclick=function(){ stepFontSize(1); }; }
@@ -1563,8 +1574,8 @@
 
   /* ---- 書き出し（HTML / PDF） ---- */
   function staticBlockHTML(b){
-    var style=b.bg?(' style="background:'+esc(b.bg)+'"'):'';
-    var us=(b.ul||b.align)?(' style="'+(b.ul?('border-bottom:2px solid '+esc(b.ul)+';'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
+    var style=(b.bg||b.indent)?(' style="'+(b.bg?('background:'+esc(b.bg)+';'):'')+(b.indent?('margin-left:'+(b.indent*24)+'px'):'')+'"'):'';
+    var us=(b.ul||b.align)?(' style="'+(b.ul?('border-bottom:1px '+(b.uls||'solid')+' '+esc(b.ul)+';'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
     var did=' id="b_'+b.id+'" data-id="'+b.id+'"';
     if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
     if(b.type==='col') return '<div class="colcell" data-type="col"'+did+' style="flex-grow:'+(+b.w||1)+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div>';
