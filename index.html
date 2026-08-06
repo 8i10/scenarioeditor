@@ -1876,33 +1876,45 @@
     });
     return merged;
   }
-  var pushTimer=null, pushing=false;
+  var pushTimer=null, pushing=false, lastPushAt=0, backoffUntil=0, backoffMs=0;
+  var PUSH_DEBOUNCE=4000, MIN_PUSH_GAP=15000;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
   function doPush(retry){
     pushing=true;
     var files={}; files[ghFile()]={content:JSON.stringify(exportCloud())};
     return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(r){
-      if(r.ok){ saveInd.textContent='同期済 '+now(); pushing=false; return; }
+      if(r.ok){ lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; saveInd.textContent='同期済 '+now(); pushing=false; return; }
       if(r.status===404 && retry<1){
         ghGist=''; try{localStorage.removeItem('scn_gh_gist_shared');}catch(e){}
         return findSharedGist().then(function(gid){
           if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} return doPush(retry+1); }
           var f={}; f[ghFile()]={content:JSON.stringify(exportCloud())};
           return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:f})}).then(function(rr){ return rr.ok?rr.json():null; }).then(function(gd){
-            if(gd&&gd.id){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} saveInd.textContent='同期済（Gist再作成） '+now(); }
+            if(gd&&gd.id){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} lastPushAt=Date.now(); saveInd.textContent='同期済（Gist再作成） '+now(); }
             else saveInd.textContent='同期失敗（Gist再作成不可／ローカルは保存済）';
             pushing=false;
           });
         });
       }
+      if(r.status===403 || r.status===429){
+        var ra=parseInt((r.headers&&r.headers.get&&r.headers.get('retry-after'))||'',10);
+        var reset=parseInt((r.headers&&r.headers.get&&r.headers.get('x-ratelimit-reset'))||'',10);
+        var w=!isNaN(ra)?ra*1000:(!isNaN(reset)?Math.max(0,reset*1000-Date.now()):0);
+        if(!w) w=backoffMs?Math.min(backoffMs*2,300000):30000; else w=Math.min(Math.max(w,20000),300000);
+        backoffMs=w; backoffUntil=Date.now()+w; pushing=false;
+        saveInd.textContent='同期を一時停止中（レート制限・約'+Math.round(w/1000)+'秒後に自動再開／ローカルは保存済）';
+        schedulePush(); return;
+      }
       saveInd.textContent='同期失敗（'+statusMsg(r.status)+'／ローカルは保存済）'; pushing=false;
-    }).catch(function(){ saveInd.textContent='同期失敗（通信エラー／ローカルは保存済）'; pushing=false; });
+    }).catch(function(){ pushing=false; backoffUntil=Date.now()+15000; saveInd.textContent='同期失敗（通信エラー・自動再試行します／ローカルは保存済）'; schedulePush(); });
   }
-  function cloudPush(){
+  function schedulePush(){
     if(!ghConnected()||!ghGist) return;
     if(pushTimer) clearTimeout(pushTimer);
-    pushTimer=setTimeout(function(){ pushTimer=null; doPush(0); },1500);
+    var now=Date.now(), due=Math.max(now+PUSH_DEBOUNCE, lastPushAt+MIN_PUSH_GAP, backoffUntil);
+    pushTimer=setTimeout(function(){ pushTimer=null; if(pushing){ schedulePush(); return; } doPush(0); }, Math.max(0, due-now));
   }
+  function cloudPush(){ schedulePush(); }
   function updateAcct(){
     var lb=document.getElementById('acctLabel'), btn=document.getElementById('btnAuth'), sy=document.getElementById('btnSync');
     if(!ghConnected()){ lb.textContent='未接続（ローカル保存）'; btn.textContent='GitHub連携'; if(sy) sy.style.display='none'; }
