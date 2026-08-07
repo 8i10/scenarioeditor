@@ -81,6 +81,8 @@
   .fcell{display:flex;align-items:center;gap:6px}
   .fgroup-fa{display:contents}
   .fbar-toggle{display:none}
+  .fbar-ins{display:none}
+  .fbar-bar{display:flex;align-items:center;gap:8px}
   .fbar .lb{font-size:11px;color:var(--muted);letter-spacing:.06em;white-space:nowrap;flex:none;display:inline-block;width:4.4em;box-sizing:border-box}
   .fbar .sepline{width:1px;height:18px;background:var(--line);flex:none}
   .fbar .fb{width:26px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);
@@ -207,7 +209,7 @@
 
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
   .block[data-type="kp"]{background:var(--kp-bg);color:var(--kp-text)}
-  .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
+  .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif;line-height:1.5}
   .block[data-type="kp"] .be{color:var(--kp-text)}
   .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22)}
   .block[data-type="kp"] .addchild{color:rgba(255,255,255,.55)}
@@ -363,8 +365,9 @@
   }
 
   @media (max-width:820px){
-    .fbar-toggle{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:0;
+    .fbar-toggle{display:flex;align-items:center;gap:6px;flex:1;background:transparent;border:0;
       color:var(--text);font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;text-align:left}
+    .fbar-ins{display:inline-flex;align-items:center;gap:4px;background:var(--red);color:#fff;border:0;border-radius:7px;font-weight:700;font-size:13px;padding:8px 14px;margin-right:12px;cursor:pointer}
     .fbar-toggle::after{content:"▾";margin-left:auto;color:var(--muted)}
     .fbar.open .fbar-toggle::after{content:"▴"}
     .fbar-in{display:none;overflow:visible;padding:4px 16px 12px;gap:4px}
@@ -453,7 +456,7 @@
   </div>
 </div>
 <div class="fbar" id="fbar">
-  <button class="fbar-toggle" id="fbarToggle">書式 ▾</button>
+  <div class="fbar-bar"><button class="fbar-toggle" id="fbarToggle">書式 ▾</button><button class="fbar-ins" id="fbarIns" title="ブロックを挿入">＋ 挿入</button></div>
   <div class="fbar-in" id="fbarIn">
     <div class="fbrow">
       <div class="fcell"><span class="grp" id="palStyle">
@@ -1451,6 +1454,7 @@
   var FONTS=[
     {n:'ゴシック（既定）', v:GOTHIC},
     {n:'明朝', v:'"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif'},
+    {n:'UDデジタル教科書体', v:'"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",sans-serif'},
     {n:'Zen Kaku Gothic New', v:'"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif'},
     {n:'源暎こぶり明朝 v6', v:'"源暎こぶり明朝 v6","GenEiKoburiMincho v6","GenEi Koburi Mincho v6",serif'},
     {n:'游明朝 Demibold', v:'"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho",serif'},
@@ -1473,7 +1477,7 @@
     var sel=document.getElementById('fontSel'); if(!sel) return;
     sel.innerHTML='';
     FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; sel.appendChild(o); });
-    localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=fam; sel.appendChild(o); });
+    localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=jpFontDisplay(fam); sel.appendChild(o); });
     if(state.font && !FONTS.some(function(f){return f.v===state.font;}) && localFontList.indexOf(state.font.replace(/"/g,''))<0){
       var o=document.createElement('option'); o.value=state.font; o.textContent=state.font.replace(/"/g,''); sel.insertBefore(o, sel.firstChild);
     }
@@ -1485,12 +1489,14 @@
       fi.innerHTML='';
       var ph0=document.createElement('option'); ph0.value=''; ph0.textContent='書体…'; fi.appendChild(ph0);
       FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; fi.appendChild(o); });
-      localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=fam; fi.appendChild(o); });
+      localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=jpFontDisplay(fam); fi.appendChild(o); });
       var rst=document.createElement('option'); rst.value='inherit'; rst.textContent='解除（既定）'; fi.appendChild(rst);
       fi.onchange=function(){ var v=fi.value; if(v){ wrapSelectionFont(v); } fi.value=''; };
     }
   }
   var localFontData={}, localFontList=[];
+  var JP_FONT_NAMES={'Yu Mincho':'游明朝','YuMincho':'游明朝','Yu Gothic':'游ゴシック','YuGothic':'游ゴシック','Yu Gothic UI':'游ゴシック UI','Meiryo':'メイリオ','Meiryo UI':'メイリオ UI','MS Mincho':'ＭＳ 明朝','MS PMincho':'ＭＳ Ｐ明朝','MS Gothic':'ＭＳ ゴシック','MS PGothic':'ＭＳ Ｐゴシック','MS UI Gothic':'ＭＳ ＵＩ ゴシック','UD Digital Kyokasho N-R':'UD デジタル 教科書体 N-R','UD Digital Kyokasho NK-R':'UD デジタル 教科書体 NK-R','UD Digital Kyokasho NP-R':'UD デジタル 教科書体 NP-R','UD Digital Kyokasho NK-B':'UD デジタル 教科書体 NK-B','BIZ UDMincho':'BIZ UD明朝','BIZ UDPMincho':'BIZ UDP明朝','BIZ UDGothic':'BIZ UDゴシック','BIZ UDPGothic':'BIZ UDPゴシック','Hiragino Mincho ProN':'ヒラギノ明朝 ProN','Hiragino Mincho Pro':'ヒラギノ明朝 Pro','Hiragino Kaku Gothic ProN':'ヒラギノ角ゴ ProN','Hiragino Kaku Gothic Pro':'ヒラギノ角ゴ Pro','Hiragino Sans':'ヒラギノ角ゴシック','Hiragino Maru Gothic ProN':'ヒラギノ丸ゴ ProN','Noto Sans JP':'Noto Sans JP','Noto Serif JP':'Noto Serif JP','Shippori Mincho':'しっぽり明朝','Shippori Mincho B1':'しっぽり明朝 B1','Klee One':'クレー One','Kosugi':'小杉ゴシック','Kosugi Maru':'小杉丸ゴシック','Sawarabi Mincho':'さわらび明朝','Sawarabi Gothic':'さわらびゴシック'};
+  function jpFontDisplay(fam){ if(!fam) return fam; if(/[\u3040-\u30ff\u4e00-\u9faf\uff00-\uffef]/.test(fam)) return fam; return JP_FONT_NAMES[fam]||fam; }
   function loadLocalFonts(){
     if(!window.queryLocalFonts){ alert('この環境では端末フォントの取得に対応していません。\nChrome系ブラウザで、ローカルフォントアクセスの許可が必要です。'); return; }
     window.queryLocalFonts().then(function(fonts){
@@ -2061,6 +2067,7 @@
   function setTopbar(){ var hd=document.querySelector('.head'), fb2=document.querySelector('.fbar'); var hh=hd?hd.offsetHeight:0; var h=hh+(fb2?fb2.offsetHeight:0); if(hh>0) document.documentElement.style.setProperty('--head-h', hh+'px'); if(h>0) document.documentElement.style.setProperty('--topbar-h', h+'px'); }
   window.addEventListener('resize', setTopbar);
   (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); setTopbar(); }; })();
+  (function(){ var ins=document.getElementById('fbarIns'); if(!ins) return; ins.onmousedown=function(e){ e.preventDefault(); }; ins.onclick=function(e){ e.stopPropagation(); var id=focusedId; if(!id){ var bs=state.blocks; id=bs.length?bs[bs.length-1].id:null; } if(!id) return; openBlockMenu(id, ins); }; })();
   render(); applyOutline(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
