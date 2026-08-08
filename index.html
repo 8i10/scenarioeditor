@@ -209,7 +209,9 @@
 
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
   .block[data-type="kp"]{background:var(--kp-bg);color:var(--kp-text)}
-  .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif;line-height:1.5}
+  .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
+  .block[data-type="kp"]>.children .be{line-height:1.45;min-height:1.3em}
+  .block[data-type="kp"]>.children>.block{margin:0}
   .block[data-type="kp"] .be{color:var(--kp-text)}
   .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22)}
   .block[data-type="kp"] .addchild{color:rgba(255,255,255,.55)}
@@ -2068,6 +2070,16 @@
   window.addEventListener('resize', setTopbar);
   (function(){ var fb=document.getElementById('fbar'), tg=document.getElementById('fbarToggle'); if(tg) tg.onclick=function(){ fb.classList.toggle('open'); setTopbar(); }; })();
   (function(){ var ins=document.getElementById('fbarIns'); if(!ins) return; ins.onmousedown=function(e){ e.preventDefault(); }; ins.onclick=function(e){ e.stopPropagation(); var id=focusedId; if(!id){ var bs=state.blocks; id=bs.length?bs[bs.length-1].id:null; } if(!id) return; openBlockMenu(id, ins); }; })();
+  /* iOS: ソフトキーボードで表示領域がずれても、上部ヘッダー・書式バーを表示領域の上端に固定する */
+  (function(){
+    var isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(!isIOS || !window.visualViewport) return;
+    var vv=window.visualViewport, raf=0;
+    function apply(){ raf=0; var head=document.querySelector('.head'), fbar=document.getElementById('fbar'); var y=Math.max(0,Math.round(vv.offsetTop)); var t=y?('translateY('+y+'px)'):''; if(head) head.style.transform=t; if(fbar) fbar.style.transform=t; }
+    function pin(){ if(!raf) raf=requestAnimationFrame(apply); }
+    vv.addEventListener('resize', pin); vv.addEventListener('scroll', pin); window.addEventListener('scroll', pin, {passive:true});
+    document.addEventListener('focusin', function(){ setTimeout(pin, 60); setTimeout(pin, 300); });
+  })();
   render(); applyOutline(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
