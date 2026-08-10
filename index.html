@@ -169,6 +169,8 @@
   .block[data-type="ev"] .be,.block[data-type="evr"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:800;color:var(--text);font-size:1.02em;letter-spacing:.02em;margin:14px 0 5px}
   .block[data-type="ev"] .be{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
   .block[data-type="evr"] .be{border-bottom:1px solid var(--text);padding-bottom:3px}
+  .block[data-type="q"] .be::before{content:"Q.";display:inline-block;margin-right:3px;font-weight:700}
+  .block[data-type="q"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:700;color:#2383c7}
   .block[data-type="quote"] .be{border-left:3px solid var(--accent2);padding-left:14px;color:var(--accent)}
   .block[data-type="bullet"]{padding-left:20px}
   .block[data-type="bullet"]>.be::before{content:"•";position:absolute;left:4px;color:var(--red)}
@@ -204,9 +206,9 @@
   .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="secret"]{
     position:relative;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
   .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{
-    position:absolute;top:-10px;left:8px;min-height:0;font-weight:700;font-size:10.5px;
+    position:absolute;top:-10px;left:8px;min-height:0;font-weight:700;font-size:0.82em;
     letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px}
-  .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{font-size:12.5px;top:-12px}
+  .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{font-size:0.98em;top:-12px}
   .block[data-type="kp"] .lbl:empty::before,.block[data-type="info"] .lbl:empty::before,.block[data-type="skill"] .lbl:empty::before,.block[data-type="secret"] .lbl:empty::before{opacity:.85}
   .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="secret"]>.children{
     margin:0;border-left:0;padding-left:0}
@@ -227,22 +229,22 @@
 
   /* NPCセリフ：四角（角丸なし）・見出しバッジを左端に完全に寄せる */
   .block[data-type="npc"]{position:relative;background:var(--card);border:1.5px solid var(--pl-edge);border-radius:0;padding:16px 14px 10px;margin:19px 0 10px}
-  .block[data-type="npc"] .lbl{position:absolute;top:-13px;left:-1.5px;min-height:0;font-weight:700;font-size:12.5px;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;background:var(--pl-edge);color:#fff}
+  .block[data-type="npc"] .lbl{position:absolute;top:-13px;left:-1.5px;min-height:0;font-weight:700;font-size:0.98em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;background:var(--pl-edge);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
   .block[data-type="npc"]>.children{margin:0;border-left:0;padding-left:0}
 
   /* 情報ボックス（任意色・boxcで背景指定） */
   .block[data-type="cbox"]{position:relative;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px;border:1px solid var(--line)}
-  .block[data-type="cbox"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:12.5px;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;background:var(--card);border:1px solid var(--line)}
+  .block[data-type="cbox"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:0.98em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;background:var(--card);border:1px solid var(--line)}
   .block[data-type="cbox"]>.children{margin:0;border-left:0;padding-left:0}
 
   /* 情報ボックス（白地・枠色変更可） */
   .block[data-type="cbox2"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
-  .block[data-type="cbox2"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:12.5px;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;color:#fff}
+  .block[data-type="cbox2"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:0.98em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;color:#fff}
   .block[data-type="cbox2"]>.children{margin:0;border-left:0;padding-left:0}
 
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
-  .block[data-type="skill"] .lbl{background:var(--blue);color:#fff}
+  .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px}
@@ -542,6 +544,7 @@
     {t:'npc',     ic:'💬', nm:'NPCセリフ',                   ph:'セリフ', ctn:1, dl:'NPC'},
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント', cat:'イベント・リスト'},
     {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
+    {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
     {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト'},
     {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'quote',   ic:'❝', nm:'引用',                 ph:'引用', cat:'その他'},
