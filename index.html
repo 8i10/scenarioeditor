@@ -119,6 +119,8 @@
 
   /* ── block ── */
   .block{position:relative;margin:1px 0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
+  .block.has-bg{padding-top:.35em;padding-bottom:.35em;padding-left:12px;padding-right:12px;margin-top:8px;margin-bottom:8px}
+  .block.has-bg>.be{min-height:0;margin-top:0;margin-bottom:0}
   .block>.gutter{position:absolute;left:-52px;top:2px;display:flex;gap:2px;opacity:0;transition:.12s;height:1.7em;align-items:center}
   .block:hover>.gutter,.block:focus-within>.gutter{opacity:1}
   .gutter button{width:20px;height:20px;border:0;background:transparent;color:var(--muted);
@@ -323,6 +325,12 @@
   .rbar .rb-item{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:var(--text);cursor:pointer;padding:6px 12px;font-size:13px;text-align:left;font-family:inherit}
   .rbar .rb-item:hover{background:var(--hover)}
   .rbar .rb-item .ic{width:18px;text-align:center;color:var(--muted);flex:none}
+  .rbar .macc-h{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:10px;letter-spacing:.12em;color:var(--muted);cursor:pointer;user-select:none}
+  .rbar .macc-h:hover{background:var(--hover);color:var(--text)}
+  .rbar .macc-h .tw{display:inline-block;transition:transform .12s}
+  .rbar .macc.open .macc-h .tw{transform:rotate(90deg)}
+  .rbar .macc-body{display:none}
+  .rbar .macc.open .macc-body{display:block}
   .hm-item.on{color:var(--red);font-weight:700}
   @media (min-width:821px){ body.rb-open .wrap{margin-right:242px} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 580px))} }
 
@@ -821,7 +829,7 @@
     var wrap=document.createElement('div');
     wrap.className='block'+(b.collapsed?' collapsed':'')+(b.type==='todo'&&b.done?' done':'');
     wrap.dataset.type=b.type; wrap.dataset.id=b.id; wrap.id='b_'+b.id;
-    if(b.bg) wrap.style.background=b.bg;
+    if(b.bg){ wrap.style.background=b.bg; wrap.classList.add('has-bg'); }
     if(b.indent) wrap.style.marginLeft=(b.indent*24)+'px';
 
     var g=document.createElement('div'); g.className='gutter'; g.setAttribute('contenteditable','false');
@@ -1244,7 +1252,7 @@
     syncSelectionHtml();
     persist();
   }
-  function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.background=c||''; }); persist(); }
+  function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
   function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='npc') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='npc') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
@@ -1453,10 +1461,13 @@
   var rbar=document.getElementById('rightBar');
   function rightBarInnerHTML(){
     var h='<div class="rb-ttl">挿入メニュー<button class="rb-x" id="rbX" title="閉じる">×</button></div><div class="rb-hint">選択中の行の下に挿入します</div>';
-    TYPES.forEach(function(x){
-      if(x.hidden||x.t==='col'||x.t==='columns') return;
-      if(x.cat) h+='<div class="rb-cat">'+x.cat+'</div>';
-      h+='<button class="rb-item" data-rt="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>';
+    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント・リスト':1,'その他':1};
+    var lastCat=null, groups=[], byCat={};
+    TYPES.forEach(function(x){ if(x.cat) lastCat=x.cat; var cat=lastCat||'基本'; if(x.hidden||x.t==='col'||x.t==='columns') return; if(!byCat[cat]){ byCat[cat]={cat:cat,items:[]}; groups.push(byCat[cat]); } byCat[cat].items.push(x); });
+    var item=function(x){ return '<button class="rb-item" data-rt="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
+    groups.forEach(function(g){
+      if(ACC[g.cat]){ h+='<div class="macc"><div class="macc-h" data-acc="1"><span class="tw">▸</span>'+g.cat+'</div><div class="macc-body">'+g.items.map(item).join('')+'</div></div>'; }
+      else { if(g.cat!=='基本') h+='<div class="rb-cat">'+g.cat+'</div>'; h+=g.items.map(item).join(''); }
     });
     return h;
   }
@@ -1471,7 +1482,7 @@
     var be=doc.querySelector('.block[data-id="'+nb.id+'"] .be'); if(be) setCaretStart(be);
     persist();
   }
-  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var it=e.target.closest('.rb-item'); if(it){ rightInsert(it.getAttribute('data-rt')); } }); }
+  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ rightInsert(it.getAttribute('data-rt')); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   function expandTo(id){
     var chain=[], cur=id, guard=0;
@@ -1661,7 +1672,7 @@
     }
     if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
-    return '<div class="block'+done+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||'')+'</div></div>';
+    return '<div class="block'+done+(b.bg?' has-bg':'')+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||'')+'</div></div>';
   }
   function exportHTML(){
     (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
