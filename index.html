@@ -252,6 +252,16 @@
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px}
   .block[data-type="secret"] .lbl{background:var(--secret);color:#fff}
   .block[data-type="info"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
+  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{display:inline-flex;align-items:center;line-height:1.15}
+  /* 情報枠②：見出しは枠外（上）、本文だけを左＋下の細い罫線で囲む */
+  .block[data-type="lbox"]{border:0;background:transparent;border-radius:0;padding:0;margin:14px 0}
+  .block[data-type="lbox"]>.lbl{position:static;display:block;background:transparent;border:0;color:var(--text);font-weight:400;font-size:1.05em;letter-spacing:.02em;padding:0;margin:0 0 3px;border-radius:0;min-height:0;font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
+  .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:5px}
+  .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 12px 12px;margin:0}
+  /* ■探索箇所＜＞ */
+  .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
+  .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
+  .block[data-type="explore"] .be{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif;font-weight:600;margin:12px 0 4px}
 
   /* ── menu ── */
   .menu{position:absolute;z-index:200;width:264px;max-height:340px;overflow:auto;background:var(--card);
@@ -531,39 +541,41 @@
   var root=document.documentElement;
 
   var TYPES=[
-    {t:'p',       ic:'¶',  nm:'本文',                 ph:'', cat:'基本'},
+    {t:'p',       ic:'¶',  nm:'本文',                 ph:'', hidden:1},
     {t:'title',   ic:'T',  nm:'作品タイトル',          ph:'作品タイトル', cat:'見出し'},
     {t:'tagline', ic:'×',  nm:'タグライン',            ph:'要素 × 要素', hidden:1},
-    {t:'h1',      ic:'H1', nm:'見出し1',               ph:'見出し1', cat:'見出し'},
+    {t:'h1',      ic:'H1', nm:'見出し1',               ph:'見出し1'},
     {t:'h2',      ic:'H2', nm:'見出し2',               ph:'見出し2'},
     {t:'h3',      ic:'H3', nm:'見出し3',               ph:'見出し3'},
     {t:'h4',      ic:'H4', nm:'見出し4',               ph:'見出し4'},
     {t:'h5',      ic:'H5', nm:'見出し5',               ph:'見出し5'},
+    {t:'skill',   ic:'技', nm:'技能',                  ph:'＜技能＞', cat:'情報枠', ctn:1, dl:'＜技能＞'},
+    {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', ctn:1, dl:'KP情報'},
+    {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿'},
+    {t:'info',    ic:'▼', nm:'情報（囲い）',            ph:'情報', ctn:1, dl:'▼情報'},
+    {t:'lbox',    ic:'⌐', nm:'情報（左+下線）',         ph:'見出し', ctn:1, dl:''},
+    {t:'cbox',    ic:'▣', nm:'色変えボックス①',         ph:'情報ボックス', ctn:1},
+    {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
+    {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
+    {t:'explore', ic:'■', nm:'■探索箇所＜＞',           ph:'場所', cat:'イベント・リスト'},
+    {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
+    {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
+    {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
+    {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト'},
+    {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'toggle',  ic:'▸',  nm:'トグル',               ph:'トグル', cat:'トグル', ctn:1},
     {t:'th1',     ic:'▸1', nm:'トグル見出し1',         ph:'トグル見出し1', ctn:1},
     {t:'th2',     ic:'▸2', nm:'トグル見出し2',         ph:'トグル見出し2', ctn:1},
     {t:'th3',     ic:'▸3', nm:'トグル見出し3',         ph:'トグル見出し3', ctn:1},
     {t:'th4',     ic:'▸4', nm:'トグル見出し4',         ph:'トグル見出し4', ctn:1},
     {t:'th5',     ic:'▸5', nm:'トグル見出し5',         ph:'トグル見出し5', ctn:1},
-    {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', cat:'情報枠', ctn:1, dl:'KP情報'},
-    {t:'info',    ic:'▼', nm:'情報',                  ph:'情報', ctn:1, dl:'▼情報'},
-    {t:'skill',   ic:'技', nm:'技能情報',              ph:'＜技能＞', ctn:1, dl:'＜技能＞'},
-    {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿'},
-    {t:'cbox',    ic:'▣', nm:'情報ボックス（色変更可）', ph:'情報ボックス', ctn:1},
-    {t:'cbox2',   ic:'▢', nm:'情報ボックス（白地・枠色変更可）', ph:'情報ボックス', ctn:1},
-    {t:'npc',     ic:'💬', nm:'NPCセリフ',                   ph:'セリフ', ctn:1, dl:'NPC'},
-    {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント', cat:'イベント・リスト'},
-    {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
-    {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
-    {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト'},
-    {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'quote',   ic:'❝', nm:'引用',                 ph:'引用', cat:'その他'},
     {t:'divider', ic:'—',  nm:'区切り線',              ph:''}
   ];
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='secret'||t==='cbox'||t==='cbox2'||t==='npc'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='secret'||t==='cbox'||t==='cbox2'||t==='npc'||t==='lbox'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
@@ -1806,6 +1818,7 @@
       +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px}'
+      +' .outline{top:46px;height:calc(100vh - 46px)}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-add{display:none!important}'
       +' .scn-page{display:none}'
       +' .scn-page.scn-cur{display:block}'
