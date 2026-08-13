@@ -246,13 +246,16 @@
 
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
-  .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+  .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+  .block[data-type="skill2"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
+  .block[data-type="skill2"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;position:absolute;top:-12px;left:8px;min-height:0;letter-spacing:.08em;padding:4px 10px;border-radius:4px;display:inline-flex;align-items:center;line-height:1}
+  .sk-note{font-size:0.82em;font-weight:400}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px}
   .block[data-type="secret"] .lbl{background:var(--secret);color:#fff}
   .block[data-type="info"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
-  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{display:inline-flex;align-items:center;line-height:1.15}
+  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{display:inline-flex;align-items:center;line-height:1;padding-top:4px;padding-bottom:4px}
   /* 情報枠②：見出しは枠外（上）、本文だけを左＋下の細い罫線で囲む */
   .block[data-type="lbox"]{border:0;background:transparent;border-radius:0;padding:0;margin:14px 0}
   .block[data-type="lbox"]>.lbl{position:static;display:flex;align-items:flex-end;background:transparent;border:0;color:var(--text);font-weight:400;font-size:1.13em;letter-spacing:.02em;padding:0;margin:0;line-height:1.1;border-radius:0;min-height:1.4em;border-radius:0;font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
@@ -550,6 +553,7 @@
     {t:'h4',      ic:'H4', nm:'見出し4',               ph:'見出し4'},
     {t:'h5',      ic:'H5', nm:'見出し5',               ph:'見出し5'},
     {t:'skill',   ic:'技', nm:'技能',                  ph:'＜技能＞', cat:'情報枠', ctn:1, dl:'＜技能＞'},
+    {t:'skill2',  ic:'技※',nm:'技能（※あり）',          ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', ctn:1, dl:'KP情報'},
     {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿'},
     {t:'info',    ic:'▼', nm:'情報（囲い）',            ph:'情報', ctn:1, dl:'▼情報'},
@@ -575,7 +579,7 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='secret'||t==='cbox'||t==='cbox2'||t==='npc'||t==='lbox'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='npc'||t==='lbox'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
@@ -910,10 +914,17 @@
     (b.children||[]).forEach(function(c){ ch.appendChild(blockEl(c)); });
     return ch;
   }
+  function skNoteWrap(html){
+    var tmp=document.createElement('div'); tmp.innerHTML=html||'';
+    [].slice.call(tmp.querySelectorAll('.sk-note')).forEach(function(s){ while(s.firstChild) s.parentNode.insertBefore(s.firstChild,s); s.parentNode.removeChild(s); });
+    var raw=tmp.innerHTML; var i=raw.indexOf('※');
+    if(i<0) return raw;
+    return raw.slice(0,i)+'<span class="sk-note">'+raw.slice(i)+'</span>';
+  }
   function mkBe(b){
     var be=document.createElement('div');
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
-    be.innerHTML=b.html||'';
+    be.innerHTML=(b.type==='skill2')?skNoteWrap(b.html):(b.html||'');
     if(b.ul) be.style.borderBottom=ulBorder(b);
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
@@ -1790,7 +1801,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; boxStyle=' style="background:'+cc+'"'; lblStyle=' style="background:'+opaqueColor(cc)+';color:#fff;border-color:transparent"'; }
       else if(b.type==='cbox2'){ var oo=opaqueColor(b.boxc||BOX_DEFAULT); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+(b.html||'')+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skNoteWrap(b.html):(b.html||''))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
@@ -1819,6 +1830,7 @@
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px}'
       +' .outline{top:46px;height:calc(100vh - 46px)}'
+      +' .sk-note{-webkit-user-select:none;user-select:none}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-pdup,.outline .ol-add{display:none!important}'
       +' .scn-page{display:none}'
       +' .scn-page.scn-cur{display:block}'
