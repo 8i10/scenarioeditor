@@ -258,6 +258,7 @@
     border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.22);padding:6px;display:none}
   .menu.show{display:block}
   .menu .mcat{font-size:10px;letter-spacing:.14em;color:var(--muted);padding:7px 10px 3px}
+  .menu .mcat-pg{color:var(--text);font-weight:700;border-top:1px solid var(--line);margin-top:3px}
   .menu .macc-h{display:flex;align-items:center;gap:6px;padding:7px 10px;font-size:11px;letter-spacing:.1em;color:var(--muted);cursor:pointer;user-select:none;border-radius:6px}
   .menu .macc-h:hover{background:var(--hover);color:var(--text)}
   .menu .macc-h .tw{display:inline-block;transition:transform .12s}
@@ -295,10 +296,10 @@
   .outline .ol-page .ol-tw{display:inline-block;width:12px;text-align:center;color:var(--muted);font-size:10px;transition:transform .12s;flex:0 0 12px}
   .outline .ol-pgroup.open>.ol-page .ol-tw{transform:rotate(90deg)}
   .outline .ol-page .ol-pname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .outline .ol-page .ol-pedit,.outline .ol-page .ol-pdel,.outline .ol-page .ol-pmv{opacity:0;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 3px;border-radius:4px}
+  .outline .ol-page .ol-pedit,.outline .ol-page .ol-pdel,.outline .ol-page .ol-pmv,.outline .ol-page .ol-pdup{opacity:0;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 3px;border-radius:4px}
   .outline .ol-page .ol-pmv{font-size:9px;padding:0 1px}
-  .outline .ol-page:hover .ol-pedit,.outline .ol-page:hover .ol-pdel,.outline .ol-page:hover .ol-pmv{opacity:1}
-  .outline .ol-page .ol-pedit:hover,.outline .ol-page .ol-pdel:hover,.outline .ol-page .ol-pmv:hover{background:var(--card);color:var(--text)}
+  .outline .ol-page:hover .ol-pedit,.outline .ol-page:hover .ol-pdel,.outline .ol-page:hover .ol-pmv,.outline .ol-page:hover .ol-pdup{opacity:1}
+  .outline .ol-page .ol-pedit:hover,.outline .ol-page .ol-pdel:hover,.outline .ol-page .ol-pmv:hover,.outline .ol-page .ol-pdup:hover{background:var(--card);color:var(--text)}
   .outline .ol-heads{display:none}
   .outline .ol-pgroup.open>.ol-heads{display:block}
   .outline .ol-hrow{display:flex;align-items:center;gap:3px;cursor:pointer;font-size:12.5px;line-height:1.5;color:var(--accent);padding:2px 8px}
@@ -732,6 +733,15 @@
     render(); applyOutline(); renderOutline(); window.scrollTo(0,0); afterPageChange();
     var be=doc.querySelector('.be'); if(be) setCaretStart(be); persist();
   }
+  function duplicatePage(id){
+    var src=null, idx=-1;
+    (state.pages||[]).forEach(function(p,i){ if(p.id===id){ src=p; idx=i; } });
+    if(!src) return;
+    beforePageChange();
+    var np={ id:pageId(), name:(src.name||'ページ')+' のコピー', blocks:cloneBlocksNewIds(src.blocks||[]) };
+    state.pages.splice(idx+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
+    render(); applyOutline(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist();
+  }
   function switchPage(id){ if(id===state.curPage||!(state.pages||[]).some(function(p){return p.id===id;})) return; beforePageChange(); state.curPage=id; render(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist(); }
   function renamePage(id){ var p=null; (state.pages||[]).forEach(function(x){if(x.id===id)p=x;}); if(!p) return; var nm=prompt('ページ名を入力', p.name); if(nm==null) return; p.name=(nm.trim()||p.name); renderOutline(); persist(); }
   function deletePage(id){ if((state.pages||[]).length<=1){ alert('最後のページは削除できません。'); return; } if(!confirm('このページを削除しますか？（元に戻せません）')) return; beforePageChange(); var i=-1; state.pages.forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; state.pages.splice(i,1); if(state.curPage===id) state.curPage=state.pages[Math.max(0,i-1)].id; render(); renderOutline(); afterPageChange(); persist(); }
@@ -1125,11 +1135,16 @@
   function openMenu(a,f){ menuMode='slash'; buildMenuItems(f); posMenu(a); menu.classList.add('show'); }
   function openBlockMenu(id,a){ menuMode='block'; menuTargetId=id; buildMenuItems(''); posMenu(a); menu.classList.add('show'); }
   function openHlinkMenu(anchor){
-    var items=outlineItems();
-    if(!items.length){ alert('リンク先の見出しがありません。先に見出しを作成してください。'); return; }
+    var pages=state.pages||[];
+    var total=0; pages.forEach(function(p){ total+=headingsOf(p.blocks).length; });
+    if(!total){ alert('リンク先の見出しがありません。先に見出しを作成してください。'); return; }
     menuMode='hlink';
     var h='<div class="mcat">見出しへリンク</div>';
-    items.forEach(function(it){ h+='<button data-hgoto="'+it.id+'"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t||'(無題)')+'</span></button>'; });
+    pages.forEach(function(p){
+      var its=headingsOf(p.blocks); if(!its.length) return;
+      h+='<div class="mcat mcat-pg">'+esc(p.name||'ページ')+(p.id===state.curPage?'（現在）':'')+'</div>';
+      its.forEach(function(it){ h+='<button data-hgoto="'+it.id+'"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t||'(無題)')+'</span></button>'; });
+    });
     menu.innerHTML=h; var f=menu.querySelector('button'); if(f) f.classList.add('sel');
     posMenu(anchor); menu.classList.add('show');
   }
@@ -1535,6 +1550,7 @@
         +'<button class="ol-pmv" data-pup="'+p.id+'" title="上へ移動">▲</button>'
         +'<button class="ol-pmv" data-pdn="'+p.id+'" title="下へ移動">▼</button>'
         +'<button class="ol-pedit" data-pedit="'+p.id+'" title="名前変更">✎</button>'
+        +'<button class="ol-pdup" data-pdup="'+p.id+'" title="ページを複製">⧉</button>'
         +'<button class="ol-pdel" data-pdel="'+p.id+'" title="ページ削除">🗑</button></div>';
       h+='<div class="ol-heads">'+renderHeadNodes(headingTree(p.blocks), p.id)+'</div></div>';
     });
@@ -1589,6 +1605,7 @@
     var pup=e.target.closest('[data-pup]'); if(pup){ movePage(pup.getAttribute('data-pup'),-1); return; }
     var pdn=e.target.closest('[data-pdn]'); if(pdn){ movePage(pdn.getAttribute('data-pdn'),1); return; }
     var ped=e.target.closest('[data-pedit]'); if(ped){ renamePage(ped.getAttribute('data-pedit')); return; }
+    var pdp=e.target.closest('[data-pdup]'); if(pdp){ duplicatePage(pdp.getAttribute('data-pdup')); return; }
     var pdl=e.target.closest('[data-pdel]'); if(pdl){ deletePage(pdl.getAttribute('data-pdel')); return; }
     var htw=e.target.closest('[data-htw]'); if(htw){ var hid=htw.getAttribute('data-htw'); olOpen[hid]=!olOpen[hid]; renderOutline(); return; }
     var ptw=e.target.closest('[data-ptw]'); if(ptw){ var tid=ptw.getAttribute('data-ptw'); olOpen[tid]=!olOpen[tid]; if(tid!==state.curPage){ switchPage(tid); } else { renderOutline(); } return; }
@@ -1802,7 +1819,7 @@
       +'var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));'
       +'var FS={xs:0.66,sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
-      +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}});'
+      +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
       +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
