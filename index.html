@@ -1032,7 +1032,7 @@
       return;
     }
   });
-  document.addEventListener('selectionchange',function(){ if(_composing) return; var be=curBe(); if(be){ focusedId=be.dataset.id; } saveSel(); });
+  document.addEventListener('selectionchange',function(){ if(_composing) return; var be=curBe(); if(be){ focusedId=be.dataset.id; saveSel(); } });
 
   /* ---- スラッシュ ---- */
   var slash={active:false,be:null,b:null};
@@ -1376,6 +1376,7 @@
     ci.title='カラーピッカー';
     ci.oninput=function(){ onColor(ci.value); };
     ci.onchange=function(){ onColor(ci.value); };
+    ci.onclick=function(){ onColor(ci.value); };
     host.appendChild(ci);
     quick.forEach(function(c){ var b=document.createElement('button'); b.className='mini'; b.style.background=c; b.title=c;
       b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ ci.value=(/^#/.test(c)?c:'#000000'); onColor(c); }; host.appendChild(b); });
