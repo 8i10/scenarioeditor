@@ -118,7 +118,7 @@
   #pageOverlay .page-line span{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;white-space:nowrap;font-size:10px;line-height:1;color:var(--page-line);font-family:sans-serif}
 
   /* ── block ── */
-  .block{position:relative;margin:1px 0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
+  .block{position:relative;margin:0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
   .block.has-bg{padding-top:.35em;padding-bottom:.35em;padding-left:12px;padding-right:12px;margin-top:8px;margin-bottom:8px}
   .block.has-bg>.be{min-height:0!important;margin-top:0!important;margin-bottom:0!important}
   .block>.gutter{position:absolute;left:-52px;top:2px;display:flex;gap:2px;opacity:0;transition:.12s;height:1.7em;align-items:center}
@@ -134,7 +134,7 @@
   .colcell.drag-over{box-shadow:inset 0 0 0 2px var(--red);border-radius:6px}
   .block.dragging{opacity:.4}
 
-  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1.3em;line-height:1;padding:0 2px}
+  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1em;line-height:1.3;padding:0 2px}
   #doc,#doc:focus,#doc:focus-visible{outline:none}
   .doc-img{float:left;max-width:46%;height:auto;margin:3px 16px 8px 0;border-radius:6px;border:1px solid var(--line)}
   #imgRz{position:fixed;width:14px;height:14px;background:var(--red);border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:9998;box-shadow:0 1px 4px rgba(0,0,0,.4);display:none}
@@ -218,7 +218,7 @@
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
   .block[data-type="kp"]{background:var(--kp-bg);color:var(--kp-text)}
   .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
-  .block[data-type="kp"]>.children .be{line-height:1.45;min-height:1.3em}
+  .block[data-type="kp"]>.children .be{line-height:1.3;min-height:1em}
   .block[data-type="kp"]>.children>.block{margin:0}
   .block[data-type="kp"] .be{color:var(--kp-text)}
   .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22);font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
