@@ -18,7 +18,7 @@
 <style>
   :root{
     --fs:1;
-    --bg:#fcfbfa; --card:#ffffff; --box:#f4f1ea; --line:#e4ded2;
+    --bg:#fbfbfb; --card:#ffffff; --box:#f4f1ea; --line:#e4ded2;
     --text:#2b2724; --muted:#8a8175; --accent:#5b5348; --accent2:#8c8375;
     --red:#8b0000; --blue:#0000ff;
     --kp-bg:#3a3a3a; --kp-text:#f2f0ec; --pl-edge:#1e1e1e; --secret:#8b0000;
@@ -134,7 +134,7 @@
   .colcell.drag-over{box-shadow:inset 0 0 0 2px var(--red);border-radius:6px}
   .block.dragging{opacity:.4}
 
-  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1.3em;padding:0 2px}
+  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1.3em;line-height:1;padding:0 2px}
   #doc,#doc:focus,#doc:focus-visible{outline:none}
   .doc-img{float:left;max-width:46%;height:auto;margin:3px 16px 8px 0;border-radius:6px;border:1px solid var(--line)}
   #imgRz{position:fixed;width:14px;height:14px;background:var(--red);border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:9998;box-shadow:0 1px 4px rgba(0,0,0,.4);display:none}
@@ -206,7 +206,7 @@
 
   /* callout（KP情報 / PL情報 / 技能情報）：左上バッジ + 本文 */
   .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="secret"]{
-    position:relative;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
+    position:relative;border-radius:7px;padding:13px 14px 4px;margin:17px 0 10px}
   .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{
     position:absolute;top:-10px;left:8px;min-height:0;font-weight:700;font-size:0.9em;
     letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px}
@@ -230,7 +230,7 @@
   .block[data-type="info"] .lbl{background:var(--pl-edge);color:#fff}
 
   /* NPCセリフ：四角（角丸なし）・見出しバッジを左端に完全に寄せる */
-  .block[data-type="npc"]{position:relative;background:var(--card);border:1.5px solid var(--pl-edge);border-radius:0;padding:16px 14px 10px;margin:19px 0 10px}
+  .block[data-type="npc"]{position:relative;background:var(--card);border:1.5px solid var(--pl-edge);border-radius:7px;padding:16px 10.5px 5px;margin:19px 0 10px}
   .block[data-type="npc"] .lbl{position:absolute;top:-13px;left:-1.5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;background:var(--pl-edge);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
   .block[data-type="npc"]>.children{margin:0;border-left:0;padding-left:0}
 
@@ -243,28 +243,35 @@
   .block[data-type="cbox2"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
   .block[data-type="cbox2"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;color:#fff}
   .block[data-type="cbox2"]>.children{margin:0;border-left:0;padding-left:0}
+  /* 色変えボックス③：やや丸い枠・左右が太線・四角い見出し（枠色変更可） */
+  .block[data-type="cbox3"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:5px;border-right-width:5px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
+  .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
+  .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
+  /* 色変えボックス③と同じデザイン（左だけ太線・右は太くしない）を 技能/情報(囲い)/色変え①② に適用 */
+  .block[data-type="skill"],.block[data-type="info"],.block[data-type="cbox"],.block[data-type="cbox2"]{position:relative;border-radius:0!important;border-left-width:5px!important;border-right-width:1px!important;border-top-width:1px!important;border-bottom-width:1px!important;padding:13px 7px 4px!important;margin:18px 0 10px!important}
+  .block[data-type="skill"] .lbl,.block[data-type="info"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{left:-5px!important;top:-13px!important;border-radius:0!important;padding-left:12px!important;padding-right:12px!important}
 
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
   .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
-  .block[data-type="skill2"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
+  .block[data-type="skill2"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px;border-radius:0}
   .block[data-type="skill2"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;position:absolute;top:-12px;left:8px;min-height:0;letter-spacing:.08em;padding:4px 10px;border-radius:4px;display:inline-flex;align-items:center;line-height:1}
   .sk-note{font-size:0.82em;font-weight:400}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
-  .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px}
+  .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px;border-radius:0}
   .block[data-type="secret"] .lbl{background:var(--secret);color:#fff}
-  .block[data-type="info"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
-  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl{display:inline-flex;align-items:center;line-height:1;padding-top:4px;padding-bottom:4px}
+  .block[data-type="info"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
+  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{display:inline-flex;align-items:center;line-height:1;padding-top:4px;padding-bottom:4px}
   /* 情報枠②：見出しは枠外（上）、本文だけを左＋下の細い罫線で囲む */
   .block[data-type="lbox"]{border:0;background:transparent;border-radius:0;padding:0;margin:14px 0}
   .block[data-type="lbox"]>.lbl{position:static;display:flex;align-items:flex-end;background:transparent;border:0;color:var(--text);font-weight:400;font-size:1.13em;letter-spacing:.02em;padding:0;margin:0;line-height:1.1;border-radius:0;min-height:1.4em;border-radius:0;font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
-  .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:5px}
-  .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 4px 12px;margin:0}
+  .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:2px}
+  .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 1px 12px;margin:0}
   /* ■探索箇所＜＞ */
   .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
   .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
-  .block[data-type="explore"] .be{font-family:"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif;font-weight:600;margin:12px 0 4px}
+  .block[data-type="explore"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
 
   /* ── menu ── */
   .menu{position:absolute;z-index:200;width:264px;max-height:340px;overflow:auto;background:var(--card);
@@ -394,10 +401,10 @@
     html,body,*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
     .block[data-type="kp"]{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid #333!important}
     .block[data-type="kp"] .be{color:var(--kp-text)!important}
-    .block[data-type="info"]{background:var(--card)!important;border:1px solid var(--pl-edge)!important;border-left-width:4px!important}
-    .block[data-type="npc"]{background:var(--card)!important;border:1.5px solid var(--pl-edge)!important;border-radius:0!important}
+    .block[data-type="info"]{background:var(--card)!important;border:1px solid var(--pl-edge)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
+    .block[data-type="npc"]{background:var(--card)!important;border:1.5px solid var(--pl-edge)!important;border-radius:7px!important}
     .block[data-type="npc"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
-    .block[data-type="skill"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:4px!important}
+    .block[data-type="skill"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="secret"]{background:var(--card)!important;border:1px solid var(--secret)!important;border-left-width:4px!important}
     .block[data-type="kp"] .lbl{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid rgba(255,255,255,.4)!important}
     .block[data-type="info"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
@@ -555,11 +562,12 @@
     {t:'skill',   ic:'技', nm:'技能',                  ph:'＜技能＞', cat:'情報枠', ctn:1, dl:'＜技能＞'},
     {t:'skill2',  ic:'※', nm:'技能（※あり）',          ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', ctn:1, dl:'KP情報'},
-    {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿'},
+    {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿', hidden:1},
     {t:'info',    ic:'▼', nm:'情報（囲い）',            ph:'情報', ctn:1, dl:'▼情報'},
     {t:'lbox',    ic:'⌐', nm:'情報（左+下線）',         ph:'見出し', ctn:1, dl:''},
     {t:'cbox',    ic:'▣', nm:'色変えボックス①',         ph:'情報ボックス', ctn:1},
     {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
+    {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
     {t:'explore', ic:'■', nm:'■探索箇所＜＞',           ph:'場所', cat:'イベント・リスト'},
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
@@ -579,8 +587,9 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='npc'||t==='lbox'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
@@ -891,8 +900,8 @@
 
     if(isCallout(b.type)){
       var lbl=mkBe(b); lbl.classList.add('lbl');
-      if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; wrap.style.background=_c; lbl.style.background=opaqueColor(_c); lbl.style.color='#fff'; lbl.style.borderColor='transparent'; }
-      else if(b.type==='cbox2'){ var _o=opaqueColor(b.boxc||BOX_DEFAULT); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
+      if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; var _co=opaqueColor(_c); wrap.style.background=_c; wrap.style.borderColor=_co; lbl.style.background=_co; lbl.style.color='#fff'; lbl.style.borderColor=_co; }
+      else if(b.type==='cbox2'||b.type==='cbox3'){ var _o=opaqueColor(b.boxc||boxDefault(b.type)); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
       else if(b.type==='npc'){ if(b.boxc){ var _n=opaqueColor(b.boxc); wrap.style.borderColor=_n; lbl.style.background=_n; lbl.style.color='#fff'; } }
       wrap.appendChild(lbl);
       wrap.appendChild(childrenRegion(b));
@@ -1380,10 +1389,10 @@
     persist();
   }
   function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
-  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='npc') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='npc') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
+  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
-    box.boxc=c||BOX_DEFAULT;
+    box.boxc=c||boxDefault(box.type);
     var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(!w){ persist(); return; }
     var lbl=w.querySelector('.lbl'); var oc=opaqueColor(box.boxc);
     if(box.type==='cbox'){ w.style.background=box.boxc; w.style.borderColor=''; if(lbl){ lbl.style.background=oc; lbl.style.color='#fff'; lbl.style.borderColor='transparent'; } }
@@ -1798,8 +1807,8 @@
     if(b.type==='columns') return '<div class="block" data-type="columns"'+did+'><div class="cols-row'+(state.colline!==false?' colline':'')+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     if(isCallout(b.type)){
       var boxStyle=style, lblStyle='';
-      if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; boxStyle=' style="background:'+cc+'"'; lblStyle=' style="background:'+opaqueColor(cc)+';color:#fff;border-color:transparent"'; }
-      else if(b.type==='cbox2'){ var oo=opaqueColor(b.boxc||BOX_DEFAULT); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
+      if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
+      else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
       return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skNoteWrap(b.html):(b.html||''))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
