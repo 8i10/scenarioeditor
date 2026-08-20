@@ -1653,7 +1653,7 @@
     var el=document.getElementById('rubyList'); if(!el) return;
     var rows=state.ruby||[];
     el.innerHTML = rows.length ? rows.map(function(r,i){
-      return '<div class="ruby-row"><input type="text" class="ruby-t-in" data-i="'+i+'" placeholder="語句（例：鷹天ヶ原市）" value="'+esc(r.t||'')+'"><input type="text" class="ruby-y-in" data-i="'+i+'" placeholder="読み（例：たかてんがはらし）" value="'+esc(r.y||'')+'"><button class="ruby-del" data-i="'+i+'" title="削除">🗑</button></div>';
+      return '<div class="ruby-row"><input type="text" class="ruby-t-in" data-i="'+i+'" placeholder="語句" value="'+esc(r.t||'')+'"><input type="text" class="ruby-y-in" data-i="'+i+'" placeholder="読み" value="'+esc(r.y||'')+'"><button class="ruby-del" data-i="'+i+'" title="削除">🗑</button></div>';
     }).join('') : '<div class="fhint">まだ登録がありません。「＋ 行を追加」で追加してください。</div>';
   }
   if(rubyOvl){
@@ -1918,8 +1918,8 @@
       +' body>.wrap{padding-top:66px}'
       +' .outline{top:46px;height:calc(100vh - 46px)}'
       +' .sk-note{-webkit-user-select:none;user-select:none}'
-      +' .ruby-t{border-bottom:1px dotted rgba(0,0,0,.4);cursor:help;position:relative}'
-      +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
+      +' .ruby-t{cursor:help;position:relative}'
+      +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
       +' .ruby-t:hover::before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2b2b2b;z-index:1000;pointer-events:none}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-pdup,.outline .ol-add,.outline .ol-ruby{display:none!important}'
       +' .scn-page{display:none}'
