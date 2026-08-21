@@ -481,6 +481,7 @@
       <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
       <div class="hm-sec">アカウント（GitHub同期）</div>
       <div class="hm-row"><span id="acctLabel">未接続</span><span style="display:flex;gap:6px"><button class="hb2" id="btnSync" title="他端末の変更を取得" style="display:none">🔄 同期</button><button class="hb2" id="btnAuth">GitHub連携</button></span></div>
+      <button class="hm-item" id="btnDiag">同期の詳細（診断）</button>
       <div class="hm-sec">バージョン</div>
       <div class="hm-row"><span id="appVer" style="color:var(--muted);font-size:12px">—</span></div>
     </div>
@@ -2332,6 +2333,37 @@
     }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
   }
   function ghRefresh(){ ghPull(true); }
+  function ghDiag(){
+    if(!ghConnected()){ alert('GitHub連携していません（ID＋トークンを設定してください）'); return; }
+    saveInd.textContent='診断中…';
+    var gid=ghGist||(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})();
+    var run=function(g){
+      ghFetch('/gists/'+g).then(function(r){ if(!r.ok){ alert('クラウド取得失敗（'+statusMsg(r.status)+'）'); saveInd.textContent='診断失敗'; return null; } return r.json(); }).then(function(gd){
+        if(!gd) return;
+        var L=[];
+        L.push('◆この端末'); L.push('ID: '+ghId()); L.push('ファイル: '+ghFile());
+        L.push('作品ID(末尾): …'+String(state.id||'').slice(-6)); L.push('作品名: '+(state.name||''));
+        L.push('rev: '+(state.rev||0)+' / 更新: '+new Date(state.updated||0).toLocaleString());
+        L.push(''); L.push('◆クラウド (Gist '+String(g).slice(0,6)+'…)');
+        var f=gd.files&&gd.files[ghFile()];
+        if(!f||!f.content){ L.push('★このID用ファイル('+ghFile()+')がGistに無い'); L.push('→ 端末間でIDが違う可能性大。両端末のIDを完全一致させてください。'); alert(L.join('\n')); saveInd.textContent='診断完了'; return; }
+        var rd=null; try{ rd=JSON.parse(f.content); }catch(e){}
+        if(!rd||!rd.docs){ L.push('★クラウドデータが読めません'); alert(L.join('\n')); saveInd.textContent='診断完了'; return; }
+        var ids=Object.keys(rd.docs); L.push('作品数: '+ids.length);
+        ids.forEach(function(id){ var d=rd.docs[id]||{}; L.push((id===state.id?'● ':'・ ')+'…'+id.slice(-6)+' 「'+(d.name||'')+'」 rev'+(d.rev||0)); });
+        L.push(''); L.push('◆判定');
+        var cur=rd.docs[state.id];
+        if(!cur){ L.push('★この作品IDはクラウドに存在しません'); L.push('→ PCとiPadで別々に作った“別作品”の可能性。'); L.push('  クラウドの●が付かない作品を「シナリオの管理」から開いて使ってください。'); }
+        else { L.push('クラウド側 同作品: rev'+(cur.rev||0)+' / '+new Date(cur.updated||0).toLocaleString());
+          if((cur.rev||0)>(state.rev||0)) L.push('→ クラウドが新しい。「同期し直し」で取得できるはずです。');
+          else if((cur.rev||0)<(state.rev||0)) L.push('→ この端末が新しい。相手側で「同期し直し」を。');
+          else L.push('→ 版番号は同じ（内容は一致のはず）。'); }
+        alert(L.join('\n')); saveInd.textContent='診断完了';
+      }).catch(function(){ alert('診断中に通信エラー'); saveInd.textContent='診断失敗'; });
+    };
+    if(gid) run(gid); else findSharedGist().then(function(g){ if(g){ ghGist=g; run(g); } else { alert('同期先Gistが見つかりません'); saveInd.textContent='診断完了'; } });
+  }
+  (function(){ var b=document.getElementById('btnDiag'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); ghDiag(); }; })();
   var loginOvl=document.getElementById('loginOvl');
   document.getElementById('btnAuth').onclick=function(){
     hmenu.classList.remove('show');
@@ -2401,7 +2433,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21c 同期修正版(rev/高速化: 送信~5秒/取得12秒)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21d 同期診断版(rev/高速化/診断ボタン)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
