@@ -2310,15 +2310,22 @@
           var rd=null; try{ rd=JSON.parse(incoming); }catch(e){}
           if(rd){
             var merged=mergeCloud(rd);
+            var forcedRemote=false;
+            /* 手動「同期し直し」時は、時計や版番号に関係なく“クラウドの内容”を今の作品に取り込む（未送信のローカル編集が無い場合のみ） */
+            if(force && rd.docs && rd.docs[state.id] && !(pushTimer||pushing)){
+              var localDocJson=''; try{ localDocJson=localStorage.getItem(K_DOC(state.id))||''; }catch(_){}
+              var remoteDocJson=''; try{ remoteDocJson=JSON.stringify(rd.docs[state.id]); }catch(_){}
+              if(remoteDocJson && remoteDocJson!==localDocJson){ merged.docs[state.id]=rd.docs[state.id]; merged.index=(merged.index||[]).map(function(e){ return e.id===state.id?{id:e.id,name:(rd.docs[state.id].name||e.name),updated:(rd.docs[state.id].updated||e.updated)}:e; }); forcedRemote=true; }
+            }
             importCloud(merged);
             var curRemote=merged.docs[state.id];
-            var remoteNewer = curRemote && ( ((curRemote.rev||0) > (state.rev||0)) || ((curRemote.rev||0)===(state.rev||0) && (curRemote.updated||0) > (state.updated||0)) );
+            var remoteNewer = forcedRemote || (curRemote && ( ((curRemote.rev||0) > (state.rev||0)) || ((curRemote.rev||0)===(state.rev||0) && (curRemote.updated||0) > (state.updated||0)) ));
             if(!saveTimer && remoteNewer){
               if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
-              saveInd.textContent='最新を取得 '+now();
+              saveInd.textContent=(forcedRemote?'クラウド版を取得 ':'最新を取得 ')+now();
             } else if(force){ saveInd.textContent='同期済み '+now(); }
-            /* ローカルにリモートより新しい文書があればリモートへ反映（巻き戻り防止） */
-            try{ if(JSON.stringify(merged)!==incoming && typeof cloudPush==='function') cloudPush(); }catch(e){}
+            /* ローカルにリモートより新しい文書があればリモートへ反映（巻き戻り防止）。ただし手動でクラウド版を取り込んだ直後は上書きしない */
+            try{ if(!forcedRemote && JSON.stringify(merged)!==incoming && typeof cloudPush==='function') cloudPush(); }catch(e){}
           }
         } else if(force){ saveInd.textContent='同期済み（最新）'; }
       } else if(force){ saveInd.textContent='この端末のデータはまだ未送信です'; }
@@ -2394,7 +2401,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21 同期修正版(rev/no-store/timeout)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21b 同期修正版(rev/no-store/timeout/手動クラウド取得)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
