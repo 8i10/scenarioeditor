@@ -686,7 +686,7 @@
   function persist(){
     scheduleUndo();
     if(!state.id) state.id=docId();
-    state.updated=Date.now();
+    state.updated=Date.now(); state.rev=(state.rev||0)+1;
     var json=null; try{ json=JSON.stringify(state); }catch(e){}
     var idx=readIndex(), e=null;
     for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
@@ -736,7 +736,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[];
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(typeof o.rev!=="number")o.rev=0;
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
     o.pages.forEach(function(p,i){ if(!p.id)p.id=pageId(); if(!p.name)p.name='ページ'+(i+1); if(!p.blocks)p.blocks=[]; });
     if(!o.curPage || !o.pages.some(function(p){return p.id===o.curPage;})) o.curPage=o.pages[0].id;
@@ -2190,7 +2190,10 @@
     Object.keys(ids).forEach(function(id){
       var ld=(local.docs||{})[id], rd=(remote.docs||{})[id];
       var lu=ld?(ld.updated||0):-1, ru=rd?(rd.updated||0):-1;
-      var pick=(ru>lu)?rd:ld;
+      var lr=(ld&&typeof ld.rev==='number')?ld.rev:-1, rr=(rd&&typeof rd.rev==='number')?rd.rev:-1;
+      var pick;
+      if(lr>=0 && rr>=0 && lr!==rr){ pick=(rr>lr)?rd:ld; }   /* 版番号で判定（時計ずれに強い） */
+      else { pick=(ru>lu)?rd:ld; }                            /* 版番号が無い/同じなら更新時刻 */
       if(pick){ merged.docs[id]=pick; merged.index.push({id:id,name:pick.name||'無題',updated:pick.updated||0}); }
     });
     return merged;
@@ -2307,7 +2310,8 @@
             var merged=mergeCloud(rd);
             importCloud(merged);
             var curRemote=merged.docs[state.id];
-            if(!saveTimer && curRemote && (curRemote.updated||0) > (state.updated||0)){
+            var remoteNewer = curRemote && ( ((curRemote.rev||0) > (state.rev||0)) || ((curRemote.rev||0)===(state.rev||0) && (curRemote.updated||0) > (state.updated||0)) );
+            if(!saveTimer && remoteNewer){
               if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
               saveInd.textContent='最新を取得 '+now();
             } else if(force){ saveInd.textContent='同期済み '+now(); }
