@@ -2179,7 +2179,7 @@
   function ghId(){ return account.indexOf('id_')===0 ? account.slice(3) : ''; }
   function ghConnected(){ return account.indexOf('id_')===0 && !!ghToken; }
   function ghFile(){ return 'user-'+ghId()+'.json'; }
-  function ghFetch(path,opts){ opts=opts||{}; opts.headers=Object.assign({'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},opts.headers||{}); return fetch('https://api.github.com'+path,opts); }
+  function ghFetch(path,opts){ opts=opts||{}; opts.headers=Object.assign({'Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},opts.headers||{}); opts.cache='no-store'; var to=null; try{ var ctrl=new AbortController(); opts.signal=ctrl.signal; to=setTimeout(function(){ try{ctrl.abort();}catch(_){} },15000); }catch(_){} return fetch('https://api.github.com'+path,opts).then(function(r){ if(to)clearTimeout(to); return r; },function(e){ if(to)clearTimeout(to); throw e; }); }
   function exportCloud(){ var idx=readIndex(),docs={}; idx.forEach(function(e){ try{ docs[e.id]=JSON.parse(localStorage.getItem(K_DOC(e.id))); }catch(_){} }); return {index:idx,docs:docs}; }
   function importCloud(data){ if(!data) return; writeIndex(data.index||[]); (data.index||[]).forEach(function(e){ if(data.docs&&data.docs[e.id]){ try{ localStorage.setItem(K_DOC(e.id), JSON.stringify(data.docs[e.id])); }catch(_){}}}); }
   function mergeCloud(remote){
