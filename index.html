@@ -481,6 +481,8 @@
       <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
       <div class="hm-sec">アカウント（GitHub同期）</div>
       <div class="hm-row"><span id="acctLabel">未接続</span><span style="display:flex;gap:6px"><button class="hb2" id="btnSync" title="他端末の変更を取得" style="display:none">🔄 同期</button><button class="hb2" id="btnAuth">GitHub連携</button></span></div>
+      <div class="hm-sec">バージョン</div>
+      <div class="hm-row"><span id="appVer" style="color:var(--muted);font-size:12px">—</span></div>
     </div>
   </div>
 </div>
@@ -2392,6 +2394,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21 同期修正版(rev/no-store/timeout)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
