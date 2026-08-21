@@ -2283,12 +2283,18 @@
   }
   var lastPullAt=0;
   function ghPull(force){
-    if(!ghConnected()) return;
+    if(!ghConnected()){ if(force) saveInd.textContent='未連携（同期オフ）'; return; }
     var nowMs=Date.now();
     if(!force && (nowMs-lastPullAt < 8000)) return; /* 8秒以内の連続取得は間引き（レート制限回避） */
     if(!ghGist){ ghGist=(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})(); }
-    if(!ghGist){ findSharedGist().then(function(gid){ if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} ghPull(force); } }); return; }
-    if((pushTimer||pushing) && !force) return; /* 未送信のローカル編集がある間は取得しない（巻き戻り防止／送信を優先） */
+    if(!ghGist){
+      findSharedGist().then(function(gid){
+        if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} ghPull(force); }
+        else if(force){ saveInd.textContent='同期先が見つかりません（未送信／別トークン・別IDの可能性）'; }
+      }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
+      return;
+    }
+    if((pushTimer||pushing) && !force){ return; } /* 未送信のローカル編集がある間は取得しない（巻き戻り防止／送信を優先） */
     lastPullAt=nowMs;
     ghFetch('/gists/'+ghGist).then(function(r){ if(!r.ok){ if(force) saveInd.textContent='取得失敗（'+statusMsg(r.status)+'）'; return null; } return r.json(); }).then(function(gd){
       if(!gd) return; var f=gd.files&&gd.files[ghFile()];
