@@ -146,7 +146,7 @@
   .col-resize{flex:0 0 22px;align-self:stretch;min-height:1.8em;cursor:col-resize;position:relative;touch-action:none}
   .col-resize::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;border-radius:2px;background:transparent;transition:background .12s}
   .cols-row.colline .col-resize::before{background:var(--line)}
-  .cols-row.colline>.colcell + .colcell{border-left:1px solid var(--line)}
+  .cols-row.colline>.colcell + .colcell{border-left:1px solid var(--line);margin-left:-12px;padding-left:12px}
   .col-resize::after{content:"";position:absolute;left:5px;top:50%;transform:translateY(-50%);width:12px;height:36px;border-radius:6px;background:var(--muted);opacity:0;transition:opacity .12s,background .12s}
   .col-resize:hover::before,.col-resize.rz::before{background:var(--red)}
   .col-resize:hover::after,.col-resize.rz::after{opacity:.95;background:var(--red)}
@@ -2302,7 +2302,7 @@
             importCloud(merged);
             var curRemote=merged.docs[state.id];
             if(!saveTimer && curRemote && (curRemote.updated||0) > (state.updated||0)){
-              if(load()){ applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
+              if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; }
               saveInd.textContent='最新を取得 '+now();
             } else if(force){ saveInd.textContent='同期済み '+now(); }
             /* ローカルにリモートより新しい文書があればリモートへ反映（巻き戻り防止） */
@@ -2380,7 +2380,8 @@
     vv.addEventListener('resize', pin); vv.addEventListener('scroll', pin); window.addEventListener('scroll', pin, {passive:true});
     document.addEventListener('focusin', function(){ setTimeout(pin, 60); setTimeout(pin, 300); });
   })();
-  (function(){ var ch=false; (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; ch=true; } } } })(pg.blocks||[]); }); if(ch) persist(); })();
+  function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
+  normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
