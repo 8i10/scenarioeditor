@@ -2201,7 +2201,7 @@
     return merged;
   }
   var pushTimer=null, pushing=false, lastPushAt=0, backoffUntil=0, backoffMs=0;
-  var PUSH_DEBOUNCE=4000, MIN_PUSH_GAP=15000;
+  var PUSH_DEBOUNCE=2000, MIN_PUSH_GAP=5000;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
   function doPush(retry){
     pushing=true;
@@ -2290,7 +2290,7 @@
   function ghPull(force){
     if(!ghConnected()){ if(force) saveInd.textContent='未連携（同期オフ）'; return; }
     var nowMs=Date.now();
-    if(!force && (nowMs-lastPullAt < 8000)) return; /* 8秒以内の連続取得は間引き（レート制限回避） */
+    if(!force && (nowMs-lastPullAt < 4000)) return; /* 8秒以内の連続取得は間引き（レート制限回避） */
     if(!ghGist){ ghGist=(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})(); }
     if(!ghGist){
       findSharedGist().then(function(gid){
@@ -2352,7 +2352,7 @@
   window.addEventListener('focus',function(){ refreshFromStore(); ghPull(false); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden){ refreshFromStore(); ghPull(false); } });
   window.addEventListener('pageshow',function(e){ if(e && e.persisted){ refreshFromStore(); ghPull(false); } });
-  setInterval(function(){ ghPull(false); }, 30000);
+  setInterval(function(){ ghPull(false); }, 12000);
 
   /* ---- 初期化 ---- */
   if(!load()){
@@ -2401,7 +2401,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21b 同期修正版(rev/no-store/timeout/手動クラウド取得)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21c 同期修正版(rev/高速化: 送信~5秒/取得12秒)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
