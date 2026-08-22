@@ -804,14 +804,17 @@
   function movePage(id,dir){ var i=-1; (state.pages||[]).forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; var j=i+dir; if(j<0||j>=state.pages.length) return; var t=state.pages[i]; state.pages[i]=state.pages[j]; state.pages[j]=t; renderOutline(); persist(); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
   function deleteDoc(id){
-    try{ localStorage.removeItem(K_DOC(id)); }catch(e){}
-    try{ if(idb&&idb.set) idb.set(K_DOC(id), null).catch(function(){}); }catch(e){}
-    var idx=readIndex().filter(function(x){return x.id!==id;}); writeIndex(idx);
-    try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(e){}
-    try{ delete dirtyDocs[id]; }catch(e){}
-    /* クラウド上の該当作品ファイルを削除＋索引更新 */
+    var idx=readIndex(), e=null; for(var i=0;i<idx.length;i++){ if(idx[i].id===id){ e=idx[i]; break; } }
+    var newRev=((e&&e.rev)||0)+1;
+    var had=false; idx=idx.map(function(x){ if(x.id===id){ had=true; return {id:id,name:(e&&e.name)||'',updated:Date.now(),rev:newRev,del:1}; } return x; });
+    if(!had) idx.push({id:id,name:'',updated:Date.now(),rev:newRev,del:1});
+    writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
+    try{ localStorage.removeItem(K_DOC(id)); }catch(_){}
+    try{ if(idb&&idb.set) idb.set(K_DOC(id), null).catch(function(){}); }catch(_){}
+    try{ delete dirtyDocs[id]; }catch(_){}
+    /* クラウド：索引に削除マークを反映＋作品ファイルを削除 */
     if(ghConnected() && ghGist){ var files={}; files[cloudIdxFile()]={content:cloudIndexPayload()}; files[cloudDocFile(id)]=null; ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).catch(function(){}); }
-    if(state.id===id){ if(idx[0]) openDoc(idx[0].id); else newDoc('無題のシナリオ'); }
+    if(state.id===id){ var vis=idx.filter(function(x){return !x.del;}); if(vis[0]) openDoc(vis[0].id); else newDoc('無題のシナリオ'); }
   }
   function updateDocName(){ var el=document.getElementById('docName'); if(el) el.textContent=state.name||'無題'; }
 
@@ -1837,7 +1840,7 @@
   /* ---- ファイル管理（複数シナリオ） ---- */
   var fileOvl=document.getElementById('fileOvl');
   function renderFileList(){
-    var idx=readIndex().slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);});
+    var idx=readIndex().filter(function(x){return !x.del;}).slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);});
     var el=document.getElementById('fList');
     var sq=((document.getElementById('fSearch')||{}).value||'').toLowerCase().trim();
     if(!idx.length){ el.innerHTML='<div class="fhint">保存されたシナリオはありません</div>'; return; }
@@ -2223,7 +2226,7 @@
   function cloudIdxFile(){ return 'user-'+ghId()+'.json'; }
   function cloudDocFile(id){ return 'user-'+ghId()+'__'+id+'.json'; }
   function cloudIndexPayload(){
-    var idx=readIndex().map(function(e){ var rev=e.rev; if(rev==null){ try{ var d=JSON.parse(localStorage.getItem(K_DOC(e.id))||'null'); if(d) rev=d.rev||0; }catch(_){} } return {id:e.id,name:e.name,updated:e.updated||0,rev:rev||0}; });
+    var idx=readIndex().map(function(e){ var rev=e.rev; if(rev==null){ try{ var d=JSON.parse(localStorage.getItem(K_DOC(e.id))||'null'); if(d) rev=d.rev||0; }catch(_){} } var o={id:e.id,name:e.name,updated:e.updated||0,rev:rev||0}; if(e.del) o.del=1; return o; });
     return JSON.stringify({v:2, index:idx});
   }
   function getDocJson(id){ var j=null; try{ j=localStorage.getItem(K_DOC(id)); }catch(_){} if(j) return Promise.resolve(j); if(idb&&idb.get) return idb.get(K_DOC(id)).then(function(v){ return v||null; }).catch(function(){ return null; }); return Promise.resolve(null); }
@@ -2233,7 +2236,7 @@
   function doPush(retry){
     pushing=true;
     var migrated=false; try{ migrated=localStorage.getItem('scn_perdoc_migrated')==='1'; }catch(_){}
-    var ids = migrated ? Object.keys(dirtyDocs) : readIndex().map(function(e){return e.id;});
+    var ids = migrated ? Object.keys(dirtyDocs) : readIndex().filter(function(e){return !e.del;}).map(function(e){return e.id;});
     if(ids.indexOf(state.id)<0) ids.push(state.id);
     Promise.all(ids.map(function(id){ return getDocJson(id).then(function(j){ return {id:id,j:j}; }); })).then(function(list){
       var files={}; files[cloudIdxFile()]={content:cloudIndexPayload()};
@@ -2360,14 +2363,19 @@
         var ridx=(parsed.index||[]);
         var localIdx=readIndex(); var localRev={}; localIdx.forEach(function(e){ localRev[e.id]=(e.rev!=null?e.rev:0); });
         var idxMap={}; localIdx.forEach(function(e){ idxMap[e.id]=e; });
-        ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0}; });
+        ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,del:e.del?1:undefined}; });
+        var curDeleted=false;
         var toFetch=[]; ridx.forEach(function(e){
           var lr=(e.id===state.id)?(state.rev||0):(localRev[e.id]!=null?localRev[e.id]:-1);
+          if(e.del){ /* 削除マーク：リモートが新しければローカルも削除 */
+            if((e.rev||0) > lr){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} try{ delete dirtyDocs[e.id]; }catch(_){} idxMap[e.id]={id:e.id,name:e.name||'',updated:e.updated||0,rev:e.rev||0,del:1}; if(e.id===state.id) curDeleted=true; }
+            return;
+          }
           if(force && e.id===state.id) toFetch.push(e);
           else if((e.rev||0) > lr || lr===-1) toFetch.push(e);
         });
         var writeIdx=function(){ var arr=Object.keys(idxMap).map(function(k){return idxMap[k];}); writeIndex(arr); try{ idb.set('scn_index', JSON.stringify(arr)).catch(function(){}); }catch(_){} };
-        if(!toFetch.length){ writeIdx(); if(force) saveInd.textContent='同期済み（最新） '+now(); return; }
+        if(!toFetch.length){ writeIdx(); if(curDeleted){ var vis0=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis0[0]) openDoc(vis0[0].id); else newDoc('無題のシナリオ'); if(force) saveInd.textContent='削除を反映 '+now(); return; } if(force) saveInd.textContent='同期済み（最新） '+now(); return; }
         return Promise.all(toFetch.map(function(e){ return readGistNamed(gd, cloudDocFile(e.id)).then(function(dj){ return {id:e.id, dj:dj}; }); })).then(function(list){
           var curChanged=false, forcedRemote=false;
           list.forEach(function(x){
@@ -2378,6 +2386,7 @@
             if(accept){ try{ localStorage.setItem(K_DOC(x.id), x.dj); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(x.id), x.dj).catch(function(){}); }catch(_){} idxMap[x.id]={id:x.id,name:(dd.name||''),updated:(dd.updated||0),rev:(dd.rev||0)}; if(isCur) curChanged=true; }
           });
           writeIdx();
+          if(curDeleted){ var vis1=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis1[0]) openDoc(vis1[0].id); else newDoc('無題のシナリオ'); if(force) saveInd.textContent='削除を反映 '+now(); return; }
           if(!saveTimer && curChanged){ if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } saveInd.textContent=(forcedRemote?'クラウド版を取得 ':'最新を取得 ')+now(); }
           else if(force){ saveInd.textContent='同期済み '+now(); }
         });
@@ -2489,7 +2498,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21g 同期(作品ごと別ファイル方式・大容量対応)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21h 同期(作品別ファイル/削除の確実な反映)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
