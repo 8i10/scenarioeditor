@@ -382,6 +382,14 @@
   .ruby-row .ruby-del{flex:none;border:0;background:transparent;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;color:var(--muted)}
   .ruby-row .ruby-del:hover{background:var(--hover)}
   .fitem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .ffolder{display:flex;align-items:center;gap:5px;padding:6px 8px;margin-top:6px;font-weight:700;font-size:12.5px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--line);user-select:none}
+  .ffolder:first-child{margin-top:0}
+  .ffolder:hover{color:var(--accent)}
+  .ffolder .ftw{width:12px;display:inline-block;text-align:center;color:var(--muted);font-size:10px}
+  .ffolder .fcount{color:var(--muted);font-weight:400;font-size:11px}
+  .ffolder-none{color:var(--muted)}
+  .fitem.fin{margin-left:16px}
+  .fitem [data-fold]{opacity:.7}
   .fitem.cur{border-color:var(--accent2);background:var(--hover)}
   .fitem .fnm{flex:1;font-size:13px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .fitem .fdt{font-size:10.5px;color:var(--muted)}
@@ -693,7 +701,7 @@
     var json=null; try{ json=JSON.stringify(state); }catch(e){}
     var idx=readIndex(), e=null;
     for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
-    if(e){ e.name=state.name; e.updated=state.updated; e.rev=state.rev; } else idx.push({id:state.id,name:state.name,updated:state.updated,rev:state.rev});
+    if(e){ e.name=state.name; e.updated=state.updated; e.rev=state.rev; e.folder=state.folder||''; } else idx.push({id:state.id,name:state.name,updated:state.updated,rev:state.rev,folder:state.folder||''});
     try{ dirtyDocs[state.id]=1; }catch(_){}
     /* 大容量・確実なバックアップ（IndexedDB） */
     if(json){ idb.set(K_DOC(state.id), json).catch(function(){}); }
@@ -740,7 +748,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(typeof o.rev!=="number")o.rev=0;
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder="";
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
     o.pages.forEach(function(p,i){ if(!p.id)p.id=pageId(); if(!p.name)p.name='ページ'+(i+1); if(!p.blocks)p.blocks=[]; });
     if(!o.curPage || !o.pages.some(function(p){return p.id===o.curPage;})) o.curPage=o.pages[0].id;
@@ -1839,18 +1847,57 @@
 
   /* ---- ファイル管理（複数シナリオ） ---- */
   var fileOvl=document.getElementById('fileOvl');
+  var folderCollapsed={};
+  function allFolders(){ var fs=[]; readIndex().forEach(function(e){ if(!e.del && e.folder && fs.indexOf(e.folder)<0) fs.push(e.folder); }); fs.sort(function(a,b){return a.localeCompare(b,'ja');}); return fs; }
   function renderFileList(){
-    var idx=readIndex().filter(function(x){return !x.del;}).slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);});
+    var idx=readIndex().filter(function(x){return !x.del;}).slice();
     var el=document.getElementById('fList');
     var sq=((document.getElementById('fSearch')||{}).value||'').toLowerCase().trim();
     if(!idx.length){ el.innerHTML='<div class="fhint">保存されたシナリオはありません</div>'; return; }
     var list=sq?idx.filter(function(x){return (x.name||'').toLowerCase().indexOf(sq)>=0;}):idx;
     if(!list.length){ el.innerHTML='<div class="fhint">「'+esc(sq)+'」に一致するシナリオはありません</div>'; return; }
-    el.innerHTML=list.map(function(x){
+    var groups={}, order=[];
+    list.forEach(function(x){ var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
+    order.sort(function(a,b){ if(a===b) return 0; if(a==='') return 1; if(b==='') return -1; return a.localeCompare(b,'ja'); });
+    var hasFolders=order.some(function(f){return f!=='';});
+    function itemHTML(x,indent){
       var cur=x.id===state.id?' cur':''; var dt=x.updated?new Date(x.updated):null;
       var dts=dt?((dt.getMonth()+1)+'/'+dt.getDate()+' '+pad(dt.getHours())+':'+pad(dt.getMinutes())):'';
-      return '<div class="fitem'+cur+'"><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+(cur?' ✓':'')+'</span><span class="fdt">'+dts+'</span><button data-dup="'+x.id+'">複製</button><button data-del="'+x.id+'">削除</button></div>';
-    }).join('');
+      return '<div class="fitem'+cur+(indent?' fin':'')+'"><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+(cur?' ✓':'')+'</span><span class="fdt">'+dts+'</span><button data-fold="'+x.id+'" title="フォルダへ移動">📁</button><button data-dup="'+x.id+'">複製</button><button data-del="'+x.id+'">削除</button></div>';
+    }
+    var html='';
+    order.forEach(function(f){
+      var items=groups[f].sort(function(a,b){return (b.updated||0)-(a.updated||0);});
+      if(f===''){
+        if(hasFolders){ var c0=!!folderCollapsed['']; html+='<div class="ffolder ffolder-none" data-folder=""><span class="ftw">'+(c0?'▸':'▾')+'</span>📄 フォルダなし <span class="fcount">'+items.length+'</span></div>'; if(c0) return; }
+        items.forEach(function(x){ html+=itemHTML(x,hasFolders); });
+      } else {
+        var c=!!folderCollapsed[f];
+        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span></div>';
+        if(c) return;
+        items.forEach(function(x){ html+=itemHTML(x,true); });
+      }
+    });
+    el.innerHTML=html;
+  }
+  function setDocFolder(id, folder){
+    folder=(folder||'').trim();
+    if(id===state.id){ state.folder=folder; persist(); return; }
+    var apply=function(o){ if(!o) return; o.folder=folder; o.updated=Date.now(); o.rev=(o.rev||0)+1; var j=JSON.stringify(o);
+      try{ localStorage.setItem(K_DOC(id), j); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(id), j).catch(function(){}); }catch(_){}
+      var idx=readIndex().map(function(e){ return e.id===id?{id:id,name:o.name,updated:o.updated,rev:o.rev,folder:folder}:e; }); writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
+      try{ dirtyDocs[id]=1; }catch(_){} if(typeof cloudPush==='function') cloudPush();
+    };
+    var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(_){}
+    if(raw){ var o=null; try{ o=JSON.parse(raw); }catch(_){} if(o){ apply(o); return; } }
+    if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v){ var o2=null; try{ o2=JSON.parse(v); }catch(_){} apply(o2); } }); }
+  }
+  function promptFolder(id){
+    var fs=allFolders(); var cur=''; readIndex().forEach(function(e){ if(e.id===id) cur=e.folder||''; });
+    var msg='フォルダ名を入力してください（空欄でフォルダなしに戻す）';
+    if(fs.length) msg+='\n既存フォルダ: '+fs.join(' ／ ');
+    var f=prompt(msg, cur); if(f===null) return;
+    setDocFolder(id, f); renderFileList();
   }
   function openFileDlg(){ document.getElementById('fName').value=state.name; document.getElementById('fHint').textContent='現在のシナリオ：'+state.name; renderFileList(); fileOvl.classList.add('show'); }
   document.getElementById('btnFile').onclick=openFileDlg;
@@ -1867,6 +1914,10 @@
   };
   (function(){ var fs=document.getElementById('fSearch'); if(fs) fs.addEventListener('input', renderFileList); })();
   document.getElementById('fList').addEventListener('click',function(e){
+    var fh=e.target.closest('.ffolder');
+    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fold]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
+    var fold=e.target.getAttribute('data-fold');
+    if(fold){ promptFolder(fold); return; }
     var op=e.target.getAttribute('data-open');
     if(op){ openDoc(op); document.getElementById('fName').value=state.name; renderFileList(); document.getElementById('fHint').textContent='開きました：'+state.name; return; }
     var dup=e.target.getAttribute('data-dup');
@@ -2229,7 +2280,7 @@
   function cloudIdxFile(){ return 'user-'+ghId()+'.json'; }
   function cloudDocFile(id){ return 'user-'+ghId()+'__'+id+'.json'; }
   function cloudIndexPayload(){
-    var idx=readIndex().map(function(e){ var rev=e.rev; if(rev==null){ try{ var d=JSON.parse(localStorage.getItem(K_DOC(e.id))||'null'); if(d) rev=d.rev||0; }catch(_){} } var o={id:e.id,name:e.name,updated:e.updated||0,rev:rev||0}; if(e.del) o.del=1; return o; });
+    var idx=readIndex().map(function(e){ var rev=e.rev; if(rev==null){ try{ var d=JSON.parse(localStorage.getItem(K_DOC(e.id))||'null'); if(d) rev=d.rev||0; }catch(_){} } var o={id:e.id,name:e.name,updated:e.updated||0,rev:rev||0}; if(e.del) o.del=1; if(e.folder) o.folder=e.folder; return o; });
     return JSON.stringify({v:2, index:idx});
   }
   function getDocJson(id){ var j=null; try{ j=localStorage.getItem(K_DOC(id)); }catch(_){} if(j) return Promise.resolve(j); if(idb&&idb.get) return idb.get(K_DOC(id)).then(function(v){ return v||null; }).catch(function(){ return null; }); return Promise.resolve(null); }
@@ -2366,7 +2417,7 @@
         var ridx=(parsed.index||[]);
         var localIdx=readIndex(); var localRev={}; localIdx.forEach(function(e){ localRev[e.id]=(e.rev!=null?e.rev:0); });
         var idxMap={}; localIdx.forEach(function(e){ idxMap[e.id]=e; });
-        ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,del:e.del?1:undefined}; });
+        ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,del:e.del?1:undefined,folder:e.folder||''}; });
         var curDeleted=false;
         var toFetch=[]; ridx.forEach(function(e){
           var lr=(e.id===state.id)?(state.rev||0):(localRev[e.id]!=null?localRev[e.id]:-1);
@@ -2386,7 +2437,7 @@
             var isCur=(x.id===state.id), accept=false;
             if(isCur && force){ var lj=''; try{ lj=localStorage.getItem(K_DOC(x.id))||''; }catch(_){} if(x.dj!==lj){ accept=true; forcedRemote=true; } }
             else { var lr=isCur?(state.rev||0):(localRev[x.id]!=null?localRev[x.id]:-1); if((dd.rev||0) > lr || lr===-1) accept=true; }
-            if(accept){ try{ localStorage.setItem(K_DOC(x.id), x.dj); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(x.id), x.dj).catch(function(){}); }catch(_){} idxMap[x.id]={id:x.id,name:(dd.name||''),updated:(dd.updated||0),rev:(dd.rev||0)}; if(isCur) curChanged=true; }
+            if(accept){ try{ localStorage.setItem(K_DOC(x.id), x.dj); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(x.id), x.dj).catch(function(){}); }catch(_){} idxMap[x.id]={id:x.id,name:(dd.name||''),updated:(dd.updated||0),rev:(dd.rev||0),folder:(dd.folder||'')}; if(isCur) curChanged=true; }
           });
           writeIdx();
           if(curDeleted){ var vis1=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis1[0]) openDoc(vis1[0].id); else newDoc('無題のシナリオ'); if(force) saveInd.textContent='削除を反映 '+now(); return; }
@@ -2501,7 +2552,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21i 出力しおり常時表示/コピー改行/同期(作品別)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21j フォルダ分け/出力しおり常時/同期(作品別)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
