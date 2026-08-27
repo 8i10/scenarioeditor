@@ -1908,7 +1908,7 @@
     }
     if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
-    return '<div class="block'+done+(b.bg?' has-bg':'')+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||'')+'</div></div>';
+    return '<div class="block'+done+(b.bg?' has-bg':'')+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||(b.type==='p'?'<br>':''))+'</div></div>';
   }
   function exportHTML(){
     (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
@@ -1917,7 +1917,6 @@
     var fsXs=(state.fs==='xs'?' class="on"':''), fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
     var themeLabel=(state.theme==='dark'?'☀ ライト':'🌙 ダーク');
     var vhead='<div class="v-head">'
-      +'<button class="hbtn ico" id="vOutline" title="しおり"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg></button>'
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
@@ -1939,6 +1938,10 @@
       +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
       +' .ruby-t:hover::before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2b2b2b;z-index:1000;pointer-events:none}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-pdup,.outline .ol-add,.outline .ol-ruby{display:none!important}'
+      +' .outline .ol-ttl{display:none!important}'
+      +' .outline{transform:none!important}'
+      +' .scn-page .doc .block{display:block}'
+      +' .scn-page .doc .be{white-space:pre-wrap}'
       +' .scn-page{display:none}'
       +' .scn-page.scn-cur{display:block}'
       +' .scn-page.pb{break-before:page;page-break-before:always}'
@@ -1946,7 +1949,7 @@
     var vjs='<'+'script>(function(){var root=document.documentElement,nav=document.getElementById("vOutlineNav"),wrap=document.querySelector(".wrap");'
       +'function showPage(pid){document.querySelectorAll(".scn-page").forEach(function(s){s.classList.toggle("scn-cur",s.id==="pg_"+pid);});document.querySelectorAll("#vOutlineNav .ol-page").forEach(function(r){r.classList.toggle("cur",r.getAttribute("data-page")===pid);});window.scrollTo(0,0);}'
       +'function setOpen(o){nav.classList.toggle("open",o);document.body.classList.toggle("ol-open",o);}'
-      +'document.getElementById("vOutline").onclick=function(){setOpen(!nav.classList.contains("open"));};'
+      +'var vo=document.getElementById("vOutline");if(vo)vo.onclick=function(){setOpen(!nav.classList.contains("open"));};'
       +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var htw=e.target.closest("[data-htw]");if(htw){var g=htw.closest(".ol-hgroup");if(g)g.classList.toggle("open");return;}var ptw=e.target.closest("[data-ptw]");if(ptw){var pg=ptw.closest(".ol-pgroup");if(pg)pg.classList.toggle("open");return;}var hrow=e.target.closest(".ol-hrow");if(hrow){var el=document.querySelector(\'.block[data-id="\'+hrow.getAttribute("data-goto")+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}return;}var prow=e.target.closest(".ol-page");if(prow){var grp=prow.closest(".ol-pgroup");if(grp)grp.classList.add("open");showPage(prow.getAttribute("data-page"));}});'
       +'var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));'
       +'var FS={xs:0.66,sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
@@ -2498,7 +2501,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21h 同期(作品別ファイル/削除の確実な反映)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21i 出力しおり常時表示/コピー改行/同期(作品別)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
