@@ -387,7 +387,8 @@
   .ovl.fpage .fdlg{width:100%;max-width:none;height:100%;max-height:none;border-radius:0;display:flex;flex-direction:column;background:var(--bg);box-shadow:none;padding:0}
   .fpg-head{display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;background:var(--header-bg);color:var(--header-text);flex:none}
   .fpg-head .fpg-ttl{font-weight:700;letter-spacing:.04em;font-size:15px}
-  .fpg-head #fClose{margin-left:auto}
+  .fpg-head .fpg-hint{margin-left:auto;color:var(--header-text);opacity:.85;font-size:12px;max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+  .fpg-head #fClose{margin-left:12px;flex:none}
   .fpg-body{flex:1;overflow:auto;padding:14px 16px 40px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box}
   .fpg-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
   .fpg-bar input[type=text]{height:34px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit}
@@ -560,6 +561,7 @@
   <div class="dlg fdlg">
     <div class="fpg-head">
       <span class="fpg-ttl">シナリオ管理</span>
+      <span class="fhint fpg-hint" id="fHint"></span>
       <button class="hb2" id="fClose">✕ 閉じて編集へ</button>
     </div>
     <div class="fpg-body">
@@ -569,14 +571,7 @@
         <button class="hb2" id="fNew">＋ 新規シナリオ</button>
         <button class="hb2" id="fNewFolder">📁＋ 新規フォルダ</button>
       </div>
-      <div class="fpg-bar fpg-exp">
-        <span class="fpg-explabel">現在の作品を出力：</span>
-        <button class="hb2" id="fExpHtml">閲覧用HTML</button>
-        <button class="hb2" id="fExpPdfBk">PDF（しおり付・文字選択可）</button>
-        <button class="hb2" id="fExpPdf">PDF（軽量・印刷向け）</button>
-      </div>
       <div class="fpg-bar"><input type="text" id="fSearch" placeholder="🔍 シナリオを検索…" style="flex:1"></div>
-      <div class="fhint" id="fHint"></div>
       <div class="flist fpg-list" id="fList"></div>
     </div>
   </div>
@@ -1917,10 +1912,8 @@
       return '<div class="fitem'+cur+(indent?' fin':'')+'" data-id="'+x.id+'" draggable="true"><span class="fgrip" title="ドラッグでフォルダ移動">⠿</span><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+'</span>'+sel+'<button data-dup="'+x.id+'">複製</button><button class="fdelb" data-del="'+x.id+'" title="削除">🗑</button></div>';
     }
     var html='';
-    var curEntry=null; for(var i=0;i<list.length;i++){ if(list[i].id===state.id){ curEntry=list[i]; break; } }
-    if(curEntry && !sq){ html+='<div class="fpin"><div class="fpin-lbl">編集中</div>'+itemHTML(curEntry,false)+'</div>'; }
     var groups={}, order=[];
-    list.forEach(function(x){ if(curEntry && !sq && x.id===state.id) return; var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
+    list.forEach(function(x){ var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
     if(!sq){ if(!('' in groups)){ groups['']=[]; order.push(''); } allFolders().forEach(function(f){ if(!(f in groups)){ groups[f]=[]; order.push(f); } }); }
     order.sort(function(a,b){ if(a===b) return 0; if(a==='') return -1; if(b==='') return 1; return a.localeCompare(b,'ja'); });
     order.forEach(function(f){
@@ -2649,7 +2642,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21l 管理: ドラッグ移動/名前変更/各行出力/現在ピン'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21m 管理UI調整(出力バー削除/ピン廃止/案内ヘッダー)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
