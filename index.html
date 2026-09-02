@@ -382,11 +382,28 @@
   .ruby-row .ruby-del{flex:none;border:0;background:transparent;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;color:var(--muted)}
   .ruby-row .ruby-del:hover{background:var(--hover)}
   .fitem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  /* シナリオ管理：全画面ページ */
+  .ovl.fpage{background:var(--bg);padding:0;align-items:stretch;justify-content:stretch}
+  .ovl.fpage .fdlg{width:100%;max-width:none;height:100%;max-height:none;border-radius:0;display:flex;flex-direction:column;background:var(--bg);box-shadow:none;padding:0}
+  .fpg-head{display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;background:var(--header-bg);color:var(--header-text);flex:none}
+  .fpg-head .fpg-ttl{font-weight:700;letter-spacing:.04em;font-size:15px}
+  .fpg-head #fClose{margin-left:auto}
+  .fpg-body{flex:1;overflow:auto;padding:14px 16px 40px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box}
+  .fpg-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+  .fpg-bar input[type=text]{height:34px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit}
+  .fpg-bar #fName{flex:1;min-width:160px}
+  .fpg-exp{padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:9px}
+  .fpg-explabel{font-size:12px;color:var(--muted)}
+  .fpg-list{max-height:none;margin:6px 0 0}
+  .fitem [data-exp]{opacity:.75}
   .ffolder{display:flex;align-items:center;gap:5px;padding:6px 8px;margin-top:6px;font-weight:700;font-size:12.5px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--line);user-select:none}
   .ffolder:first-child{margin-top:0}
   .ffolder:hover{color:var(--accent)}
   .ffolder .ftw{width:12px;display:inline-block;text-align:center;color:var(--muted);font-size:10px}
   .ffolder .fcount{color:var(--muted);font-weight:400;font-size:11px}
+  .ffolder .ffdel{margin-left:auto;border:0;background:transparent;cursor:pointer;font-size:12px;opacity:0;padding:2px 5px;border-radius:5px}
+  .ffolder:hover .ffdel{opacity:.6}
+  .ffolder .ffdel:hover{opacity:1;background:var(--hover)}
   .ffolder-none{color:var(--muted)}
   .fitem.fin{margin-left:16px}
   .fitem [data-fold]{opacity:.7}
@@ -526,17 +543,29 @@
     <div class="dlg-f"><button class="hb2" id="rubyClose">閉じる</button></div>
   </div>
 </div>
-<div class="ovl" id="fileOvl">
-  <div class="dlg">
-    <div class="dlg-h">シナリオの管理</div>
-    <div class="dlg-b">
-      <div class="frow"><input type="text" id="fName" placeholder="ファイル名"><button class="hb2 pri" id="fSave">この名前で保存</button></div>
-      <div class="fhint" id="fHint"></div>
-      <div class="frow"><input type="text" id="fSearch" placeholder="🔍 シナリオを検索…"></div>
-      <div class="flist" id="fList"></div>
-      <div class="frow"><button class="hb2" id="fNew">＋ 新規シナリオ</button></div>
+<div class="ovl fpage" id="fileOvl">
+  <div class="dlg fdlg">
+    <div class="fpg-head">
+      <span class="fpg-ttl">シナリオ管理</span>
+      <button class="hb2" id="fClose">✕ 閉じて編集へ</button>
     </div>
-    <div class="dlg-f"><button class="hb2" id="fClose">閉じる</button></div>
+    <div class="fpg-body">
+      <div class="fpg-bar">
+        <input type="text" id="fName" placeholder="現在の作品名">
+        <button class="hb2 pri" id="fSave">名前を保存</button>
+        <button class="hb2" id="fNew">＋ 新規シナリオ</button>
+        <button class="hb2" id="fNewFolder">📁＋ 新規フォルダ</button>
+      </div>
+      <div class="fpg-bar fpg-exp">
+        <span class="fpg-explabel">現在の作品を出力：</span>
+        <button class="hb2" id="fExpHtml">閲覧用HTML</button>
+        <button class="hb2" id="fExpPdfBk">PDF（しおり付・文字選択可）</button>
+        <button class="hb2" id="fExpPdf">PDF（軽量・印刷向け）</button>
+      </div>
+      <div class="fpg-bar"><input type="text" id="fSearch" placeholder="🔍 シナリオを検索…" style="flex:1"></div>
+      <div class="fhint" id="fHint"></div>
+      <div class="flist fpg-list" id="fList"></div>
+    </div>
   </div>
 </div>
 <div class="fbar" id="fbar">
@@ -1848,7 +1877,9 @@
   /* ---- ファイル管理（複数シナリオ） ---- */
   var fileOvl=document.getElementById('fileOvl');
   var folderCollapsed={};
-  function allFolders(){ var fs=[]; readIndex().forEach(function(e){ if(!e.del && e.folder && fs.indexOf(e.folder)<0) fs.push(e.folder); }); fs.sort(function(a,b){return a.localeCompare(b,'ja');}); return fs; }
+  function readFolders(){ try{ return JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); }catch(e){ return []; } }
+  function writeFolders(a){ try{ localStorage.setItem('scn_folders::'+account, JSON.stringify(a||[])); }catch(e){} }
+  function allFolders(){ var s=readFolders().slice(); readIndex().forEach(function(e){ if(!e.del && e.folder && s.indexOf(e.folder)<0) s.push(e.folder); }); s.sort(function(a,b){return a.localeCompare(b,'ja');}); return s; }
   function renderFileList(){
     var idx=readIndex().filter(function(x){return !x.del;}).slice();
     var el=document.getElementById('fList');
@@ -1858,6 +1889,7 @@
     if(!list.length){ el.innerHTML='<div class="fhint">「'+esc(sq)+'」に一致するシナリオはありません</div>'; return; }
     var groups={}, order=[];
     list.forEach(function(x){ var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
+    if(!sq){ allFolders().forEach(function(f){ if(!(f in groups)){ groups[f]=[]; order.push(f); } }); }
     order.sort(function(a,b){ if(a===b) return 0; if(a==='') return 1; if(b==='') return -1; return a.localeCompare(b,'ja'); });
     var hasFolders=order.some(function(f){return f!=='';});
     function itemHTML(x,indent){
@@ -1873,7 +1905,7 @@
         items.forEach(function(x){ html+=itemHTML(x,hasFolders); });
       } else {
         var c=!!folderCollapsed[f];
-        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span></div>';
+        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span><button class="ffdel" data-fdel="'+esc(f)+'" title="フォルダを削除">🗑</button></div>';
         if(c) return;
         items.forEach(function(x){ html+=itemHTML(x,true); });
       }
@@ -1902,6 +1934,10 @@
   function openFileDlg(){ document.getElementById('fName').value=state.name; document.getElementById('fHint').textContent='現在のシナリオ：'+state.name; renderFileList(); fileOvl.classList.add('show'); }
   document.getElementById('btnFile').onclick=openFileDlg;
   document.getElementById('fClose').onclick=function(){ fileOvl.classList.remove('show'); };
+  (function(){ var b=document.getElementById('fNewFolder'); if(b) b.onclick=function(){ var n=prompt('新しいフォルダ名を入力'); if(n===null) return; n=n.trim(); if(!n) return; var fs=readFolders(); if(fs.indexOf(n)<0){ fs.push(n); writeFolders(fs); } folderCollapsed[n]=false; renderFileList(); document.getElementById('fHint').textContent='フォルダ「'+n+'」を作成しました'; }; })();
+  (function(){ var h=document.getElementById('fExpHtml'); if(h) h.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」を閲覧用HTMLで書き出します…'; exportHTML(); };
+    var pb=document.getElementById('fExpPdfBk'); if(pb) pb.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」をPDF（しおり付）で書き出します…'; exportPDFText(); };
+    var pd=document.getElementById('fExpPdf'); if(pd) pd.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」をPDF（軽量）で書き出します…'; exportPDF(); }; })();
   fileOvl.onclick=function(e){ if(e.target===fileOvl) fileOvl.classList.remove('show'); };
   document.getElementById('fSave').onclick=function(){
     var nm=document.getElementById('fName').value.trim()||'無題のシナリオ';
@@ -1914,8 +1950,10 @@
   };
   (function(){ var fs=document.getElementById('fSearch'); if(fs) fs.addEventListener('input', renderFileList); })();
   document.getElementById('fList').addEventListener('click',function(e){
+    var fd=e.target.closest('[data-fdel]');
+    if(fd){ var fn=fd.getAttribute('data-fdel'); if(confirm('フォルダ「'+fn+'」を削除しますか？（中のシナリオはフォルダなしに移動します）')){ writeFolders(readFolders().filter(function(x){return x!==fn;})); readIndex().forEach(function(en){ if(!en.del && en.folder===fn) setDocFolder(en.id,''); }); setTimeout(renderFileList,60); } return; }
     var fh=e.target.closest('.ffolder');
-    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fold]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
+    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fold],[data-fdel]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
     var fold=e.target.getAttribute('data-fold');
     if(fold){ promptFolder(fold); return; }
     var op=e.target.getAttribute('data-open');
@@ -2552,7 +2590,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21j フォルダ分け/出力しおり常時/同期(作品別)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21k シナリオ管理全画面/フォルダ/一覧から出力'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
