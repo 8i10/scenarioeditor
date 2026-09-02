@@ -400,7 +400,7 @@
   .fitem.cur{background:var(--hover);border-color:var(--accent2)}
   .fitem .fgrip{cursor:grab;color:var(--muted);font-size:14px;flex:none;touch-action:none;user-select:none;line-height:1}
   .fitem.fdragging{opacity:.4}
-  .fitem .fexp{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:11.5px;font-family:inherit;padding:0 4px}
+  .fitem .fexp{width:72px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:11.5px;font-family:inherit;padding:0 2px;flex:none}
   .fitem .fnm{flex:1;cursor:pointer}
   .fpin{margin:0 0 12px}
   .fpin-lbl{font-size:10px;letter-spacing:.14em;color:var(--accent2);font-weight:700;margin:0 0 4px}
@@ -2371,7 +2371,8 @@
   function cloudDocFile(id){ return 'user-'+ghId()+'__'+id+'.json'; }
   function cloudIndexPayload(){
     var idx=readIndex().map(function(e){ var rev=e.rev; if(rev==null){ try{ var d=JSON.parse(localStorage.getItem(K_DOC(e.id))||'null'); if(d) rev=d.rev||0; }catch(_){} } var o={id:e.id,name:e.name,updated:e.updated||0,rev:rev||0}; if(e.del) o.del=1; if(e.folder) o.folder=e.folder; return o; });
-    return JSON.stringify({v:2, index:idx});
+    var folders=[]; try{ folders=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); }catch(_){}
+    return JSON.stringify({v:2, index:idx, folders:folders});
   }
   function getDocJson(id){ var j=null; try{ j=localStorage.getItem(K_DOC(id)); }catch(_){} if(j) return Promise.resolve(j); if(idb&&idb.get) return idb.get(K_DOC(id)).then(function(v){ return v||null; }).catch(function(){ return null; }); return Promise.resolve(null); }
   function readGistNamed(gd,name){ var f=gd&&gd.files&&gd.files[name]; if(!f) return Promise.resolve(null); if(f.truncated&&f.raw_url){ return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.ok?r.text():null; }).catch(function(){ return null; }); } return Promise.resolve(f.content!=null?f.content:null); }
@@ -2505,6 +2506,7 @@
         }
         /* 新形式 {v:2, index:[{id,name,updated,rev}]} */
         var ridx=(parsed.index||[]);
+        if(Array.isArray(parsed.folders)){ try{ var lf=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); var merged=lf.slice(); parsed.folders.forEach(function(f){ if(f && merged.indexOf(f)<0) merged.push(f); }); localStorage.setItem('scn_folders::'+account, JSON.stringify(merged)); }catch(_){} }
         var localIdx=readIndex(); var localRev={}; localIdx.forEach(function(e){ localRev[e.id]=(e.rev!=null?e.rev:0); });
         var idxMap={}; localIdx.forEach(function(e){ idxMap[e.id]=e; });
         ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,del:e.del?1:undefined,folder:e.folder||''}; });
@@ -2642,7 +2644,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21m 管理UI調整(出力バー削除/ピン廃止/案内ヘッダー)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21n フォルダ同期/出力プルダウン幅調整'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
