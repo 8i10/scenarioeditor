@@ -395,7 +395,20 @@
   .fpg-exp{padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:9px}
   .fpg-explabel{font-size:12px;color:var(--muted)}
   .fpg-list{max-height:none;margin:6px 0 0}
-  .fitem [data-exp]{opacity:.75}
+  .fitem [data-exp]{opacity:.9}
+  .fitem.cur{background:var(--hover);border-color:var(--accent2)}
+  .fitem .fgrip{cursor:grab;color:var(--muted);font-size:14px;flex:none;touch-action:none;user-select:none;line-height:1}
+  .fitem.fdragging{opacity:.4}
+  .fitem .fexp{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:11.5px;font-family:inherit;padding:0 4px}
+  .fitem .fnm{flex:1;cursor:pointer}
+  .fpin{margin:0 0 12px}
+  .fpin-lbl{font-size:10px;letter-spacing:.14em;color:var(--accent2);font-weight:700;margin:0 0 4px}
+  .ffolder.drop-hi{background:var(--accent2);color:#fff;border-radius:6px}
+  .ffolder .ffren{border:0;background:transparent;cursor:pointer;font-size:12px;opacity:0;padding:2px 5px;border-radius:5px;color:var(--muted)}
+  .ffolder:hover .ffren{opacity:.6}
+  .ffolder .ffren:hover{opacity:1;background:var(--hover)}
+  .ffolder .ffdel{margin-left:0}
+  .fdrag-ghost{position:fixed;z-index:99999;transform:translate(-50%,-140%);background:var(--accent2);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ffolder{display:flex;align-items:center;gap:5px;padding:6px 8px;margin-top:6px;font-weight:700;font-size:12.5px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--line);user-select:none}
   .ffolder:first-child{margin-top:0}
   .ffolder:hover{color:var(--accent)}
@@ -807,13 +820,24 @@
     try{ var o=JSON.parse(localStorage.getItem(K_DOC(id))); if(o&&(o.pages||o.blocks)){ state=normalizeState(o); state.id=id; return true; } }catch(e){}
     return false;
   }
-  function openDoc(id){
-    var applyDoc=function(raw){ try{ var o=JSON.parse(raw); if(o&&(o.pages||o.blocks)){ state=normalizeState(o); state.id=id; try{localStorage.setItem(K_CUR(),id);}catch(e){} render(); applyOutline(); updateDocName(); return true; } }catch(e){} return false; };
+  function openDoc(id, cb){
+    var applyDoc=function(raw){ try{ var o=JSON.parse(raw); if(o&&(o.pages||o.blocks)){ state=normalizeState(o); state.id=id; try{localStorage.setItem(K_CUR(),id);}catch(e){} render(); applyOutline(); updateDocName(); if(typeof cb==='function') setTimeout(cb,0); return true; } }catch(e){} return false; };
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(e){}
     if(raw && applyDoc(raw)) return;
-    /* localStorage に本体が無い/壊れている場合は IndexedDB（大容量）から取得（iOSの容量制限対策） */
-    try{ if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v&&applyDoc(v)){ /* ok */ } else if(v){ alert('この作品のデータを開けませんでした（破損の可能性）。'); } else { alert('この作品の本体データが端末にありません。「同期し直し」で取得してから開いてください。'); } }).catch(function(){ alert('データの読み込みに失敗しました。'); }); return; } }catch(e){}
+    try{ if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v&&applyDoc(v)){ } else if(v){ alert('この作品のデータを開けませんでした（破損の可能性）。'); } else { alert('この作品の本体データが端末にありません。「同期し直し」で取得してから開いてください。'); } }).catch(function(){ alert('データの読み込みに失敗しました。'); }); return; } }catch(e){}
     if(!raw) alert('この作品の本体データが見つかりません。「同期し直し」をお試しください。');
+  }
+  function exportDoc(id, kind){
+    var run=function(){ if(kind==='html') exportHTML(); else if(kind==='pdfbk') exportPDFText(); else if(kind==='pdf') exportPDF(); };
+    if(id===state.id){ run(); return; }
+    openDoc(id, run);
+  }
+  function renameFolder(oldName){
+    var nn=prompt('フォルダ名を変更', oldName); if(nn===null) return; nn=nn.trim(); if(!nn || nn===oldName) return;
+    var fs=readFolders().map(function(x){return x===oldName?nn:x;}); if(fs.indexOf(nn)<0) fs.push(nn); writeFolders(fs.filter(function(v,i,a){return a.indexOf(v)===i;}));
+    readIndex().forEach(function(e){ if(!e.del && e.folder===oldName) setDocFolder(e.id, nn); });
+    if(folderCollapsed[oldName]!=null){ folderCollapsed[nn]=folderCollapsed[oldName]; delete folderCollapsed[oldName]; }
+    setTimeout(renderFileList,60);
   }
   function freshDoc(name){
     return normalizeState({ id:docId(), name:name||'無題のシナリオ', theme:state.theme, fs:state.fs, outlineOpen:state.outlineOpen, headBg:'#000000',
@@ -1887,27 +1911,27 @@
     if(!idx.length){ el.innerHTML='<div class="fhint">保存されたシナリオはありません</div>'; return; }
     var list=sq?idx.filter(function(x){return (x.name||'').toLowerCase().indexOf(sq)>=0;}):idx;
     if(!list.length){ el.innerHTML='<div class="fhint">「'+esc(sq)+'」に一致するシナリオはありません</div>'; return; }
-    var groups={}, order=[];
-    list.forEach(function(x){ var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
-    if(!sq){ allFolders().forEach(function(f){ if(!(f in groups)){ groups[f]=[]; order.push(f); } }); }
-    order.sort(function(a,b){ if(a===b) return 0; if(a==='') return 1; if(b==='') return -1; return a.localeCompare(b,'ja'); });
-    var hasFolders=order.some(function(f){return f!=='';});
     function itemHTML(x,indent){
-      var cur=x.id===state.id?' cur':''; var dt=x.updated?new Date(x.updated):null;
-      var dts=dt?((dt.getMonth()+1)+'/'+dt.getDate()+' '+pad(dt.getHours())+':'+pad(dt.getMinutes())):'';
-      return '<div class="fitem'+cur+(indent?' fin':'')+'"><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+(cur?' ✓':'')+'</span><span class="fdt">'+dts+'</span><button data-fold="'+x.id+'" title="フォルダへ移動">📁</button><button data-dup="'+x.id+'">複製</button><button data-del="'+x.id+'">削除</button></div>';
+      var cur=x.id===state.id?' cur':'';
+      var sel='<select class="fexp" data-exp="'+x.id+'"><option value="">出力…</option><option value="html">閲覧用HTML</option><option value="pdfbk">PDF（しおり付）</option><option value="pdf">PDF（軽量）</option></select>';
+      return '<div class="fitem'+cur+(indent?' fin':'')+'" data-id="'+x.id+'" draggable="true"><span class="fgrip" title="ドラッグでフォルダ移動">⠿</span><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+'</span>'+sel+'<button data-dup="'+x.id+'">複製</button><button class="fdelb" data-del="'+x.id+'" title="削除">🗑</button></div>';
     }
     var html='';
+    var curEntry=null; for(var i=0;i<list.length;i++){ if(list[i].id===state.id){ curEntry=list[i]; break; } }
+    if(curEntry && !sq){ html+='<div class="fpin"><div class="fpin-lbl">編集中</div>'+itemHTML(curEntry,false)+'</div>'; }
+    var groups={}, order=[];
+    list.forEach(function(x){ if(curEntry && !sq && x.id===state.id) return; var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
+    if(!sq){ if(!('' in groups)){ groups['']=[]; order.push(''); } allFolders().forEach(function(f){ if(!(f in groups)){ groups[f]=[]; order.push(f); } }); }
+    order.sort(function(a,b){ if(a===b) return 0; if(a==='') return -1; if(b==='') return 1; return a.localeCompare(b,'ja'); });
     order.forEach(function(f){
-      var items=groups[f].sort(function(a,b){return (b.updated||0)-(a.updated||0);});
+      var items=(groups[f]||[]).sort(function(a,b){return (b.updated||0)-(a.updated||0);});
       if(f===''){
-        if(hasFolders){ var c0=!!folderCollapsed['']; html+='<div class="ffolder ffolder-none" data-folder=""><span class="ftw">'+(c0?'▸':'▾')+'</span>📄 フォルダなし <span class="fcount">'+items.length+'</span></div>'; if(c0) return; }
-        items.forEach(function(x){ html+=itemHTML(x,hasFolders); });
+        var c0=!!folderCollapsed['']; html+='<div class="ffolder ffolder-none" data-folder=""><span class="ftw">'+(c0?'▸':'▾')+'</span>📄 フォルダ未分類 <span class="fcount">'+items.length+'</span></div>';
+        if(c0) return; items.forEach(function(x){ html+=itemHTML(x,false); });
       } else {
         var c=!!folderCollapsed[f];
-        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span><button class="ffdel" data-fdel="'+esc(f)+'" title="フォルダを削除">🗑</button></div>';
-        if(c) return;
-        items.forEach(function(x){ html+=itemHTML(x,true); });
+        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span><button class="ffren" data-fren="'+esc(f)+'" title="名前変更">✎</button><button class="ffdel" data-fdel="'+esc(f)+'" title="削除">🗑</button></div>';
+        if(c) return; items.forEach(function(x){ html+=itemHTML(x,true); });
       }
     });
     el.innerHTML=html;
@@ -1950,12 +1974,12 @@
   };
   (function(){ var fs=document.getElementById('fSearch'); if(fs) fs.addEventListener('input', renderFileList); })();
   document.getElementById('fList').addEventListener('click',function(e){
+    var fr=e.target.closest('[data-fren]');
+    if(fr){ renameFolder(fr.getAttribute('data-fren')); return; }
     var fd=e.target.closest('[data-fdel]');
-    if(fd){ var fn=fd.getAttribute('data-fdel'); if(confirm('フォルダ「'+fn+'」を削除しますか？（中のシナリオはフォルダなしに移動します）')){ writeFolders(readFolders().filter(function(x){return x!==fn;})); readIndex().forEach(function(en){ if(!en.del && en.folder===fn) setDocFolder(en.id,''); }); setTimeout(renderFileList,60); } return; }
+    if(fd){ var fn=fd.getAttribute('data-fdel'); if(confirm('フォルダ「'+fn+'」を削除しますか？（中のシナリオはフォルダ未分類に移動します）')){ writeFolders(readFolders().filter(function(x){return x!==fn;})); readIndex().forEach(function(en){ if(!en.del && en.folder===fn) setDocFolder(en.id,''); }); setTimeout(renderFileList,60); } return; }
     var fh=e.target.closest('.ffolder');
-    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fold],[data-fdel]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
-    var fold=e.target.getAttribute('data-fold');
-    if(fold){ promptFolder(fold); return; }
+    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fren],[data-fdel]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
     var op=e.target.getAttribute('data-open');
     if(op){ openDoc(op); document.getElementById('fName').value=state.name; renderFileList(); document.getElementById('fHint').textContent='開きました：'+state.name; return; }
     var dup=e.target.getAttribute('data-dup');
@@ -1963,6 +1987,41 @@
     var dl=e.target.getAttribute('data-del');
     if(dl){ if(confirm('このシナリオを削除しますか？（元に戻せません）')){ deleteDoc(dl); document.getElementById('fName').value=state.name; renderFileList(); } }
   });
+  document.getElementById('fList').addEventListener('change',function(e){
+    var ex=e.target.closest('[data-exp]'); if(ex && ex.value){ var id=ex.getAttribute('data-exp'), k=ex.value; ex.value=''; document.getElementById('fHint').textContent='書き出しています…'; exportDoc(id,k); }
+  });
+  /* ---- フォルダ移動：長押しドラッグ（PC・タブレット両対応） ---- */
+  (function(){
+    var fl=document.getElementById('fList'); var LP=null, ghost=null;
+    function endDrag(){ if(ghost){ ghost.remove(); ghost=null; } var hi=fl.querySelectorAll('.drop-hi'); [].forEach.call(hi,function(x){x.classList.remove('drop-hi');}); if(LP&&LP.item) LP.item.classList.remove('fdragging'); }
+    function startDrag(){ if(!LP) return; LP.armed=true; LP.item.classList.add('fdragging');
+      ghost=document.createElement('div'); ghost.className='fdrag-ghost'; ghost.textContent=(LP.item.querySelector('.fnm')||{}).textContent||''; document.body.appendChild(ghost); moveGhost(LP.lx,LP.ly);
+    }
+    function moveGhost(x,y){ if(ghost){ ghost.style.left=x+'px'; ghost.style.top=y+'px'; } }
+    fl.addEventListener('pointerdown',function(e){
+      var item=e.target.closest('.fitem'); if(!item) return;
+      if(e.target.closest('button,select,input,a,option')) return;
+      var id=item.getAttribute('data-id'); if(!id) return;
+      LP={item:item,id:id,sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,pid:e.pointerId,armed:false,timer:setTimeout(startDrag,300)};
+    });
+    document.addEventListener('pointermove',function(e){
+      if(!LP) return; LP.lx=e.clientX; LP.ly=e.clientY;
+      if(!LP.armed){ if(Math.abs(e.clientX-LP.sx)+Math.abs(e.clientY-LP.sy)>10){ clearTimeout(LP.timer); LP=null; } return; }
+      e.preventDefault(); moveGhost(e.clientX,e.clientY);
+      var t=document.elementFromPoint(e.clientX,e.clientY); var fh=t&&t.closest?t.closest('.ffolder'):null;
+      var hi=fl.querySelectorAll('.drop-hi'); [].forEach.call(hi,function(x){x.classList.remove('drop-hi');}); if(fh) fh.classList.add('drop-hi');
+    },{passive:false});
+    document.addEventListener('pointerup',function(e){
+      if(LP&&LP.armed){ var t=document.elementFromPoint(e.clientX,e.clientY); var fh=t&&t.closest?t.closest('.ffolder'):null; if(fh){ var f=fh.getAttribute('data-folder')||''; setDocFolder(LP.id,f); setTimeout(renderFileList,40); document.getElementById('fHint').textContent=(f?('「'+f+'」へ移動しました'):'フォルダ未分類へ移動しました'); } endDrag(); }
+      if(LP){ clearTimeout(LP.timer); } endDrag(); LP=null;
+    });
+    document.addEventListener('pointercancel',function(){ if(LP){clearTimeout(LP.timer);} endDrag(); LP=null; });
+    /* PCのHTML5ドラッグにも対応 */
+    fl.addEventListener('dragstart',function(e){ var it=e.target.closest('.fitem'); if(it){ e.dataTransfer.setData('text/plain', it.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; } });
+    fl.addEventListener('dragover',function(e){ var fh=e.target.closest('.ffolder'); if(fh){ e.preventDefault(); var hi=fl.querySelectorAll('.drop-hi'); [].forEach.call(hi,function(x){x.classList.remove('drop-hi');}); fh.classList.add('drop-hi'); } });
+    fl.addEventListener('drop',function(e){ var fh=e.target.closest('.ffolder'); if(fh){ e.preventDefault(); var id=e.dataTransfer.getData('text/plain'); if(id){ var f=fh.getAttribute('data-folder')||''; setDocFolder(id,f); setTimeout(renderFileList,40); document.getElementById('fHint').textContent=(f?('「'+f+'」へ移動しました'):'フォルダ未分類へ移動しました'); } } var hi=fl.querySelectorAll('.drop-hi'); [].forEach.call(hi,function(x){x.classList.remove('drop-hi');}); });
+    fl.addEventListener('dragend',function(){ var hi=fl.querySelectorAll('.drop-hi'); [].forEach.call(hi,function(x){x.classList.remove('drop-hi');}); });
+  })();
   function duplicateDoc(id){
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(e){}
     if(!raw && id===state.id){ raw=JSON.stringify(state); }
@@ -2590,7 +2649,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21k シナリオ管理全画面/フォルダ/一覧から出力'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21l 管理: ドラッグ移動/名前変更/各行出力/現在ピン'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
