@@ -387,12 +387,15 @@
   .ovl.fpage .fdlg{width:100%;max-width:none;height:100%;max-height:none;border-radius:0;display:flex;flex-direction:column;background:var(--bg);box-shadow:none;padding:0}
   .fpg-head{display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;background:var(--header-bg);color:var(--header-text);flex:none}
   .fpg-head .fpg-ttl{font-weight:700;letter-spacing:.04em;font-size:15px}
-  .fpg-head .fpg-hint{margin-left:auto;align-self:stretch;display:flex;align-items:center;justify-content:flex-end;color:var(--header-text);opacity:.85;font-size:12px;line-height:1;max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+  .fpg-head .fpg-hint{margin:0 0 0 auto;align-self:stretch;display:flex;align-items:center;justify-content:flex-end;color:var(--header-text);opacity:.85;font-size:12px;line-height:1;min-height:0;max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
   .fpg-head #fClose{margin-left:12px;flex:none}
   .fpg-body{flex:1;overflow:auto;padding:14px 16px 40px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box}
   .fpg-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
   .fpg-bar input[type=text]{height:34px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit}
   .fpg-bar #fName{flex:1;min-width:160px}
+  .fpg-actions{justify-content:flex-end}
+  .fitem .frenb{border:0;background:transparent;cursor:pointer;font-size:12px;opacity:.6;padding:2px 5px;border-radius:5px;color:var(--muted);flex:none}
+  .fitem .frenb:hover{opacity:1;background:var(--hover)}
   .fpg-exp{padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:9px}
   .fpg-explabel{font-size:12px;color:var(--muted)}
   .fpg-list{max-height:none;margin:6px 0 0}
@@ -406,6 +409,9 @@
   .fpin-lbl{font-size:10px;letter-spacing:.14em;color:var(--accent2);font-weight:700;margin:0 0 4px}
   .ffolder.drop-hi{background:var(--accent2);color:#fff;border-radius:6px}
   .ffolder .ffren{border:0;background:transparent;cursor:pointer;font-size:12px;opacity:0;padding:2px 5px;border-radius:5px;color:var(--muted)}
+  .ffolder .ffadd{border:0;background:transparent;cursor:pointer;font-size:14px;opacity:0;padding:2px 6px;border-radius:5px;color:var(--muted);margin-left:auto}
+  .ffolder:hover .ffadd{opacity:.6}
+  .ffolder .ffadd:hover{opacity:1;background:var(--hover)}
   .ffolder:hover .ffren{opacity:.6}
   .ffolder .ffren:hover{opacity:1;background:var(--hover)}
   .ffolder .ffdel{margin-left:0}
@@ -565,9 +571,7 @@
       <button class="hb2" id="fClose">✕ 閉じて編集へ</button>
     </div>
     <div class="fpg-body">
-      <div class="fpg-bar">
-        <input type="text" id="fName" placeholder="現在の作品名">
-        <button class="hb2 pri" id="fSave">名前を保存</button>
+      <div class="fpg-bar fpg-actions">
         <button class="hb2" id="fNew">＋ 新規シナリオ</button>
         <button class="hb2" id="fNewFolder">📁＋ 新規フォルダ</button>
       </div>
@@ -827,11 +831,41 @@
     if(id===state.id){ run(); return; }
     openDoc(id, run);
   }
-  function renameFolder(oldName){
-    var nn=prompt('フォルダ名を変更', oldName); if(nn===null) return; nn=nn.trim(); if(!nn || nn===oldName) return;
-    var fs=readFolders().map(function(x){return x===oldName?nn:x;}); if(fs.indexOf(nn)<0) fs.push(nn); writeFolders(fs.filter(function(v,i,a){return a.indexOf(v)===i;}));
-    readIndex().forEach(function(e){ if(!e.del && e.folder===oldName) setDocFolder(e.id, nn); });
-    if(folderCollapsed[oldName]!=null){ folderCollapsed[nn]=folderCollapsed[oldName]; delete folderCollapsed[oldName]; }
+  function renameDoc(id){
+    var cur=''; readIndex().forEach(function(e){ if(e.id===id) cur=e.name||''; });
+    var nn=prompt('シナリオ名を変更', cur); if(nn===null) return; nn=nn.trim()||'無題のシナリオ';
+    if(id===state.id){ state.name=nn; persist(); updateDocName(); renderFileList(); document.getElementById('fHint').textContent='名前を変更しました：'+nn; return; }
+    var apply=function(o){ if(!o) return; o.name=nn; o.updated=Date.now(); o.rev=(o.rev||0)+1; var j=JSON.stringify(o);
+      try{ localStorage.setItem(K_DOC(id), j); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(id), j).catch(function(){}); }catch(_){}
+      var idx=readIndex().map(function(e){ return e.id===id?{id:id,name:nn,updated:o.updated,rev:o.rev,folder:(e.folder||'')}:e; }); writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
+      try{ dirtyDocs[id]=1; }catch(_){} if(typeof cloudPush==='function') cloudPush(); renderFileList(); document.getElementById('fHint').textContent='名前を変更しました：'+nn;
+    };
+    var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(_){}
+    if(raw){ var o=null; try{ o=JSON.parse(raw); }catch(_){} if(o){ apply(o); return; } }
+    if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v){ var o2=null; try{o2=JSON.parse(v);}catch(_){}; apply(o2); } }); }
+  }
+  function createFolder(parent){
+    var n=prompt(parent?('「'+parent+'」内に作るサブフォルダ名'):'新しいフォルダ名を入力'); if(n===null) return; n=n.trim(); if(!n) return;
+    if(n.indexOf('/')>=0) n=n.replace(/\//g,'-');
+    var path=parent?(parent+'/'+n):n; var fs=readFolders(); if(fs.indexOf(path)<0){ fs.push(path); writeFolders(fs); }
+    if(parent) folderCollapsed[parent]=false; folderCollapsed[path]=false; renderFileList();
+    document.getElementById('fHint').textContent='フォルダ「'+path+'」を作成しました';
+  }
+  function renameFolder(oldPath){
+    var seg=oldPath.split('/').pop(); var parent=oldPath.split('/').slice(0,-1).join('/');
+    var nn=prompt('フォルダ名を変更', seg); if(nn===null) return; nn=nn.trim().replace(/\//g,'-'); if(!nn || nn===seg) return;
+    var newPath=parent?(parent+'/'+nn):nn;
+    var fs=readFolders().map(function(f){ if(f===oldPath) return newPath; if(f.indexOf(oldPath+'/')===0) return newPath+f.slice(oldPath.length); return f; });
+    writeFolders(fs.filter(function(v,i,a){return a.indexOf(v)===i;}));
+    readIndex().forEach(function(e){ if(!e.del && e.folder && (e.folder===oldPath || e.folder.indexOf(oldPath+'/')===0)){ setDocFolder(e.id, newPath+e.folder.slice(oldPath.length)); } });
+    Object.keys(folderCollapsed).forEach(function(k){ if(k===oldPath || k.indexOf(oldPath+'/')===0){ folderCollapsed[newPath+k.slice(oldPath.length)]=folderCollapsed[k]; delete folderCollapsed[k]; } });
+    setTimeout(renderFileList,60);
+  }
+  function deleteFolderPath(path){
+    var parent=path.split('/').slice(0,-1).join('/');
+    if(!confirm('フォルダ「'+path+'」を削除しますか？（中のシナリオとサブフォルダの中身は上のフォルダへ移動します）')) return;
+    writeFolders(readFolders().filter(function(f){ return !(f===path || f.indexOf(path+'/')===0); }));
+    readIndex().forEach(function(e){ if(!e.del && e.folder && (e.folder===path || e.folder.indexOf(path+'/')===0)){ var rest=e.folder.slice(path.length).replace(/^\//,''); var np=parent?(rest?parent+'/'+rest:parent):(rest||''); setDocFolder(e.id, np); } });
     setTimeout(renderFileList,60);
   }
   function freshDoc(name){
@@ -1906,26 +1940,35 @@
     if(!idx.length){ el.innerHTML='<div class="fhint">保存されたシナリオはありません</div>'; return; }
     var list=sq?idx.filter(function(x){return (x.name||'').toLowerCase().indexOf(sq)>=0;}):idx;
     if(!list.length){ el.innerHTML='<div class="fhint">「'+esc(sq)+'」に一致するシナリオはありません</div>'; return; }
-    function itemHTML(x,indent){
+    function byUpd(a,b){return (b.updated||0)-(a.updated||0);}
+    function itemHTML(x,depth){
       var cur=x.id===state.id?' cur':'';
       var sel='<select class="fexp" data-exp="'+x.id+'"><option value="">出力…</option><option value="html">閲覧用HTML</option><option value="pdfbk">PDF（しおり付）</option><option value="pdf">PDF（軽量）</option></select>';
-      return '<div class="fitem'+cur+(indent?' fin':'')+'" data-id="'+x.id+'" draggable="true"><span class="fgrip" title="ドラッグでフォルダ移動">⠿</span><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+'</span>'+sel+'<button data-dup="'+x.id+'">複製</button><button class="fdelb" data-del="'+x.id+'" title="削除">🗑</button></div>';
+      return '<div class="fitem'+cur+'" data-id="'+x.id+'" draggable="true" style="margin-left:'+(depth*16)+'px"><span class="fgrip" title="ドラッグでフォルダ移動">⠿</span><span class="fnm" data-open="'+x.id+'">'+esc(x.name)+'</span><button class="frenb" data-ren="'+x.id+'" title="名前変更">✎</button>'+sel+'<button data-dup="'+x.id+'">複製</button><button class="fdelb" data-del="'+x.id+'" title="削除">🗑</button></div>';
     }
+    if(sq){ el.innerHTML=list.sort(byUpd).map(function(x){return itemHTML(x,0);}).join(''); return; }
+    var byFolder={}; list.forEach(function(x){ var f=x.folder||''; (byFolder[f]=byFolder[f]||[]).push(x); });
     var html='';
-    var groups={}, order=[];
-    list.forEach(function(x){ var f=x.folder||''; if(!(f in groups)){ groups[f]=[]; order.push(f); } groups[f].push(x); });
-    if(!sq){ if(!('' in groups)){ groups['']=[]; order.push(''); } allFolders().forEach(function(f){ if(!(f in groups)){ groups[f]=[]; order.push(f); } }); }
-    order.sort(function(a,b){ if(a===b) return 0; if(a==='') return -1; if(b==='') return 1; return a.localeCompare(b,'ja'); });
-    order.forEach(function(f){
-      var items=(groups[f]||[]).sort(function(a,b){return (b.updated||0)-(a.updated||0);});
-      if(f===''){
-        var c0=!!folderCollapsed['']; html+='<div class="ffolder ffolder-none" data-folder=""><span class="ftw">'+(c0?'▸':'▾')+'</span>📄 フォルダ未分類 <span class="fcount">'+items.length+'</span></div>';
-        if(c0) return; items.forEach(function(x){ html+=itemHTML(x,false); });
-      } else {
-        var c=!!folderCollapsed[f];
-        html+='<div class="ffolder" data-folder="'+esc(f)+'"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(f)+' <span class="fcount">'+items.length+'</span><button class="ffren" data-fren="'+esc(f)+'" title="名前変更">✎</button><button class="ffdel" data-fdel="'+esc(f)+'" title="削除">🗑</button></div>';
-        if(c) return; items.forEach(function(x){ html+=itemHTML(x,true); });
-      }
+    /* フォルダ未分類（最上部） */
+    var noneItems=(byFolder['']||[]).sort(byUpd); var c0=!!folderCollapsed[''];
+    html+='<div class="ffolder ffolder-none" data-folder=""><span class="ftw">'+(c0?'▸':'▾')+'</span>📄 フォルダ未分類 <span class="fcount">'+noneItems.length+'</span></div>';
+    if(!c0) noneItems.forEach(function(x){ html+=itemHTML(x,0); });
+    /* フォルダのツリー（入れ子対応） */
+    var pathSet={};
+    function addPath(p){ if(!p) return; var parts=p.split('/'); var acc=''; for(var i=0;i<parts.length;i++){ acc=acc?acc+'/'+parts[i]:parts[i]; pathSet[acc]=1; } }
+    allFolders().forEach(addPath); list.forEach(function(x){ if(x.folder) addPath(x.folder); });
+    var paths=Object.keys(pathSet).sort(function(a,b){ var pa=a.split('/'),pb=b.split('/'); for(var i=0;i<Math.min(pa.length,pb.length);i++){ if(pa[i]!==pb[i]) return pa[i].localeCompare(pb[i],'ja'); } return pa.length-pb.length; });
+    function ancColl(p){ var parts=p.split('/'); var acc=''; for(var i=0;i<parts.length-1;i++){ acc=acc?acc+'/'+parts[i]:parts[i]; if(folderCollapsed[acc]) return true; } return false; }
+    paths.forEach(function(p){
+      if(ancColl(p)) return;
+      var depth=p.split('/').length-1; var seg=p.split('/').pop();
+      var items=(byFolder[p]||[]).sort(byUpd); var c=!!folderCollapsed[p];
+      html+='<div class="ffolder" data-folder="'+esc(p)+'" style="padding-left:'+(10+depth*16)+'px"><span class="ftw">'+(c?'▸':'▾')+'</span>📁 '+esc(seg)+' <span class="fcount">'+items.length+'</span>'
+        +'<button class="ffadd" data-fadd="'+esc(p)+'" title="サブフォルダを作成">＋</button>'
+        +'<button class="ffren" data-fren="'+esc(p)+'" title="名前変更">✎</button>'
+        +'<button class="ffdel" data-fdel="'+esc(p)+'" title="削除">🗑</button></div>';
+      if(c) return;
+      items.forEach(function(x){ html+=itemHTML(x,depth+1); });
     });
     el.innerHTML=html;
   }
@@ -1948,37 +1991,36 @@
     var f=prompt(msg, cur); if(f===null) return;
     setDocFolder(id, f); renderFileList();
   }
-  function openFileDlg(){ document.getElementById('fName').value=state.name; document.getElementById('fHint').textContent='現在のシナリオ：'+state.name; renderFileList(); fileOvl.classList.add('show'); }
+  function openFileDlg(){ document.getElementById('fHint').textContent='現在のシナリオ：'+state.name; renderFileList(); fileOvl.classList.add('show'); }
   document.getElementById('btnFile').onclick=openFileDlg;
   document.getElementById('fClose').onclick=function(){ fileOvl.classList.remove('show'); };
-  (function(){ var b=document.getElementById('fNewFolder'); if(b) b.onclick=function(){ var n=prompt('新しいフォルダ名を入力'); if(n===null) return; n=n.trim(); if(!n) return; var fs=readFolders(); if(fs.indexOf(n)<0){ fs.push(n); writeFolders(fs); } folderCollapsed[n]=false; renderFileList(); document.getElementById('fHint').textContent='フォルダ「'+n+'」を作成しました'; }; })();
+  (function(){ var b=document.getElementById('fNewFolder'); if(b) b.onclick=function(){ createFolder(''); }; })();
   (function(){ var h=document.getElementById('fExpHtml'); if(h) h.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」を閲覧用HTMLで書き出します…'; exportHTML(); };
     var pb=document.getElementById('fExpPdfBk'); if(pb) pb.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」をPDF（しおり付）で書き出します…'; exportPDFText(); };
     var pd=document.getElementById('fExpPdf'); if(pd) pd.onclick=function(){ document.getElementById('fHint').textContent='「'+state.name+'」をPDF（軽量）で書き出します…'; exportPDF(); }; })();
   fileOvl.onclick=function(e){ if(e.target===fileOvl) fileOvl.classList.remove('show'); };
-  document.getElementById('fSave').onclick=function(){
-    var nm=document.getElementById('fName').value.trim()||'無題のシナリオ';
-    state.name=nm; persist(); updateDocName(); renderFileList();
-    document.getElementById('fHint').textContent='保存しました：'+nm;
-  };
   document.getElementById('fNew').onclick=function(){
-    newDoc('無題のシナリオ'); document.getElementById('fName').value=state.name; renderFileList();
+    newDoc('無題のシナリオ'); renderFileList();
     document.getElementById('fHint').textContent='新規シナリオを作成しました';
   };
   (function(){ var fs=document.getElementById('fSearch'); if(fs) fs.addEventListener('input', renderFileList); })();
   document.getElementById('fList').addEventListener('click',function(e){
+    var fa=e.target.closest('[data-fadd]');
+    if(fa){ createFolder(fa.getAttribute('data-fadd')); return; }
     var fr=e.target.closest('[data-fren]');
     if(fr){ renameFolder(fr.getAttribute('data-fren')); return; }
     var fd=e.target.closest('[data-fdel]');
-    if(fd){ var fn=fd.getAttribute('data-fdel'); if(confirm('フォルダ「'+fn+'」を削除しますか？（中のシナリオはフォルダ未分類に移動します）')){ writeFolders(readFolders().filter(function(x){return x!==fn;})); readIndex().forEach(function(en){ if(!en.del && en.folder===fn) setDocFolder(en.id,''); }); setTimeout(renderFileList,60); } return; }
+    if(fd){ deleteFolderPath(fd.getAttribute('data-fdel')); return; }
     var fh=e.target.closest('.ffolder');
-    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-fren],[data-fdel]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
+    if(fh && !e.target.closest('[data-open],[data-dup],[data-del],[data-ren],[data-fren],[data-fdel],[data-fadd]')){ var f=fh.getAttribute('data-folder')||''; folderCollapsed[f]=!folderCollapsed[f]; renderFileList(); return; }
+    var rn=e.target.closest('[data-ren]');
+    if(rn){ renameDoc(rn.getAttribute('data-ren')); return; }
     var op=e.target.getAttribute('data-open');
-    if(op){ openDoc(op); document.getElementById('fName').value=state.name; renderFileList(); document.getElementById('fHint').textContent='開きました：'+state.name; return; }
+    if(op){ openDoc(op); renderFileList(); document.getElementById('fHint').textContent='開きました：'+state.name; return; }
     var dup=e.target.getAttribute('data-dup');
     if(dup){ duplicateDoc(dup); return; }
     var dl=e.target.getAttribute('data-del');
-    if(dl){ if(confirm('このシナリオを削除しますか？（元に戻せません）')){ deleteDoc(dl); document.getElementById('fName').value=state.name; renderFileList(); } }
+    if(dl){ if(confirm('このシナリオを削除しますか？（元に戻せません）')){ deleteDoc(dl); renderFileList(); } }
   });
   document.getElementById('fList').addEventListener('change',function(e){
     var ex=e.target.closest('[data-exp]'); if(ex && ex.value){ var id=ex.getAttribute('data-exp'), k=ex.value; ex.value=''; document.getElementById('fHint').textContent='書き出しています…'; exportDoc(id,k); }
@@ -2644,7 +2686,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21n フォルダ同期/出力プルダウン幅調整'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21o 入れ子フォルダ/作品名は各行✎/名前欄削除'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
