@@ -214,7 +214,7 @@
     letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px}
   .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{font-size:1.06em;top:-12px}
   .block[data-type="kp"] .lbl:empty::before,.block[data-type="info"] .lbl:empty::before,.block[data-type="skill"] .lbl:empty::before,.block[data-type="secret"] .lbl:empty::before{opacity:.85}
-  .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="secret"]>.children{
+  .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="skill2"]>.children,.block[data-type="secret"]>.children{
     margin:0;border-left:0;padding-left:0}
 
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
@@ -256,8 +256,8 @@
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
   .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
-  .block[data-type="skill2"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px;border-radius:0}
-  .block[data-type="skill2"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;position:absolute;top:-12px;left:8px;min-height:0;letter-spacing:.08em;padding:4px 10px;border-radius:4px;display:inline-flex;align-items:center;line-height:1}
+  .block[data-type="skill2"]{position:relative;background:var(--card);border:1px solid var(--blue);border-left-width:5px;border-right-width:1px;border-top-width:1px;border-bottom-width:1px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
+  .block[data-type="skill2"] .lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
   .sk-note{font-size:0.82em;font-weight:400}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
@@ -460,11 +460,11 @@
     .block[data-type="info"]{background:var(--card)!important;border:1px solid var(--pl-edge)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="npc"]{background:var(--card)!important;border:1.5px solid var(--pl-edge)!important;border-radius:7px!important}
     .block[data-type="npc"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
-    .block[data-type="skill"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
+    .block[data-type="skill"],.block[data-type="skill2"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="secret"]{background:var(--card)!important;border:1px solid var(--secret)!important;border-left-width:4px!important}
     .block[data-type="kp"] .lbl{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid rgba(255,255,255,.4)!important}
     .block[data-type="info"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
-    .block[data-type="skill"] .lbl{background:var(--blue)!important;color:#fff!important}
+    .block[data-type="skill"] .lbl,.block[data-type="skill2"] .lbl{background:var(--blue)!important;color:#fff!important}
     .block[data-type="secret"] .lbl{background:var(--secret)!important;color:#fff!important}
     .block[data-type="h1"] .be{color:var(--text)!important}
   }
@@ -1736,6 +1736,11 @@
       if(ACC[g.cat]){ h+='<div class="macc"><div class="macc-h" data-acc="1"><span class="tw">▸</span>'+g.cat+'</div><div class="macc-body">'+g.items.map(item).join('')+'</div></div>'; }
       else { if(g.cat!=='基本') h+='<div class="rb-cat">'+g.cat+'</div>'; h+=g.items.map(item).join(''); }
     });
+    h+='<div class="macc"><div class="macc-h" data-acc="1"><span class="tw">▸</span>操作・挿入</div><div class="macc-body">'
+      +'<button class="rb-item" data-rimg="1"><span class="ic">🖼</span><span class="nm">画像を挿入</span></button>'
+      +'<button class="rb-item" data-rcol2="1"><span class="ic">▥</span><span class="nm">2段組にする</span></button>'
+      +'<button class="rb-item" data-rdup="1"><span class="ic">⧉</span><span class="nm">選択行を複製</span></button>'
+      +'</div></div>';
     return h;
   }
   function applyRightMenu(){ if(rbar && !rbar.innerHTML) rbar.innerHTML=rightBarInnerHTML(); if(rbar) rbar.classList.toggle('open',!!state.rightMenu); document.body.classList.toggle('rb-open',!!state.rightMenu); var b=document.getElementById('btnRightMenu'); if(b) b.classList.toggle('on',!!state.rightMenu); }
@@ -1752,7 +1757,7 @@
     var be=doc.querySelector('.block[data-id="'+b.id+'"] .be'); if(be) setCaretEnd(be);
     persist();
   }
-  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ rightInsert(it.getAttribute('data-rt')); } }); }
+  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } rightInsert(it.getAttribute('data-rt')); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   /* ---- ルビ設定（作品ごと） ---- */
   var rubyOvl=document.getElementById('rubyOvl');
@@ -2686,7 +2691,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21o 入れ子フォルダ/作品名は各行✎/名前欄削除'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21p 技能※統一/右メニューに画像・複製追加'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
