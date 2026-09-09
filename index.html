@@ -259,8 +259,10 @@
   .block[data-type="skill2"]{position:relative;background:var(--card);border:1px solid var(--blue);border-left-width:5px;border-right-width:1px;border-top-width:1px;border-bottom-width:1px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
   .block[data-type="skill2"] .lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
   .sk-note{font-size:0.82em;font-weight:400}
-  .skfix{-webkit-user-select:none;user-select:none;cursor:default}
-  .sknm{}
+  .block[data-type="skill2"] .lbl .sknm::before{content:"＜"}
+  .block[data-type="skill2"] .lbl .sknm::after{content:"＞"}
+  .block[data-type="skill2"] .lbl .sk-note::before{content:"　※"}
+  .block[data-type="skill2"] .lbl .sknm,.block[data-type="skill2"] .lbl .sk-note{white-space:pre}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px;border-radius:0}
@@ -1063,16 +1065,15 @@
   }
   function skill2Label(html){
     var tmp=document.createElement('div'); tmp.innerHTML=html||'';
-    /* 既存の構造spanをほどいて素のテキストへ */
     [].slice.call(tmp.querySelectorAll('.skfix,.sknm,.sk-note')).forEach(function(s){ while(s.firstChild) s.parentNode.insertBefore(s.firstChild,s); s.parentNode.removeChild(s); });
-    var text=tmp.textContent||'';
+    var text=(tmp.textContent||'').replace(/\u200B/g,'');
     var lt=text.indexOf('＜'), gt=text.indexOf('＞'), st=text.indexOf('※');
     var name='', note='';
     if(lt>=0 && gt>lt){ name=text.slice(lt+1,gt); note=(st>=0)?text.slice(st+1):''; }
     else if(st>=0){ name=text.slice(0,st).replace(/[＜＞]/g,''); note=text.slice(st+1); }
     else { name=text.replace(/[＜＞※]/g,''); }
     function e(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    return '<span class="skfix" contenteditable="false">＜</span><span class="sknm">'+e(name)+'</span><span class="skfix" contenteditable="false">＞　※</span><span class="sk-note">'+e(note)+'</span>';
+    return '<span class="sknm">'+(name?e(name):'\u200B')+'</span><span class="sk-note">'+(note?e(note):'\u200B')+'</span>';
   }
   function mkBe(b){
     var be=document.createElement('div');
@@ -2706,7 +2707,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21q 技能※: ＜＞※を固定枠化(常時表示)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21r 技能※: 固定枠を疑似要素化(入力可)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
