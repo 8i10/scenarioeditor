@@ -259,6 +259,8 @@
   .block[data-type="skill2"]{position:relative;background:var(--card);border:1px solid var(--blue);border-left-width:5px;border-right-width:1px;border-top-width:1px;border-bottom-width:1px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
   .block[data-type="skill2"] .lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
   .sk-note{font-size:0.82em;font-weight:400}
+  .skfix{-webkit-user-select:none;user-select:none;cursor:default}
+  .sknm{}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px;border-radius:0}
@@ -1059,10 +1061,23 @@
     if(i<0) return raw;
     return raw.slice(0,i)+'<span class="sk-note">'+raw.slice(i)+'</span>';
   }
+  function skill2Label(html){
+    var tmp=document.createElement('div'); tmp.innerHTML=html||'';
+    /* 既存の構造spanをほどいて素のテキストへ */
+    [].slice.call(tmp.querySelectorAll('.skfix,.sknm,.sk-note')).forEach(function(s){ while(s.firstChild) s.parentNode.insertBefore(s.firstChild,s); s.parentNode.removeChild(s); });
+    var text=tmp.textContent||'';
+    var lt=text.indexOf('＜'), gt=text.indexOf('＞'), st=text.indexOf('※');
+    var name='', note='';
+    if(lt>=0 && gt>lt){ name=text.slice(lt+1,gt); note=(st>=0)?text.slice(st+1):''; }
+    else if(st>=0){ name=text.slice(0,st).replace(/[＜＞]/g,''); note=text.slice(st+1); }
+    else { name=text.replace(/[＜＞※]/g,''); }
+    function e(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    return '<span class="skfix" contenteditable="false">＜</span><span class="sknm">'+e(name)+'</span><span class="skfix" contenteditable="false">＞　※</span><span class="sk-note">'+e(note)+'</span>';
+  }
   function mkBe(b){
     var be=document.createElement('div');
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
-    be.innerHTML=(b.type==='skill2')?skNoteWrap(b.html):(b.html||'');
+    be.innerHTML=(b.type==='skill2')?skill2Label(b.html):(b.html||'');
     if(b.ul) be.style.borderBottom=ulBorder(b);
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
@@ -2092,7 +2107,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skNoteWrap(b.html):(b.html||''))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skill2Label(b.html):(b.html||''))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
@@ -2691,7 +2706,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21p 技能※統一/右メニューに画像・複製追加'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21q 技能※: ＜＞※を固定枠化(常時表示)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
