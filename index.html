@@ -1065,13 +1065,18 @@
   }
   function skill2Label(html){
     var tmp=document.createElement('div'); tmp.innerHTML=html||'';
-    [].slice.call(tmp.querySelectorAll('.skfix,.sknm,.sk-note')).forEach(function(s){ while(s.firstChild) s.parentNode.insertBefore(s.firstChild,s); s.parentNode.removeChild(s); });
-    var text=(tmp.textContent||'').replace(/\u200B/g,'');
-    var lt=text.indexOf('＜'), gt=text.indexOf('＞'), st=text.indexOf('※');
-    var name='', note='';
-    if(lt>=0 && gt>lt){ name=text.slice(lt+1,gt); note=(st>=0)?text.slice(st+1):''; }
-    else if(st>=0){ name=text.slice(0,st).replace(/[＜＞]/g,''); note=text.slice(st+1); }
-    else { name=text.replace(/[＜＞※]/g,''); }
+    var nmEl=tmp.querySelector('.sknm'), ntEl=tmp.querySelector('.sk-note');
+    var name, note;
+    if(nmEl || ntEl){
+      name=(nmEl?nmEl.textContent:'').replace(/\u200B/g,'');
+      note=(ntEl?ntEl.textContent:'').replace(/\u200B/g,'');
+    } else {
+      var text=(tmp.textContent||'').replace(/\u200B/g,'');
+      var lt=text.indexOf('＜'), gt=text.indexOf('＞'), st=text.indexOf('※');
+      if(lt>=0 && gt>lt){ name=text.slice(lt+1,gt); note=(st>=0)?text.slice(st+1):''; }
+      else if(st>=0){ name=text.slice(0,st).replace(/[＜＞]/g,''); note=text.slice(st+1); }
+      else { name=text.replace(/[＜＞※]/g,''); note=''; }
+    }
     function e(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     return '<span class="sknm">'+(name?e(name):'\u200B')+'</span><span class="sk-note">'+(note?e(note):'\u200B')+'</span>';
   }
@@ -2707,7 +2712,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21r 技能※: 固定枠を疑似要素化(入力可)'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21s 技能※: 名前と補足の分離を修正'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
