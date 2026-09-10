@@ -258,7 +258,7 @@
   .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
   .block[data-type="skill2"]{position:relative;background:var(--card);border:1px solid var(--blue);border-left-width:5px;border-right-width:1px;border-top-width:1px;border-bottom-width:1px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
   .block[data-type="skill2"] .lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
-  .sk-note{font-size:0.82em;font-weight:400}
+  .sk-note{font-size:0.9em;font-weight:400}
   .block[data-type="skill2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skill2"] .lbl .sknm::after{content:"＞"}
   .block[data-type="skill2"] .lbl .sk-note::before{content:"　※"}
@@ -948,8 +948,10 @@
             if(k==='color'||k==='background-color'||k==='text-decoration'||k==='font-weight'||k==='font-style'||k==='font-family'||k==='font-size') keep.push(k+':'+v);
           });
           var dataH=(tag==='a')?n.getAttribute('data-h'):null;
+          var keepCls=(tag==='span')?(((n.getAttribute('class')||'').match(/\b(sknm|sk-note)\b/g)||[]).join(' ')):'';
           for(var a=n.attributes.length-1;a>=0;a--){ n.removeAttribute(n.attributes[a].name); }
           if(keep.length) n.setAttribute('style',keep.join(';'));
+          if(keepCls) n.setAttribute('class',keepCls);
           if(tag==='a'){ n.setAttribute('class','hlink'); if(dataH) n.setAttribute('data-h',dataH); }
           walk(n);
         }
@@ -2712,7 +2714,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21s 技能※: 名前と補足の分離を修正'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21t 技能※: 保存後も分離保持/補足を少し大きく'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
