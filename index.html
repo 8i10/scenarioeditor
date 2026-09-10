@@ -261,6 +261,8 @@
   .sk-note{font-size:0.9em;font-weight:700}
   .block[data-type="skill2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skill2"] .lbl .sknm::after{content:"＞"}
+  .block[data-type="skill"] .lbl .sknm::before{content:"＜"}
+  .block[data-type="skill"] .lbl .sknm::after{content:"＞"}
   .block[data-type="skill2"] .lbl .sk-note::before{content:"　※"}
   .block[data-type="skill2"] .lbl .sknm,.block[data-type="skill2"] .lbl .sk-note{white-space:pre}
 
@@ -637,7 +639,7 @@
     {t:'h3',      ic:'H3', nm:'見出し3',               ph:'見出し3'},
     {t:'h4',      ic:'H4', nm:'見出し4',               ph:'見出し4'},
     {t:'h5',      ic:'H5', nm:'見出し5',               ph:'見出し5'},
-    {t:'skill',   ic:'技', nm:'技能',                  ph:'＜技能＞', cat:'情報枠', ctn:1, dl:'＜技能＞'},
+    {t:'skill',   ic:'技', nm:'技能',                  ph:'＜技能＞', cat:'情報枠', ctn:1, dl:'＜＞'},
     {t:'skill2',  ic:'※', nm:'技能（※あり）',          ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'kp',      ic:'◆', nm:'KP情報',                ph:'KP情報', ctn:1, dl:'KP情報'},
     {t:'secret',  ic:'秘', nm:'秘匿',                  ph:'秘匿', ctn:1, dl:'▊秘匿', hidden:1},
@@ -1082,10 +1084,18 @@
     function e(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     return '<span class="sknm">'+(name?e(name):'\u200B')+'</span><span class="sk-note">'+(note?e(note):'\u200B')+'</span>';
   }
+  function skillLabel(html){
+    var tmp=document.createElement('div'); tmp.innerHTML=html||'';
+    var nmEl=tmp.querySelector('.sknm'); var name;
+    if(nmEl){ name=(nmEl.textContent||'').replace(/\u200B/g,''); }
+    else { var text=(tmp.textContent||'').replace(/\u200B/g,''); var lt=text.indexOf('＜'),gt=text.indexOf('＞'); name=(lt>=0&&gt>lt)?text.slice(lt+1,gt):text.replace(/[＜＞]/g,''); }
+    function e(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    return '<span class="sknm">'+(name?e(name):'\u200B')+'</span>';
+  }
   function mkBe(b){
     var be=document.createElement('div');
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
-    be.innerHTML=(b.type==='skill2')?skill2Label(b.html):(b.html||'');
+    be.innerHTML=(b.type==='skill2')?skill2Label(b.html):((b.type==='skill')?skillLabel(b.html):(b.html||''));
     if(b.ul) be.style.borderBottom=ulBorder(b);
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
@@ -2115,7 +2125,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skill2Label(b.html):(b.html||''))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
+      return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'><div class="be lbl"'+lblStyle+'>'+((b.type==='skill2')?skill2Label(b.html):((b.type==='skill')?skillLabel(b.html):(b.html||'')))+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)) return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'><div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
@@ -2714,7 +2724,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21t 技能※: 保存後も分離保持/補足を少し大きく'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21u 技能(※なし)も＜＞固定化'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
