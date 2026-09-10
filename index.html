@@ -2264,14 +2264,16 @@
   }
   function pdfOverlay(msg){ var o=document.createElement('div'); o.className='pdf-ov'; o.innerHTML='<div class="pdf-ov-box">'+msg+'</div>'; document.body.appendChild(o); return o; }
   function exportPDF(){
+    pickPages().then(function(sel){ if(!sel) return;
     var ov=pdfOverlay('PDFを生成しています…');
     var prevTheme=document.documentElement.getAttribute('data-theme');
     function done(){ document.documentElement.setAttribute('data-theme',prevTheme||'light'); if(ov&&ov.parentNode)ov.parentNode.removeChild(ov); }
     loadPdfLibs()
       .then(function(){ return document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve(); })
-      .then(function(){ document.documentElement.setAttribute('data-theme','light'); return renderAllPages(2); })
+      .then(function(){ document.documentElement.setAttribute('data-theme','light'); return renderAllPages(2, sel); })
       .then(function(renders){ buildPdfSandwich(renders, 2); done(); })
       .catch(function(err){ done(); alert('PDFの生成に失敗しました。\nネットワーク接続をご確認ください。\n('+(err&&err.message||err)+')'); });
+    });
   }
   function buildPdf(canvas,heads,scale){
     var jsPDF=window.jspdf.jsPDF;
@@ -2355,21 +2357,41 @@
         var heads=headingsOf(page.blocks).map(function(it){ var el=root.querySelector('.block[data-id="'+it.id+'"]'); var y=el?(el.getBoundingClientRect().top-docRect.top):0; return {lv:it.lv,t:it.t,y:y}; });
         var lines=collectTextLines(docEl, docRect);
         var colW=Math.round(docRect.width);
+        var breaks=[]; [].forEach.call(docEl.children,function(el){ var r=el.getBoundingClientRect(); breaks.push(Math.round(r.top-docRect.top)); breaks.push(Math.round(r.bottom-docRect.top)); });
         root.remove();
-        resolve({canvas:canvas, heads:heads, lines:lines, colW:colW, name:page.name||'ページ'});
+        resolve({canvas:canvas, heads:heads, lines:lines, colW:colW, breaks:breaks, name:page.name||'ページ'});
       }).catch(function(e){ try{root.remove();}catch(_){}; reject(e); });
     });
   }
-  function renderAllPages(scale){ var renders=[]; return (state.pages||[]).reduce(function(chain,pg){ return chain.then(function(){ return renderPageCanvas(pg,scale).then(function(r){ renders.push(r); }); }); }, Promise.resolve()).then(function(){ return renders; }); }
+  function renderAllPages(scale, sel){ var renders=[]; var pages=(state.pages||[]).filter(function(pg){ return !sel || sel.indexOf(pg.id)>=0; }); if(!pages.length) pages=(state.pages||[]); return pages.reduce(function(chain,pg){ return chain.then(function(){ return renderPageCanvas(pg,scale).then(function(r){ renders.push(r); }); }); }, Promise.resolve()).then(function(){ return renders; }); }
+  function pickPages(){
+    var pages=state.pages||[];
+    if(pages.length<=1) return Promise.resolve(pages.map(function(p){return p.id;}));
+    return new Promise(function(resolve){
+      var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99998';
+      ov.innerHTML='<div class="dlg" style="max-width:420px"><div class="dlg-h">出力するページを選択</div><div class="dlg-b"><div class="fhint">PDFに含めるページにチェックを入れてください。</div><div class="frow" style="gap:6px"><button class="hb2" id="ppAll">全選択</button><button class="hb2" id="ppNone">全解除</button></div><div id="ppList" style="display:flex;flex-direction:column;gap:4px;max-height:50vh;overflow:auto;margin:8px 0"></div></div><div class="dlg-f" style="display:flex;gap:8px;justify-content:flex-end"><button class="hb2" id="ppCancel">キャンセル</button><button class="hb2 pri" id="ppGo">この内容で出力</button></div></div>';
+      document.body.appendChild(ov);
+      var list=ov.querySelector('#ppList');
+      list.innerHTML=pages.map(function(p,i){ return '<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;cursor:pointer"><input type="checkbox" data-pid="'+p.id+'" checked><span>'+(i+1)+'. '+esc(p.name||('ページ'+(i+1)))+'</span></label>'; }).join('');
+      ov.querySelector('#ppAll').onclick=function(){ [].forEach.call(list.querySelectorAll('input'),function(c){c.checked=true;}); };
+      ov.querySelector('#ppNone').onclick=function(){ [].forEach.call(list.querySelectorAll('input'),function(c){c.checked=false;}); };
+      function close(v){ if(ov.parentNode) ov.parentNode.removeChild(ov); resolve(v); }
+      ov.querySelector('#ppCancel').onclick=function(){ close(null); };
+      ov.onclick=function(e){ if(e.target===ov) close(null); };
+      ov.querySelector('#ppGo').onclick=function(){ var ids=[]; [].forEach.call(list.querySelectorAll('input'),function(c){ if(c.checked) ids.push(c.getAttribute('data-pid')); }); if(!ids.length){ alert('少なくとも1ページ選択してください'); return; } close(ids); };
+    });
+  }
   function exportPDFText(){
+    pickPages().then(function(sel){ if(!sel) return;
     var ov=pdfOverlay('文字選択できるPDFを生成しています（フォント読込中）…');
     var prevTheme=document.documentElement.getAttribute('data-theme');
     function done(){ document.documentElement.setAttribute('data-theme',prevTheme||'light'); if(ov&&ov.parentNode)ov.parentNode.removeChild(ov); }
     Promise.all([loadPdfLibs(), loadJpFont()])
       .then(function(){ return document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve(); })
-      .then(function(){ document.documentElement.setAttribute('data-theme','light'); return renderAllPages(2); })
+      .then(function(){ document.documentElement.setAttribute('data-theme','light'); return renderAllPages(2, sel); })
       .then(function(renders){ buildPdfSandwich(renders, 2); done(); })
       .catch(function(err){ done(); if(confirm('文字選択できるPDFの生成に失敗しました（フォント取得がブロックされた可能性）。\n画像PDF（文字選択不可・しおり付き）で出力しますか？')){ exportPDF(); } });
+    });
   }
   function buildPdfSandwich(renders, scale){
     var jsPDF=window.jspdf.jsPDF;
@@ -2383,21 +2405,32 @@
       var desiredWpt=colPx*72/96, availWpt=pageW-2*minMarginX;
       var drawWpt=Math.min(desiredWpt,availWpt), marginX=(pageW-drawWpt)/2;
       var pxPerPt=canvas.width/drawWpt, spc=drawWpt/colPx;
-      var sliceH=Math.max(1,Math.floor(contentHpt*pxPerPt)), sliceHcss=sliceH/scale;
-      var total=canvas.height, np=Math.max(1,Math.ceil(total/sliceH));
-      var firstPdf=pdfPageNo+1;
-      for(var p=0;p<np;p++){
+      var sliceH=Math.max(1,Math.floor(contentHpt*pxPerPt));
+      var total=canvas.height;
+      /* ブロック境界（canvas px）で切る。境界が入らない大きなブロックのみ強制カット */
+      var bpx=(R.breaks||[]).map(function(b){ return Math.round(b*scale); }).filter(function(b){ return b>0 && b<total; });
+      bpx.sort(function(a,b){return a-b;});
+      var slices=[], start=0, guard=0;
+      while(start<total && guard++<2000){
+        var maxEnd=start+sliceH, end=0;
+        for(var bi=0;bi<bpx.length;bi++){ if(bpx[bi]>start && bpx[bi]<=maxEnd) end=bpx[bi]; }
+        if(end<=start) end=Math.min(maxEnd,total);
+        slices.push({y0:start,h:end-start}); start=end;
+      }
+      if(!slices.length) slices.push({y0:0,h:total});
+      var np=slices.length, firstPdf=pdfPageNo+1;
+      slices.forEach(function(S,p){
         pdfPageNo++; if(pdfPageNo>1) pdf.addPage();
-        var sh=Math.min(sliceH,total-p*sliceH);
+        var sh=S.h;
         var tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=sh;
         var g=tmp.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,tmp.width,tmp.height);
-        g.drawImage(canvas,0,p*sliceH,canvas.width,sh,0,0,canvas.width,sh);
+        g.drawImage(canvas,0,S.y0,canvas.width,sh,0,0,canvas.width,sh);
         pdf.addImage(tmp.toDataURL('image/jpeg',0.92),'JPEG',marginX,marginY,drawWpt,sh/pxPerPt);
-        if(haveFont){ pdf.setFont('jpf'); var y0=p*sliceHcss, y1=(p+1)*sliceHcss;
+        if(haveFont){ pdf.setFont('jpf'); var y0=S.y0/scale, y1=(S.y0+sh)/scale;
           for(var li=0;li<lines.length;li++){ var L=lines[li]; if(L.y<y0-2||L.y>=y1) continue; pdf.setFontSize(Math.max(4,L.f*spc)); try{ pdf.text(L.text, marginX+L.x*spc, marginY+(L.y-y0)*spc, {baseline:'top', renderingMode:'invisible'}); }catch(e){} } }
-      }
+      });
       if(multi) outlineEntries.push({lv:0,t:R.name,pdfPage:firstPdf});
-      heads.forEach(function(hd){ var within=Math.floor((hd.y*scale)/sliceH); outlineEntries.push({lv:hd.lv,t:hd.t,pdfPage:firstPdf+Math.min(np-1,Math.max(0,within))}); });
+      heads.forEach(function(hd){ var hy=hd.y*scale, within=0; for(var si=0;si<slices.length;si++){ if(hy>=slices[si].y0-2){ within=si; } } outlineEntries.push({lv:hd.lv,t:hd.t,pdfPage:firstPdf+Math.min(np-1,Math.max(0,within))}); });
     });
     if(pdf.outline&&pdf.outline.add){
       var last={};
@@ -2724,7 +2757,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21u 技能(※なし)も＜＞固定化'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-21v PDF: ブロック分断防止/ページ選択'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'GitHub同期 有効':'自動保存 有効');
   reconcileFromIdb();
 
