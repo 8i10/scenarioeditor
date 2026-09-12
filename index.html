@@ -1831,7 +1831,7 @@
       return '<div class="mat-row" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px">'
         +'<div style="display:flex;gap:8px;align-items:center"><input type="text" class="mat-t-in" data-i="'+i+'" placeholder="資料タイトル" value="'+esc(m.title||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'
         +'<button class="mat-up" data-i="'+i+'" title="上へ">▲</button><button class="mat-dn" data-i="'+i+'" title="下へ">▼</button><button class="mat-del" data-i="'+i+'" title="削除">🗑</button></div>'
-        +'<div class="mat-tools" style="display:flex;gap:6px;flex-wrap:wrap"><button class="mat-imgb hb2" data-i="'+i+'">🖼 画像</button><button class="mat-frameb hb2" data-i="'+i+'">▢ 枠</button><button class="mat-checkb hb2" data-i="'+i+'">☑ チェック</button><button class="mat-hrb hb2" data-i="'+i+'">─ 区切り</button><button class="mat-colb hb2" data-i="'+i+'">▥ 二段組</button><button class="mat-linkb hb2" data-i="'+i+'">🔗 リンク</button></div>'
+        +'<div class="mat-tools" style="display:flex;gap:6px;flex-wrap:wrap"><button class="mat-imgb hb2" data-i="'+i+'">🖼 画像</button><button class="mat-frameb hb2" data-i="'+i+'">▢ 枠</button><button class="mat-checkb hb2" data-i="'+i+'">☑ チェック</button><button class="mat-hrb hb2" data-i="'+i+'">─ 区切り</button><button class="mat-colb hb2" data-i="'+i+'">▥ 二段組</button><button class="mat-linkb hb2" data-i="'+i+'">🔗 見出しリンク</button></div>'
         +'<div class="mat-b-in" data-i="'+i+'" contenteditable="true">'+bodyHtml+'</div></div>';
     }).join('') : '<div class="fhint">まだ資料がありません。「＋ 資料を追加」で追加してください。</div>';
   }
@@ -1850,11 +1850,18 @@
   function matInsertCheck(i){ matInsert(i,'<div class="mat-check"><input type="checkbox">&nbsp;項目</div>'); }
   function matInsertHr(i){ matInsert(i,'<div class="mat-hr"></div>'); }
   function matInsertCols(i){ matInsert(i,'<div class="mat-cols"><div class="mat-col"><br></div><div class="mat-col"><br></div></div><br>'); }
-  function matInsertLink(i){
+  function matInsertHLink(i){
+    var body=matOvl.querySelector('.mat-b-in[data-i="'+i+'"]'); if(!body) return;
+    var items=[]; (state.pages||[]).forEach(function(p){ headingsOf(p.blocks).forEach(function(it){ items.push({id:it.id,lv:it.lv,t:it.t||'(無題)',pg:p.name||'ページ'}); }); });
+    if(!items.length){ alert('リンク先の見出しがありません。先に見出しを作成してください。'); return; }
     var sel=window.getSelection(); var selText=(sel&&sel.toString())||'';
-    var url=prompt('リンク先URL（https://…）', 'https://'); if(url===null) return; url=url.trim(); if(!/^(https?:|mailto:)/i.test(url)){ alert('http:// または https:// で始まるURLを入力してください'); return; }
-    var label=selText||prompt('表示するテキスト', url)||url;
-    matInsert(i,'<a href="'+url.replace(/"/g,'%22')+'" target="_blank" rel="noopener">'+esc(label)+'</a>');
+    var byPage={}, order=[]; items.forEach(function(it){ if(!byPage[it.pg]){byPage[it.pg]=[];order.push(it.pg);} byPage[it.pg].push(it); });
+    var listHtml=order.map(function(pg){ return '<div class="mcat mcat-pg">'+esc(pg)+(pg===state.name?'':'')+'</div>'+byPage[pg].map(function(it){ return '<button class="hlpick" data-hid="'+it.id+'" style="display:flex;width:100%;text-align:left;gap:8px;align-items:center;background:transparent;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--text)"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t)+'</span></button>'; }).join(''); }).join('');
+    var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
+    ov.innerHTML='<div class="dlg" style="max-width:420px"><div class="dlg-h">見出しへリンク</div><div class="dlg-b"><div class="fhint">リンク先の見出しを選んでください。閲覧用HTMLでクリックすると、その見出しへ移動します。</div><div style="max-height:52vh;overflow:auto;margin-top:6px">'+listHtml+'</div></div><div class="dlg-f"><button class="hb2" id="hlpCancel">キャンセル</button></div></div>';
+    document.body.appendChild(ov);
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hlpCancel'){ close(); return; } var b=e.target.closest('.hlpick'); if(b){ var id=b.getAttribute('data-hid'); var label=selText || (b.querySelector('.nm')?b.querySelector('.nm').textContent:'見出し'); close(); matInsert(i,'<a class="hlink" data-h="'+id+'">'+esc(label)+'</a>'); } });
   }
   if(matOvl){
     matOvl.addEventListener('input',function(e){ var t=e.target; var i=t.getAttribute('data-i'); if(i==null) return; i=+i; state.materials[i]=state.materials[i]||{title:'',body:''}; if(t.classList.contains('mat-t-in')) state.materials[i].title=t.value; else if(t.classList.contains('mat-b-in')) state.materials[i].body=sanitize(t.innerHTML); persist(); });
@@ -1864,7 +1871,7 @@
       var cb=e.target.closest('.mat-checkb'); if(cb){ matInsertCheck(+cb.getAttribute('data-i')); return; }
       var hb=e.target.closest('.mat-hrb'); if(hb){ matInsertHr(+hb.getAttribute('data-i')); return; }
       var clb=e.target.closest('.mat-colb'); if(clb){ matInsertCols(+clb.getAttribute('data-i')); return; }
-      var lb=e.target.closest('.mat-linkb'); if(lb){ matInsertLink(+lb.getAttribute('data-i')); return; }
+      var lb=e.target.closest('.mat-linkb'); if(lb){ matInsertHLink(+lb.getAttribute('data-i')); return; }
       var del=e.target.closest('.mat-del'); if(del){ state.materials.splice(+del.getAttribute('data-i'),1); renderMatList(); persist(); return; }
       var up=e.target.closest('.mat-up'); if(up){ var i=+up.getAttribute('data-i'); if(i>0){ var a=state.materials; var tmp=a[i-1]; a[i-1]=a[i]; a[i]=tmp; renderMatList(); persist(); } return; }
       var dn=e.target.closest('.mat-dn'); if(dn){ var j=+dn.getAttribute('data-i'); var a2=state.materials; if(j<a2.length-1){ var t2=a2[j+1]; a2[j+1]=a2[j]; a2[j]=t2; renderMatList(); persist(); } return; }
@@ -2807,12 +2814,12 @@
   window.addEventListener('focus',function(){ refreshFromStore(); ghPull(false); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden){ refreshFromStore(); ghPull(false); } });
   window.addEventListener('pageshow',function(e){ if(e && e.persisted){ refreshFromStore(); ghPull(false); } });
-  /* 5分ごとの自動同期（取得＋未送信があれば送信） */
+  /* 30秒ごとの自動同期（取得＋未送信があれば送信） */
   setInterval(function(){
     if(!ghConnected()) return;
     ghPull(false);
     if(dirtyDocs && Object.keys(dirtyDocs).length){ if(!ghGist){ try{ ghGist=localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){} } if(ghGist) setTimeout(function(){ if(!pushing) doPush(0); }, 3000); }
-  }, 300000);
+  }, 30000);
 
   /* ---- 初期化 ---- */
   if(!load()){
@@ -2861,8 +2868,8 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22b 資料: チェック/区切り/二段組/リンク追加'; })();
-  render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（5分ごと）':'自動保存 有効');
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22d 自動同期を30秒間隔に変更'; })();
+  render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
   window.__ed={ state:state, TYPES:TYPES, newBlock:newBlock, render:render, persist:persist, load:load,
