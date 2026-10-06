@@ -406,10 +406,11 @@
   .npc-card-name .npc-tri{margin-right:5px}
   .npc-missing{color:var(--muted);font-style:italic}
   .npc-rule{border:0;border-top:1px solid var(--text);margin:5px 0;height:0}
+  .npc-rule-dot{border-top-style:dotted}
   .npc-statrow{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.9em;margin:4px 0}
   .npc-stats{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 7px;font-size:.86em}
   .npc-stat b,.npc-stat .npc-k{color:var(--accent);font-weight:700;margin-right:1px}
-  .npc-cols2{display:flex;gap:16px;margin:6px 0;align-items:flex-start}
+  .npc-cols2{display:flex;gap:16px;margin:14px 0 6px;align-items:flex-start}
   .npc-cols2 .npc-col-n{flex:6;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}
   .npc-cols2 .npc-col-c{flex:4;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}
   .npc-policy{white-space:pre-wrap;font-size:.92em;line-height:1.55;margin:4px 0 0}
@@ -441,6 +442,8 @@
   .fpg-head .fpg-hint{margin:0 0 0 auto;align-self:stretch;display:flex;align-items:center;justify-content:flex-end;color:var(--header-text);opacity:.85;font-size:12px;line-height:1;min-height:0;max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
   .fpg-head #fClose{margin-left:12px;flex:none}
   .fpg-body{flex:1;overflow:auto;padding:14px 16px 40px;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box}
+  .pv-body{flex:1;min-height:0;background:#fff}
+  #previewFrame{width:100%;height:100%;border:0;display:block;background:#fff}
   .fpg-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
   .fpg-bar input[type=text]{height:34px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit}
   .fpg-bar #fName{flex:1;min-width:160px}
@@ -554,6 +557,7 @@
     <button class="hbtn" id="btnFile">📄 <span id="docName">無題</span></button>
     <span class="save-ind" id="saveInd"></span>
     <span class="sp"></span>
+    <button class="hbtn ico" id="btnPreview" title="閲覧用HTMLをプレビュー">👁</button>
     <button class="hbtn ico" id="btnMenu" title="メニュー" aria-label="メニュー">☰</button>
     <div class="hmenu" id="hmenu">
       <div class="hm-sec">出力</div>
@@ -603,17 +607,23 @@
   </div>
 </div>
 
+<div class="ovl fpage" id="previewOvl">
+  <div class="dlg fdlg">
+    <div class="fpg-head"><span class="fpg-ttl">プレビュー（閲覧用HTML）</span><span style="margin-left:auto;display:flex;gap:8px"><button class="hb2" id="pvDownload">⬇ ダウンロード</button><button class="hb2" id="pvClose">✕ 閉じる</button></span></div>
+    <div class="pv-body"><iframe id="previewFrame" title="プレビュー"></iframe></div>
+  </div>
+</div>
 <div class="ovl" id="matOvl">
   <div class="dlg" style="max-width:660px">
-    <div class="dlg-h">資料・データ（この作品）</div>
+    <div class="dlg-h">データ（この作品）</div>
     <div class="dlg-b">
-      <div class="mat-tabs"><button class="mat-tab on" data-tab="mat">資料</button><button class="mat-tab" data-tab="npc">NPC・エネミー</button></div>
-      <div class="mat-pane" data-pane="mat">
-        <div class="fhint">閲覧用HTMLの右側「資料」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
+      <div class="mat-tabs"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button></div>
+      <div class="mat-pane" data-pane="mat" style="display:none">
+        <div class="fhint">閲覧用HTMLの右側「データ」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
         <div id="matList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
-        <div class="frow"><button class="hb2" id="matAdd">＋ 資料を追加</button></div>
+        <div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>
       </div>
-      <div class="mat-pane" data-pane="npc" style="display:none">
+      <div class="mat-pane" data-pane="npc">
         <div class="fhint">NPC・エネミーの能力値や技能を登録できます。各データは見出しの▸/▾で開閉できます。閲覧用HTMLの「資料」パネルに表示されます。</div>
         <div class="frow" style="gap:6px;margin:4px 0 0"><button class="hb2" id="npcAllOpen">すべて開く</button><button class="hb2" id="npcAllClose">すべて畳む</button></div>
         <div id="npcList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
@@ -1809,7 +1819,7 @@
   }
   function outlineInnerHTML(){
     var h='<div class="ol-ttl">しおり<button class="ol-x" id="olX" title="閉じる">×</button></div>';
-    h+='<div class="ol-addrow"><button class="ol-add" id="olAdd">＋ ページを追加</button><button class="ol-ruby" id="olRuby">ルビ設定</button><button class="ol-ruby" id="olMat">資料</button></div>';
+    h+='<div class="ol-addrow"><button class="ol-add" id="olAdd">＋ ページを追加</button><button class="ol-ruby" id="olRuby">ルビ設定</button><button class="ol-ruby" id="olMat">データ</button></div>';
     h+='<div class="ol-list">';
     (state.pages||[]).forEach(function(p){
       var cur=(p.id===state.curPage), open=!!olOpen[p.id];
@@ -1943,15 +1953,15 @@
     var sl=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]];
     var stats=sl.filter(function(s){return (s[1]!=null && s[1]!=='');}).map(function(s){ return '<span class="npc-stat"><b class="npc-k">＜'+s[0]+'＞</b>'+esc(String(s[1]))+'</span>'; }).join('');
     function det(lbl,v){ return v?'<details class="npc-det"'+(openAll?' open':'')+'><summary>'+lbl+'</summary><div class="npc-detb">'+esc(v).replace(/\n/g,'<br>')+'</div></details>':''; }
-    return (stats?'<div class="npc-stats">'+stats+'</div>':'')+det('チャパレ',n.chat||n.skills)+det('備考',n.notes)+det('行動方針',n.policy);
+    return (stats?'<div class="npc-stats">'+stats+'</div>':'')+det('チャパレ',n.chat||n.skills)+det('メモ',n.notes)+det('行動方針',n.policy);
   }
   function npcCardBody(n){
     function statRow(arr){ var s=arr.filter(function(x){return x[1]!=null&&x[1]!=='';}).map(function(x){ return '<span class="npc-stat"><b class="npc-k">＜'+x[0]+'＞</b>'+esc(String(x[1]))+'</span>'; }).join(''); return s?'<div class="npc-statrow">'+s+'</div>':''; }
     var r1=statRow([['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu]]);
     var r2=statRow([['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]]);
     var notes=n.notes||'', chat=n.chat||n.skills||'', policy=n.policy||'';
-    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">備考</span>'+esc(notes).replace(/\n/g,'<br>'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ</span>'+esc(chat).replace(/\n/g,'<br>'):'')+'</div></div>'):'';
-    var pol=policy?('<hr class="npc-rule"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
+    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">メモ</span>'+esc(notes).replace(/\n/g,'<br>'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ</span>'+esc(chat).replace(/\n/g,'<br>'):'')+'</div></div>'):'';
+    var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
     return r1+r2+cols+pol;
   }
   function npcCardHTML(id, color){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var tri='<span class="npc-tri"'+(color?' style="color:'+esc(color)+'"':'')+'>▶</span>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
@@ -1982,7 +1992,7 @@
         +'<div class="npc-grid npc-derived">'+derived+'</div>'
         +'<div class="npc-autonote">HP/MP/DBは空欄なら自動算出（入力すると手動値が優先）</div>'
         +'<label class="npc-lbl2">チャパレ</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="chat" placeholder="チャットパレット（技能・攻撃などのダイスコマンド）" rows="3">'+esc(n.chat||n.skills||'')+'</textarea>'
-        +'<label class="npc-lbl2">備考</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="notes" placeholder="備考" rows="2">'+esc(n.notes||'')+'</textarea>'
+        +'<label class="npc-lbl2">メモ</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="notes" placeholder="メモ" rows="2">'+esc(n.notes||'')+'</textarea>'
         +'<label class="npc-lbl2">行動方針</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="policy" placeholder="行動方針" rows="2">'+esc(n.policy||'')+'</textarea>') : '';
       return '<div class="npc-row'+(open?'':' collapsed')+'" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px">'
         +'<div class="npc-top" style="display:flex;gap:6px;align-items:center"><button class="npc-tog" data-i="'+i+'" title="開閉">'+(open?'▾':'▸')+'</button><input class="npc-in npc-name" data-i="'+i+'" data-k="name" placeholder="名前（NPC／エネミー）" value="'+esc(n.name||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit"><button class="npc-up" data-i="'+i+'" title="上へ">▲</button><button class="npc-dn" data-i="'+i+'" title="下へ">▼</button><button class="npc-del" data-i="'+i+'" title="削除">🗑</button></div>'
@@ -2054,7 +2064,7 @@
     if(e.target.id==='olX'){ state.outlineOpen=false; applyOutline(); persist(); return; }
     if(e.target.id==='olAdd'){ addPage(); return; }
     if(e.target.id==='olRuby'){ renderRubyList(); rubyOvl.classList.add('show'); return; }
-    if(e.target.id==='olMat'){ renderMatList(); matOvl.classList.add('show'); return; }
+    if(e.target.id==='olMat'){ renderMatList(); renderNpcList(); matOvl.classList.add('show'); return; }
     var pup=e.target.closest('[data-pup]'); if(pup){ movePage(pup.getAttribute('data-pup'),-1); return; }
     var pdn=e.target.closest('[data-pdn]'); if(pdn){ movePage(pdn.getAttribute('data-pdn'),1); return; }
     var ped=e.target.closest('[data-pedit]'); if(ped){ renamePage(ped.getAttribute('data-pedit')); return; }
@@ -2331,7 +2341,7 @@
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
     return '<div class="block'+done+(b.bg?' has-bg':'')+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+(b.html||(b.type==='p'?'<br>':''))+'</div></div>';
   }
-  function exportHTML(){
+  function exportHTML(preview){
     (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
     var css=document.querySelector('style').textContent;
     var olHTML=outlineInnerHTML();
@@ -2341,7 +2351,7 @@
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
-      +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn" id="vMat">📚 資料</button>':'')
+      +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn" id="vMat">📚 データ</button>':'')
       +'<button class="hbtn" id="vTheme">'+themeLabel+'</button></div>';
     var nav='<nav class="outline open" id="vOutlineNav">'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(state.pages||[]).map(function(p){ var its=headingsOf(p.blocks); return '<div class="pt-p">'+esc(p.name||'ページ')+'</div>'+its.map(function(it){return '<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>';}).join(''); }).join('')+'</div>';
@@ -2355,7 +2365,7 @@
         return '<section class="npc-item"><h3>'+esc(n.name||'NPC')+'</h3>'+npcInner(n)+'</section>';
       }).join('');
     }
-    var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">資料・データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
+    var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
     var body='<div class="wrap" style="--fs:'+FS[state.fs]+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
     var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
       +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
@@ -2391,9 +2401,10 @@
       +' .npc-card-name .npc-tri{margin-right:5px}'
       +' .npc-missing{color:var(--line);font-style:italic}'
       +' .npc-rule{border:0;border-top:1px solid var(--text);margin:5px 0;height:0}'
+      +' .npc-rule-dot{border-top-style:dotted}'
       +' .npc-statrow{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.9em;margin:4px 0}'
       +' .npc-statrow .npc-k{color:var(--accent);font-weight:700;margin-right:1px}'
-      +' .npc-cols2{display:flex;gap:16px;margin:6px 0;align-items:flex-start}'
+      +' .npc-cols2{display:flex;gap:16px;margin:14px 0 6px;align-items:flex-start}'
       +' .npc-cols2 .npc-col-n{flex:6;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}'
       +' .npc-cols2 .npc-col-c{flex:4;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}'
       +' .npc-policy{white-space:pre-wrap;font-size:.92em;line-height:1.55;margin:4px 0 0}'
@@ -2428,12 +2439,26 @@
       +'<body class="ol-open">'+vhead+nav+body+matHTML+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
       +'</body></html>';
-    var blob=new Blob([html],{type:'text/html'}); var a=document.createElement('a');
+    var blob=new Blob([html],{type:'text/html'});
+    if(preview){ showPreview(blob); return; }
+    var a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'.html'; a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
     });
   }
-  document.getElementById('btnHtml').onclick=exportHTML;
+  function showPreview(blob){
+    var ov=document.getElementById('previewOvl'), frame=document.getElementById('previewFrame');
+    if(!ov||!frame) return;
+    if(ov._url){ try{URL.revokeObjectURL(ov._url);}catch(e){} }
+    ov._url=URL.createObjectURL(blob); frame.src=ov._url; ov.classList.add('show');
+  }
+  (function(){
+    var ov=document.getElementById('previewOvl'); if(!ov) return;
+    var cl=document.getElementById('pvClose'); if(cl) cl.onclick=function(){ ov.classList.remove('show'); var f=document.getElementById('previewFrame'); if(f) f.src='about:blank'; if(ov._url){ try{URL.revokeObjectURL(ov._url);}catch(e){} ov._url=null; } };
+    var dl=document.getElementById('pvDownload'); if(dl) dl.onclick=function(){ exportHTML(false); };
+    var bp=document.getElementById('btnPreview'); if(bp) bp.onclick=function(){ exportHTML(true); };
+  })();
+  document.getElementById('btnHtml').onclick=function(){ exportHTML(false); };
   function importScenarioHTML(text){
     var m=text.match(/<script id="scn-data"[^>]*>([\s\S]*?)<\/script>/);
     if(!m){ alert('このHTMLには編集用データが含まれていません。\n新しい版のエディタで「HTMLで保存」したファイルを読み込んでください。'); return; }
@@ -3013,7 +3038,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22j NPCカード: 罫線レイアウト/▶のみ色'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22k HTMLプレビュー追加/メモ・データ改称/点線罫線'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
