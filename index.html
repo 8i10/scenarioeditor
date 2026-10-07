@@ -1986,7 +1986,7 @@
     function sp(s){ return '<span class="npc-stat"><b class="npc-k">＜'+s[0]+'＞</b>'+esc(String(s[1]))+'</span>'; }
     var chars=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san]].filter(function(s){return s[1]!=null&&s[1]!=='';});
     var derived=[['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]].filter(function(s){return s[1]!=null&&s[1]!=='';});
-    var rows=''; for(var i=0;i<chars.length;i+=3){ rows+='<div class="npc-statrow">'+chars.slice(i,i+3).map(sp).join('')+'</div>'; }
+    var rows=''; for(var i=0;i<chars.length;i+=4){ rows+='<div class="npc-statrow">'+chars.slice(i,i+4).map(sp).join('')+'</div>'; }
     if(derived.length) rows+='<div class="npc-statrow npc-drow">'+derived.map(sp).join('')+'</div>';
     function detF(lbl,v,copyable){ if(!v) return ''; var cp=copyable?'<button class="npc-copy" data-cp="'+encodeURIComponent(v)+'" title="内容をコピー">コピー</button>':''; return '<details class="npc-pd" open><summary>'+lbl+cp+'</summary><div class="npc-pdb">'+esc(v).replace(/\n/g,'<br>')+'</div></details>'; }
     var fields=detF('チャパレ',n.chat||n.skills,true)+detF('メモ',n.notes,false)+detF('行動方針',n.policy,false);
@@ -2396,12 +2396,15 @@
     pagesHTML=applyRubyToHTML(pagesHTML);
     var mats=(state.materials||[]).filter(function(m){ return (m.title||m.body); });
     var npcs=(state.npcs||[]).filter(function(n){ return (n.name||n.notes||n.str||n.con||n.chat||n.skills||n.policy); });
-    var panelInner=mats.map(function(m){ var b=/[<]/.test(m.body||'')?(m.body||''):esc(m.body||'').replace(/\n/g,'<br>'); return '<section class="mat-item"><h3>'+esc(m.title||'資料')+'</h3><div class="mat-body">'+b+'</div></section>'; }).join('');
+    var matsInner=mats.map(function(m){ var b=/[<]/.test(m.body||'')?(m.body||''):esc(m.body||'').replace(/\n/g,'<br>'); return '<section class="mat-item"><h3>'+esc(m.title||'資料')+'</h3><div class="mat-body">'+b+'</div></section>'; }).join('');
     var isEnemy=function(c){ c=(c||'').toLowerCase(); return c==='#ff0000'||c==='#f00'||c==='red'; };
     var npcOnly=npcs.filter(function(n){ return !isEnemy(n.color); });
     var enemyOnly=npcs.filter(function(n){ return isEnemy(n.color); });
-    if(npcOnly.length){ panelInner += '<div class="mat-sec">NPC</div>' + npcOnly.map(npcPanelHTML).join(''); }
-    if(enemyOnly.length){ panelInner += '<div class="mat-sec">エネミー</div>' + enemyOnly.map(npcPanelHTML).join(''); }
+    function matGroup(lbl,inner){ return '<details class="mat-group" open><summary class="mat-sec">'+lbl+'</summary><div class="mat-gbody">'+inner+'</div></details>'; }
+    var panelInner='';
+    if(npcOnly.length){ panelInner += matGroup('NPC', npcOnly.map(npcPanelHTML).join('')); }
+    if(enemyOnly.length){ panelInner += matGroup('エネミー', enemyOnly.map(npcPanelHTML).join('')); }
+    if(mats.length){ panelInner += matGroup('資料', matsInner); }
     var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
     var clipHTML='<aside class="mat-panel clip-panel" id="clipPanel"><div class="mat-phead">本文コピー<button class="mat-x" id="clipPClose" aria-label="閉じる">×</button></div>'
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button><div class="clip-hint">本文をドラッグ選択して「＋ 選択範囲を追加」で登録（この端末に保存）。グリップ（⠿）でドラッグし、項目やフォルダを整理できます。</div></div>'
@@ -2457,7 +2460,13 @@
       +' .mat-item h3{font-weight:700;font-size:1.05em;margin:0 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px}'
       +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55}'
       +' .mat-item .mat-body img{max-width:100%;height:auto;border-radius:4px}'
-      +' .mat-sec{font-weight:700;letter-spacing:.06em;margin:4px 0 12px;padding-bottom:4px;border-bottom:2px solid var(--text);font-size:.95em}'
+      +' .mat-group{margin:4px 0 12px}'
+      +' .mat-sec{font-weight:700;letter-spacing:.06em;margin:0 0 10px;padding-bottom:4px;border-bottom:2px solid var(--text);font-size:.95em;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
+      +' .mat-sec::-webkit-details-marker{display:none}'
+      +' .mat-sec::before{content:"\\25BE";font-size:.85em;width:1em;display:inline-block}'
+      +' .mat-group:not([open])>.mat-sec{margin-bottom:0}'
+      +' .mat-group:not([open])>.mat-sec::before{content:"\\25B8"}'
+      +' .mat-gbody{margin:0}'
       +' .npc-item{margin:0 0 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden}'
       +' .npc-item>summary{cursor:pointer;list-style:none;font-weight:700;font-size:1.0em;padding:8px 11px;background:var(--hover);display:flex;align-items:center}'
       +' .npc-item>summary .npc-sp{flex:1}'
@@ -2467,7 +2476,8 @@
       +' .npc-item-body{padding:9px 12px}'
       +' .npc-stats{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 7px;font-size:.86em}'
       +' .npc-stat b{color:var(--accent);font-weight:700;margin-right:1px}'
-      +' .npc-item .npc-statrow{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.9em;margin:3px 0}'
+      +' .npc-item .npc-statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:3px 8px;font-size:.86em;margin:3px 0}'
+      +' .npc-item .npc-statrow .npc-stat{min-width:0;white-space:nowrap}'
       +' .npc-item .npc-drow{margin-top:5px}'
       +' .npc-pd{margin:8px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}'
       +' .npc-pd>summary{cursor:pointer;list-style:none;font-weight:700;font-size:.82em;color:var(--text);display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--hover)}'
@@ -3157,7 +3167,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22x 駒サイズ5/本文からも駒出力/データ欄NPC・エネミー分割'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22z データ欄グループ（NPC/エネミー/資料）折り畳み'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
