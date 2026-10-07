@@ -1036,6 +1036,8 @@
             return;
           }
           if(['span','b','i','u','strong','em','br','s','strike','del','a','input'].indexOf(tag)<0 && !(tag==='div' && /\b(mat-frame|mat-hr|mat-check|mat-cols|mat-col)\b/.test(n.getAttribute('class')||''))){
+            var blockish=(tag==='div'||tag==='p'||tag==='li'||/^h[1-6]$/.test(tag)||tag==='tr');
+            if(blockish && n.previousSibling){ node.insertBefore(document.createElement('br'),n); }
             while(n.firstChild) node.insertBefore(n.firstChild,n);
             node.removeChild(n); return;
           }
@@ -3199,7 +3201,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23e 取り消し(Ctrl+Z)を全体対応（ページ/データ/ルビ）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23f 資料入力の改行を保持（div/p→br）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
