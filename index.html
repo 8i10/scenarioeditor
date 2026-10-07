@@ -2382,15 +2382,13 @@
     var css=document.querySelector('style').textContent;
     var olHTML=outlineInnerHTML();
     var fsXs=(state.fs==='xs'?' class="on"':''), fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
-    var themeLabel=(state.theme==='dark'?'☀ ライト':'🌙 ダーク');
     var vhead='<div class="v-head">'
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
       +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn" id="vMat">📚 データ</button>':'')
-      +'<button class="hbtn" id="vClip">📋 本文コピー</button>'
-      +'<button class="hbtn" id="vTheme">'+themeLabel+'</button></div>';
-    var nav='<nav class="outline open" id="vOutlineNav">'+olHTML+'</nav>';
+      +'<button class="hbtn" id="vClip">📋 本文コピー</button></div>';
+    var nav='<nav class="outline open" id="vOutlineNav"><div class="ol-search"><input type="search" id="olSearch" placeholder="🔍 データ内検索" autocomplete="off"><span class="ol-scount" id="olSCount"></span></div>'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(state.pages||[]).map(function(p){ var its=headingsOf(p.blocks); return '<div class="pt-p">'+esc(p.name||'ページ')+'</div>'+its.map(function(it){return '<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>';}).join(''); }).join('')+'</div>';
     var pagesHTML=(state.pages||[]).map(function(p,i){ return '<section class="scn-page'+(i===0?' scn-cur':'')+(i>0?' pb':'')+'" id="pg_'+p.id+'"><div class="doc">'+(p.blocks||[]).map(staticBlockHTML).join('')+'</div></section>'; }).join('');
     pagesHTML=applyRubyToHTML(pagesHTML);
@@ -2416,7 +2414,13 @@
       +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px}'
-      +' .outline{top:46px;height:calc(100vh - 46px)}'
+      +' .outline{top:46px;height:calc(100vh - 46px);background:#e7e6e2;border-right:1px solid #d8d7d2}'
+      +' .ol-search{padding:10px 12px 8px;position:sticky;top:0;background:#e7e6e2;z-index:2}'
+      +' .ol-search input{width:100%;height:32px;border:1px solid #c9c8c3;border-radius:8px;background:#fff;color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;box-sizing:border-box}'
+      +' .ol-search input:focus{outline:none;border-color:var(--text)}'
+      +' .ol-scount{display:block;font-size:11px;color:var(--muted);margin:4px 2px 0;min-height:12px}'
+      +' mark.ol-hit{background:#ffe58a;color:inherit;border-radius:2px}'
+      +' mark.ol-hit.cur{background:#ffbf47;box-shadow:0 0 0 2px rgba(255,160,0,.4)}'
       +' .sk-note{-webkit-user-select:none;user-select:none}'
       +' .mat-panel{position:fixed;top:46px;right:0;bottom:0;width:340px;max-width:88vw;background:var(--card);border-left:1px solid var(--line);box-shadow:-6px 0 20px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .25s ease;z-index:70;display:flex;flex-direction:column}'
       +' .mat-panel.open{transform:none}'
@@ -2528,7 +2532,6 @@
       +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var htw=e.target.closest("[data-htw]");if(htw){var g=htw.closest(".ol-hgroup");if(g)g.classList.toggle("open");return;}var ptw=e.target.closest("[data-ptw]");if(ptw){var pg=ptw.closest(".ol-pgroup");if(pg)pg.classList.toggle("open");return;}var hrow=e.target.closest(".ol-hrow");if(hrow){var el=document.querySelector(\'.block[data-id="\'+hrow.getAttribute("data-goto")+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}return;}var prow=e.target.closest(".ol-page");if(prow){var grp=prow.closest(".ol-pgroup");if(grp)grp.classList.add("open");showPage(prow.getAttribute("data-page"));}});'
       +'var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));'
       +'var FS={xs:0.66,sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
-      +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
       +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel");if(vm&&mp){vm.onclick=function(){var cp=document.getElementById("clipPanel");if(cp)cp.classList.remove("open");mp.classList.toggle("open");};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");};}'
       +'(function(){var CKEY='+JSON.stringify('clip:'+(state.id||state.name||'scn'))+';var panel=document.getElementById("clipPanel"),bodyEl=document.getElementById("clipBody"),vb=document.getElementById("vClip"),px=document.getElementById("clipPClose"),addb=document.getElementById("clipAddSel"),addf=document.getElementById("clipAddFolder");'
@@ -2559,8 +2562,16 @@
       +'bodyEl.addEventListener("dragend",function(){drag=null;[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});});}'
       +'render();})();'
       +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){var o=cp.textContent;cp.textContent="コピーしました";setTimeout(function(){cp.textContent=o;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
+      +'(function(){var inp=document.getElementById("olSearch");if(!inp)return;var cnt=document.getElementById("olSCount");var marks=[],idx=-1;'
+      +'function clearHits(){marks.forEach(function(m){var p=m.parentNode;if(p){p.replaceChild(document.createTextNode(m.textContent),m);p.normalize();}});marks=[];idx=-1;}'
+      +'function roots(){var r=[];var wr=document.querySelector(".wrap");if(wr)r.push(wr);var mp=document.getElementById("matPanel");if(mp)r.push(mp);return r;}'
+      +'function jump(){var m=marks[idx];if(!m)return;marks.forEach(function(x){x.classList.remove("cur");});m.classList.add("cur");var pg=m.closest?m.closest(".scn-page"):null;if(pg)showPage(pg.id.replace(/^pg_/,""));var mp=m.closest?m.closest("#matPanel"):null;if(mp){var dt=m.closest(".npc-item,.npc-pd,.mat-group");if(dt&&dt.tagName==="DETAILS")dt.open=true;mp.classList.add("open");}if(m.scrollIntoView)m.scrollIntoView({behavior:"smooth",block:"center"});if(cnt)cnt.textContent=(idx+1)+" / "+marks.length;}'
+      +'function run(q){clearHits();if(!q){if(cnt)cnt.textContent="";return;}var ql=q.toLowerCase();roots().forEach(function(root){var tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null,false);var nodes=[],n;while(n=tw.nextNode()){var pn=n.parentNode;if(n.nodeValue&&pn&&pn.nodeName!=="SCRIPT"&&pn.nodeName!=="STYLE"&&pn.nodeName!=="MARK")nodes.push(n);}nodes.forEach(function(node){var t=node.nodeValue,lt=t.toLowerCase(),i,last=0,pos=0,frag=null;while((i=lt.indexOf(ql,pos))>=0){if(!frag)frag=document.createDocumentFragment();frag.appendChild(document.createTextNode(t.slice(last,i)));var mk=document.createElement("mark");mk.className="ol-hit";mk.textContent=t.slice(i,i+q.length);frag.appendChild(mk);marks.push(mk);last=i+q.length;pos=last;}if(frag){frag.appendChild(document.createTextNode(t.slice(last)));node.parentNode.replaceChild(frag,node);}});});if(cnt)cnt.textContent=marks.length?("1 / "+marks.length):"0 件";if(marks.length){idx=0;jump();}}'
+      +'var tmr;inp.addEventListener("input",function(){clearTimeout(tmr);tmr=setTimeout(function(){run(inp.value.trim());},200);});'
+      +'inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();if(!marks.length)return;idx=(idx+(e.shiftKey?-1:1)+marks.length)%marks.length;jump();}});'
+      +'})();'
       +'})();<\/script>';
-    var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
+    var html='<!DOCTYPE html><html lang="ja" data-theme="light"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
@@ -3167,7 +3178,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22z データ欄グループ（NPC/エネミー/資料）折り畳み'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23a しおり背景灰色/ダークモード削除/データ内検索'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
