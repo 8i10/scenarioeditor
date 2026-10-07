@@ -2595,7 +2595,7 @@
       +'bodyEl.addEventListener("dragend",function(){drag=null;[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});});}'
       +'render();})();'
       +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){var o=cp.textContent;cp.textContent="コピーしました";setTimeout(function(){cp.textContent=o;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
-      +'document.addEventListener("mouseover",function(e){var t=e.target.closest&&e.target.closest(".ruby-t");if(!t)return;var r=t.getBoundingClientRect();t.classList.toggle("rb-below",r.top<66);},true);'
+      +'document.addEventListener("mouseover",function(e){var t=e.target.closest&&e.target.closest(".ruby-t");if(!t)return;var r=t.getBoundingClientRect();t.classList.toggle("rb-below",r.top<104);},true);'
       +'(function(){var inp=document.getElementById("olSearch");if(!inp)return;var cnt=document.getElementById("olSCount");var marks=[],idx=-1;'
       +'function clearHits(){marks.forEach(function(m){var p=m.parentNode;if(p){p.replaceChild(document.createTextNode(m.textContent),m);p.normalize();}});marks=[];idx=-1;}'
       +'function roots(){var r=[];var wr=document.querySelector(".wrap");if(wr)r.push(wr);var mp=document.getElementById("matPanel");if(mp)r.push(mp);return r;}'
@@ -3212,7 +3212,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23q しおり固定・右パネル可変・本文は間で中央（余白可変）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23r ふりがな：上端語はヘッダーに重ならず下側表示'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
