@@ -433,7 +433,7 @@
   .npc-det[open] summary::before{content:"▾ "}
   .npc-detb{padding:7px 10px;white-space:pre-wrap;font-size:.9em;line-height:1.55}
   .npc-lbl2{font-size:11px;color:var(--muted);font-weight:700;margin:2px 0 -4px}
-  .npc-ta{border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:7px 9px;font-size:12.5px;font-family:inherit;resize:vertical;box-sizing:border-box;width:100%}
+  .npc-ta{border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:7px 9px;font-size:12.5px;font-family:inherit;resize:none;overflow:hidden;min-height:40px;line-height:1.55;box-sizing:border-box;width:100%}
   #matList .mat-b-in{min-height:70px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;outline:none;overflow:auto;white-space:pre-wrap}
   #matList .mat-b-in img{max-width:100%}
   #matList .mat-tools .hb2{font-size:11px;padding:3px 8px}
@@ -2029,8 +2029,10 @@
         +'<div class="npc-top" style="display:flex;gap:6px;align-items:center"><button class="npc-tog" data-i="'+i+'" title="開閉">'+(open?'▾':'▸')+'</button><input class="npc-in npc-name" data-i="'+i+'" data-k="name" placeholder="名前（NPC／エネミー）" value="'+esc(n.name||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit"><button class="npc-up" data-i="'+i+'" title="上へ">▲</button><button class="npc-dn" data-i="'+i+'" title="下へ">▼</button><button class="npc-dup" data-i="'+i+'" title="複製">⧉</button><button class="npc-del" data-i="'+i+'" title="削除">🗑</button></div>'
         +body+'</div>';
     }).join('') : '<div class="fhint">まだNPC/エネミーがありません。「＋ NPC/エネミーを追加」で追加してください。</div>';
+    setTimeout(function(){ [].forEach.call(el.querySelectorAll('.npc-ta'), npcAutoGrow); },0);
   }
-  (function(){ var ml=document.getElementById('npcList'); if(ml && matOvl){ matOvl.addEventListener('input',function(e){ var t=e.target; if(!t.classList.contains('npc-in')) return; var i=+t.getAttribute('data-i'), k=t.getAttribute('data-k'); if(isNaN(i)||!k) return; state.npcs[i]=state.npcs[i]||{name:''}; state.npcs[i][k]=t.value;
+  function npcAutoGrow(t){ if(!t) return; t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
+  (function(){ var ml=document.getElementById('npcList'); if(ml && matOvl){ matOvl.addEventListener('input',function(e){ var t=e.target; if(!t.classList.contains('npc-in')) return; var i=+t.getAttribute('data-i'), k=t.getAttribute('data-k'); if(isNaN(i)||!k) return; state.npcs[i]=state.npcs[i]||{name:''}; state.npcs[i][k]=t.value; if(t.classList.contains('npc-ta')) npcAutoGrow(t);
     if(k==='con'||k==='siz'||k==='pow'||k==='str'){ var row=t.closest('.npc-row'); if(row){ var hpI=row.querySelector('.npc-in[data-k="hp"]'),mpI=row.querySelector('.npc-in[data-k="mp"]'),dbI=row.querySelector('.npc-in[data-k="db"]'); if(hpI) hpI.placeholder=String(npcHp(state.npcs[i].con,state.npcs[i].siz)); if(mpI) mpI.placeholder=String(npcMp(state.npcs[i].pow)); if(dbI) dbI.placeholder=String(npcDb(state.npcs[i].str,state.npcs[i].siz)); } }
     render(); persist(); }); } })();
   function renderRubyList(){
@@ -3188,7 +3190,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23c 閲覧しおりの視認性改善（文字濃く/大きく/行間）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23d データ入力欄（チャパレ/メモ/行動方針）の自動伸縮'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
