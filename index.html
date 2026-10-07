@@ -1976,8 +1976,8 @@
     var derived=[['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]].filter(function(s){return s[1]!=null&&s[1]!=='';});
     var rows=''; for(var i=0;i<chars.length;i+=3){ rows+='<div class="npc-statrow">'+chars.slice(i,i+3).map(sp).join('')+'</div>'; }
     if(derived.length) rows+='<div class="npc-statrow npc-drow">'+derived.map(sp).join('')+'</div>';
-    function fld(lbl,v){ return v?'<div class="npc-pf"><span class="npc-fl">'+lbl+'</span>'+esc(v).replace(/\n/g,'<br>')+'</div>':''; }
-    var fields=fld('チャパレ',n.chat||n.skills)+fld('メモ',n.notes)+fld('行動方針',n.policy);
+    function detF(lbl,v,copyable){ if(!v) return ''; var cp=copyable?'<button class="npc-copy" data-cp="'+encodeURIComponent(v)+'" title="内容をコピー">コピー</button>':''; return '<details class="npc-pd" open><summary>'+lbl+cp+'</summary><div class="npc-pdb">'+esc(v).replace(/\n/g,'<br>')+'</div></details>'; }
+    var fields=detF('チャパレ',n.chat||n.skills,true)+detF('メモ',n.notes,false)+detF('行動方針',n.policy,false);
     var tri='<span class="npc-tri"'+(n.color?' style="color:'+esc(n.color)+'"':'')+'>▶</span>';
     return '<details class="npc-item"><summary>'+tri+esc(n.name||'NPC')+'</summary><div class="npc-item-body">'+rows+fields+'</div></details>';
   }
@@ -2411,8 +2411,15 @@
       +' .npc-stats{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 7px;font-size:.86em}'
       +' .npc-stat b{color:var(--accent);font-weight:700;margin-right:1px}'
       +' .npc-item .npc-statrow{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.9em;margin:3px 0}'
-      +' .npc-item .npc-drow{margin-top:7px;padding-top:6px;border-top:1px dotted var(--line)}'
-      +' .npc-pf{margin:8px 0 0;white-space:pre-wrap;font-size:.9em;line-height:1.55}'
+      +' .npc-item .npc-drow{margin-top:5px}'
+      +' .npc-pd{margin:8px 0 0}'
+      +' .npc-pd>summary{cursor:pointer;list-style:none;font-weight:700;font-size:.82em;color:var(--muted);display:flex;align-items:center;gap:8px}'
+      +' .npc-pd>summary::-webkit-details-marker{display:none}'
+      +' .npc-pd>summary::before{content:"\\25B8 "}'
+      +' .npc-pd[open]>summary::before{content:"\\25BE "}'
+      +' .npc-pd .npc-pdb{white-space:pre-wrap;font-size:.9em;line-height:1.55;margin:3px 0 0;-webkit-user-select:text;user-select:text}'
+      +' .npc-copy{font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--text);padding:1px 7px;cursor:pointer}'
+      +' .npc-copy:active{opacity:.6}'
       +' .npc-det{margin:5px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}'
       +' .npc-det summary{cursor:pointer;padding:5px 9px;font-weight:700;font-size:.86em;background:var(--hover);list-style:none}'
       +' .npc-det summary::-webkit-details-marker{display:none}'
@@ -2455,6 +2462,7 @@
       +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
       +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel");if(vm&&mp){vm.onclick=function(){mp.classList.toggle("open");};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");};}'
+      +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){var o=cp.textContent;cp.textContent="コピーしました";setTimeout(function(){cp.textContent=o;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
       +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
@@ -3062,7 +3070,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22l NPC登録で▶色指定/閲覧カードを折りたたみ3列'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22m 閲覧NPC: 点線除去/チャパレ・メモ折畳/コピー'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
