@@ -2427,7 +2427,7 @@
       +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
-      +' html{--pw:clamp(236px,23vw,330px)}'
+      +' html{--pw:clamp(236px,26vw,460px)}'
       +' @media (min-width:821px){ body.ol-open .wrap,.wrap{margin-left:auto!important;margin-right:auto!important;max-width:calc(100vw - 2*var(--pw,236px) - 16px)!important} }'
       +' .outline{top:46px;height:calc(100vh - 46px);width:var(--pw,236px);background:#f1f0ec;border-right:1px solid #d6d5d0}'
       +' .outline .ol-list{padding:8px 6px}'
@@ -3212,7 +3212,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23o しおり・右パネルを同幅可変で連動（中央固定/余白均等/伸縮）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23p 右タブ/しおりの上限幅を拡大（最大460px）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
