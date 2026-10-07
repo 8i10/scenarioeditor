@@ -53,7 +53,7 @@
   .hmenu.show{display:block}
   .hm-sec{font-size:10px;letter-spacing:.14em;color:var(--muted);padding:9px 8px 3px}
   .hm-item{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;
-    padding:9px 10px;cursor:pointer;color:var(--text);font-size:13px}
+    padding:8px 10px;cursor:pointer;color:var(--text);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hm-item:hover{background:var(--hover)}
   .hm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;font-size:12.5px}
   .hm-row #acctLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -418,7 +418,9 @@
   .npc-cols2 .npc-col-n{flex:6;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}
   .npc-cols2 .npc-col-c{flex:4;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}
   .npc-policy{white-space:pre-wrap;font-size:.92em;line-height:1.55;margin:4px 0 0}
-  .npc-fl{display:block;font-weight:700;font-size:.82em;color:var(--muted);margin:0 0 2px}
+  .npc-fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.82em;color:var(--muted);margin:0 0 2px}
+  .npc-copy{font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--text);padding:1px 7px;cursor:pointer;font-family:inherit}
+  .npc-copy:active{opacity:.6}
   .npc-det{margin:5px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   .npc-det summary{cursor:pointer;padding:5px 9px;font-weight:700;font-size:.86em;background:var(--hover);list-style:none}
   .npc-det summary::-webkit-details-marker{display:none}
@@ -583,6 +585,7 @@
       <div class="hm-row"><label class="hm-check"><input type="checkbox" id="embedFonts"> HTMLにフォントを埋め込む</label></div>
       <div class="hm-sec">テーマ</div>
       <div class="hm-row"><span>ライト / ダーク</span><button class="hb2" id="btnTheme">🌙 ダーク</button></div>
+      <div class="hm-row"><span>背景色</span><span style="display:flex;gap:6px;align-items:center"><input type="color" id="bgColorPick" value="#fbfbfb" style="width:36px;height:26px;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer;padding:0"><button class="hb2" id="bgColorReset">既定に戻す</button></span></div>
       <div class="hm-sec">アカウント（GitHub同期）</div>
       <div class="hm-row"><span id="acctLabel">未接続</span><span style="display:flex;gap:6px"><button class="hb2" id="btnSync" title="他端末の変更を取得" style="display:none">🔄 同期</button><button class="hb2" id="btnAuth">GitHub連携</button></span></div>
       <button class="hm-item" id="btnDiag">同期の詳細（診断）</button>
@@ -874,7 +877,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder="";
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
     o.pages.forEach(function(p,i){ if(!p.id)p.id=pageId(); if(!p.name)p.name='ページ'+(i+1); if(!p.blocks)p.blocks=[]; });
     if(!o.curPage || !o.pages.some(function(p){return p.id===o.curPage;})) o.curPage=o.pages[0].id;
@@ -1965,7 +1968,7 @@
     var r1=statRow([['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu]]);
     var r2=statRow([['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]]);
     var notes=n.notes||'', chat=n.chat||n.skills||'', policy=n.policy||'';
-    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">メモ</span>'+esc(notes).replace(/\n/g,'<br>'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ</span>'+esc(chat).replace(/\n/g,'<br>'):'')+'</div></div>'):'';
+    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">メモ</span>'+esc(notes).replace(/\n/g,'<br>'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ<button class="npc-copy" data-cp="'+encodeURIComponent(chat)+'" title="内容をコピー">コピー</button></span>'+esc(chat).replace(/\n/g,'<br>'):'')+'</div></div>'):'';
     var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
     return r1+r2+cols+pol;
   }
@@ -2097,7 +2100,8 @@
   document.getElementById('btnOutline').onclick=function(){ state.outlineOpen=!state.outlineOpen; applyOutline(); persist(); };
 
   /* ---- テーマ / 文字サイズ ---- */
-  function applyTheme(){ root.setAttribute('data-theme',state.theme); document.getElementById('btnTheme').textContent=state.theme==='dark'?'☀ ライト':'🌙 ダーク'; }
+  function applyTheme(){ root.setAttribute('data-theme',state.theme); document.getElementById('btnTheme').textContent=state.theme==='dark'?'☀ ライト':'🌙 ダーク'; applyBgColor(); }
+  function applyBgColor(){ if(state.bgColor){ root.style.setProperty('--bg',state.bgColor); } else { root.style.removeProperty('--bg'); } var bp=document.getElementById('bgColorPick'); if(bp && state.bgColor) bp.value=state.bgColor; }
   var FS={xs:0.66,sm:0.8,md:1};
   function applyFs(){ document.querySelector('.wrap').style.setProperty('--fs',FS[state.fs]); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
   var GOTHIC='"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif';
@@ -2191,6 +2195,10 @@
   (function(){ var eb=document.getElementById('embedFonts'); if(eb){ eb.checked=!!state.embedFonts; eb.onchange=function(){ state.embedFonts=eb.checked; persist(); }; } })();
   document.getElementById('segFs').addEventListener('click',function(e){ var b=e.target.closest('button[data-fs]'); if(b){ state.fs=b.dataset.fs; applyFs(); persist(); } });
   document.getElementById('btnTheme').onclick=function(){ state.theme=state.theme==='dark'?'light':'dark'; applyTheme(); persist(); };
+  (function(){ var bp=document.getElementById('bgColorPick'), br=document.getElementById('bgColorReset');
+    if(bp){ bp.oninput=function(){ state.bgColor=bp.value; applyBgColor(); persist(); }; }
+    if(br){ br.onclick=function(){ state.bgColor=''; applyBgColor(); persist(); }; }
+  })();
 
   /* ---- ファイル管理（複数シナリオ） ---- */
   var fileOvl=document.getElementById('fileOvl');
@@ -2439,7 +2447,7 @@
       +' .npc-cols2 .npc-col-n{flex:6;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}'
       +' .npc-cols2 .npc-col-c{flex:4;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}'
       +' .npc-policy{white-space:pre-wrap;font-size:.92em;line-height:1.55;margin:4px 0 0}'
-      +' .npc-fl{display:block;font-weight:700;font-size:.82em;color:var(--muted);margin:0 0 2px}'
+      +' .npc-fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.82em;color:var(--muted);margin:0 0 2px}'
       +' .ruby-t{cursor:help;position:relative}'
       +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
       +' .ruby-t:hover::before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2b2b2b;z-index:1000;pointer-events:none}'
@@ -2467,7 +2475,7 @@
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
-      +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+'</style></head>'
+      +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
       +'<body class="ol-open">'+vhead+nav+body+matHTML+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
       +'</body></html>';
@@ -2960,6 +2968,7 @@
       });
     }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
   }
+  document.addEventListener('click',function(e){ var cp=e.target.closest&&e.target.closest('.npc-copy'); if(!cp) return; e.preventDefault(); e.stopPropagation(); var t=''; try{ t=decodeURIComponent(cp.getAttribute('data-cp')||''); }catch(_){ t=cp.getAttribute('data-cp')||''; } var done=function(){ var o=cp.textContent; cp.textContent='コピーしました'; setTimeout(function(){cp.textContent=o;},1200); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,function(){}); } else { var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} document.body.removeChild(ta); done(); } }, true);
   function ghRefresh(){ ghPull(true); }
   function ghDiag(){
     if(!ghConnected()){ alert('GitHub連携していません（ID＋トークンを設定してください）'); return; }
@@ -3070,7 +3079,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22m 閲覧NPC: 点線除去/チャパレ・メモ折畳/コピー'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22n 本文チャパレコピー/背景色変更/メニュー文字調整'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
