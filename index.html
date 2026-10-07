@@ -2428,7 +2428,6 @@
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
       +' html{--clear:236px}'
-      +' body.rpanel-open{--clear:var(--rpw,340px)}'
       +' @media (min-width:821px){ body.ol-open .wrap,.wrap{margin-left:auto!important;margin-right:auto!important;max-width:calc(100vw - 2*var(--clear,236px) - 16px)!important} }'
       +' .outline{top:46px;height:calc(100vh - 46px);background:#f1f0ec;border-right:1px solid #d6d5d0}'
       +' .outline .ol-list{padding:8px 6px}'
@@ -2447,7 +2446,7 @@
       +' mark.ol-hit{background:#ffe58a;color:inherit;border-radius:2px}'
       +' mark.ol-hit.cur{background:#ffbf47;box-shadow:0 0 0 2px rgba(255,160,0,.4)}'
       +' .sk-note{-webkit-user-select:none;user-select:none}'
-      +' html{--rpw:clamp(280px,32vw,460px)}'
+      +' html{--rpw:clamp(200px,22vw,236px)}'
       +' .mat-panel{position:fixed;top:46px;right:0;bottom:0;width:var(--rpw,340px);max-width:92vw;background:var(--card);border-left:1px solid var(--line);box-shadow:none;transform:translateX(100%);transition:transform .25s ease;z-index:70;display:flex;flex-direction:column}'
       +' @media (max-width:820px){ .mat-panel{width:86vw;max-width:86vw} }'
       +' .mat-panel.open{transform:none}'
@@ -3214,7 +3213,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23m 本文を常にブラウザ中央に配置'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23n 右パネルを縮小し本文を縮めない（中央維持）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
