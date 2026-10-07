@@ -798,7 +798,7 @@
   var userInteracted=false;
   /* ---- Undo / Redo ---- */
   var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
-  function snapshot(){ return JSON.stringify({page:state.curPage,blocks:state.blocks,name:state.name}); }
+  function snapshot(){ try{ return JSON.stringify({pages:state.pages,curPage:state.curPage,name:state.name,materials:state.materials,npcs:state.npcs,letters:state.letters,ruby:state.ruby,bgColor:state.bgColor,headBg:state.headBg,theme:state.theme,fs:state.fs,font:state.font,pagelines:state.pagelines,colline:state.colline}); }catch(e){ return JSON.stringify({name:state.name}); } }
   function commitUndo(){
     if(applyingSnap) return;
     var s=snapshot();
@@ -809,9 +809,18 @@
   function applySnap(s){
     var o; try{ o=JSON.parse(s); }catch(e){ return; }
     applyingSnap=true;
-    if(o.page && o.page!==state.curPage && (state.pages||[]).some(function(p){return p.id===o.page;})) state.curPage=o.page;
-    state.blocks=o.blocks; if(o.name!=null) state.name=o.name;
+    if(Array.isArray(o.pages)) state.pages=o.pages;
+    else if(o.blocks) state.blocks=o.blocks;
+    var cp=(o.curPage!=null?o.curPage:o.page);
+    if(cp!=null && (state.pages||[]).some(function(p){return p.id===cp;})) state.curPage=cp;
+    if(o.name!=null) state.name=o.name;
+    if(Array.isArray(o.materials)) state.materials=o.materials;
+    if(Array.isArray(o.npcs)) state.npcs=o.npcs;
+    if(Array.isArray(o.letters)) state.letters=o.letters;
+    if(Array.isArray(o.ruby)) state.ruby=o.ruby;
+    ['bgColor','headBg','theme','fs','font','pagelines','colline'].forEach(function(k){ if(o[k]!==undefined) state[k]=o[k]; });
     render(); applyOutline(); updateDocName(); renderOutline();
+    try{ if(typeof renderNpcList==='function') renderNpcList(); if(typeof renderMatList==='function') renderMatList(); if(typeof renderRubyList==='function') renderRubyList(); }catch(_){}
     lastSnap=snapshot();
     try{ localStorage.setItem(K_DOC(state.id), JSON.stringify(state)); }catch(e){}
     if(typeof cloudPush==='function') cloudPush();
@@ -3190,7 +3199,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23d データ入力欄（チャパレ/メモ/行動方針）の自動伸縮'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23e 取り消し(Ctrl+Z)を全体対応（ページ/データ/ルビ）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
