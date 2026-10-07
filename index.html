@@ -2407,15 +2407,15 @@
     pagesHTML=applyRubyToHTML(pagesHTML);
     var mats=(state.materials||[]).filter(function(m){ return (m.title||m.body); });
     var npcs=(state.npcs||[]).filter(function(n){ return (n.name||n.notes||n.str||n.con||n.chat||n.skills||n.policy); });
-    var matsInner=mats.map(function(m){ var b=/[<]/.test(m.body||'')?(m.body||''):esc(m.body||'').replace(/\n/g,'<br>'); return '<section class="mat-item"><h3>'+esc(m.title||'資料')+'</h3><div class="mat-body">'+b+'</div></section>'; }).join('');
+    var matsInner=mats.map(function(m){ var b=/[<]/.test(m.body||'')?(m.body||''):esc(m.body||'').replace(/\n/g,'<br>'); return '<details class="mat-item" open><summary class="mat-isum">'+esc(m.title||'資料')+'</summary><div class="mat-body">'+b+'</div></details>'; }).join('');
     var isEnemy=function(c){ c=(c||'').toLowerCase(); return c==='#ff0000'||c==='#f00'||c==='red'; };
     var npcOnly=npcs.filter(function(n){ return !isEnemy(n.color); });
     var enemyOnly=npcs.filter(function(n){ return isEnemy(n.color); });
     function matGroup(lbl,inner){ return '<details class="mat-group" open><summary class="mat-sec">'+lbl+'</summary><div class="mat-gbody">'+inner+'</div></details>'; }
     var panelInner='';
+    if(mats.length){ panelInner += matGroup('資料', matsInner); }
     if(npcOnly.length){ panelInner += matGroup('NPC', npcOnly.map(npcPanelHTML).join('')); }
     if(enemyOnly.length){ panelInner += matGroup('エネミー', enemyOnly.map(npcPanelHTML).join('')); }
-    if(mats.length){ panelInner += matGroup('資料', matsInner); }
     var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
     var clipHTML='<aside class="mat-panel clip-panel" id="clipPanel"><div class="mat-phead">本文コピー<button class="mat-x" id="clipPClose" aria-label="閉じる">×</button></div>'
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button></div>'
@@ -2445,9 +2445,10 @@
       +' mark.ol-hit{background:#ffe58a;color:inherit;border-radius:2px}'
       +' mark.ol-hit.cur{background:#ffbf47;box-shadow:0 0 0 2px rgba(255,160,0,.4)}'
       +' .sk-note{-webkit-user-select:none;user-select:none}'
-      +' html{--rpw:clamp(290px,27vw,380px)}'
-      +' .mat-panel{position:fixed;top:46px;right:0;bottom:0;width:var(--rpw);max-width:92vw;background:var(--card);border-left:1px solid var(--line);box-shadow:-6px 0 20px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .25s ease;z-index:70;display:flex;flex-direction:column}'
-      +' @media (min-width:821px){ body.rpanel-open .wrap{margin-right:calc(var(--rpw) + 8px)!important;max-width:none!important} }'
+      +' html{--rpw:clamp(280px,32vw,460px)}'
+      +' .mat-panel{position:fixed;top:46px;right:0;bottom:0;width:var(--rpw,340px);max-width:92vw;background:var(--card);border-left:1px solid var(--line);box-shadow:-6px 0 20px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .25s ease;z-index:70;display:flex;flex-direction:column}'
+      +' @media (min-width:821px){ body.rpanel-open .wrap{margin-right:calc(var(--rpw,340px) + 8px)!important;max-width:none!important} }'
+      +' @media (max-width:820px){ .mat-panel{width:86vw;max-width:86vw} }'
       +' .mat-panel.open{transform:none}'
       +' .mat-phead{flex:none;height:44px;display:flex;align-items:center;padding:0 14px;font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--header-bg);color:var(--header-text)}'
       +' .mat-phead .mat-x{margin-left:auto;background:transparent;border:0;color:inherit;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px}'
@@ -2485,9 +2486,13 @@
       +' .clip-item .clip-cat{display:flex;gap:6px;margin-top:7px}'
       +' .clip-item .clip-cat input{flex:1;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-size:11px;font-family:inherit}'
       +' .clip-empty{font-size:12px;color:var(--muted);line-height:1.6;padding:6px 2px}'
-      +' .mat-item{margin:0 0 20px}'
-      +' .mat-item h3{font-weight:700;font-size:1.05em;margin:0 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px}'
-      +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55}'
+      +' .mat-item{margin:0 0 14px}'
+      +' .mat-item>.mat-isum{font-weight:700;font-size:1.05em;margin:0 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
+      +' .mat-item>.mat-isum::-webkit-details-marker{display:none}'
+      +' .mat-item>.mat-isum::before{content:"\\25BE";font-size:.8em;color:var(--muted);width:1em;display:inline-block}'
+      +' .mat-item:not([open])>.mat-isum{margin-bottom:0}'
+      +' .mat-item:not([open])>.mat-isum::before{content:"\\25B8"}'
+      +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55;margin-top:2px}'
       +' .mat-item .mat-body img{max-width:100%;height:auto;border-radius:4px}'
       +' .mat-group{margin:4px 0 12px}'
       +' .mat-sec{font-weight:700;letter-spacing:.06em;margin:0 0 10px;padding-bottom:4px;border-bottom:2px solid var(--text);font-size:.95em;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
@@ -2538,9 +2543,12 @@
       +' .npc-cols2 .npc-col-c{flex:4;min-width:0;white-space:pre-wrap;font-size:.92em;line-height:1.55}'
       +' .npc-policy{white-space:pre-wrap;font-size:.92em;line-height:1.55;margin:4px 0 0}'
       +' .npc-fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.82em;color:var(--muted);margin:0 0 2px}'
-      +' .ruby-t{cursor:help;position:relative}'
-      +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:1000;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
-      +' .ruby-t:hover::before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2b2b2b;z-index:1000;pointer-events:none}'
+      +' .ruby-t{cursor:help;position:relative;z-index:1}'
+      +' .ruby-t:hover{z-index:100001}'
+      +' .ruby-t:hover::after{content:attr(data-y);position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#2b2b2b;color:#fff;padding:3px 10px;border-radius:6px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:.72em;font-weight:400;letter-spacing:.02em;white-space:nowrap;line-height:1.2;z-index:100002;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}'
+      +' .ruby-t:hover::before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#2b2b2b;z-index:100002;pointer-events:none}'
+      +' .ruby-t.rb-below:hover::after{top:100%;bottom:auto;margin-top:6px;margin-bottom:0}'
+      +' .ruby-t.rb-below:hover::before{top:100%;bottom:auto;border-top-color:transparent;border-bottom-color:#2b2b2b}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-pdup,.outline .ol-add,.outline .ol-ruby{display:none!important}'
       +' .outline .ol-ttl{display:none!important}'
       +' .outline{transform:none!important}'
@@ -2588,6 +2596,7 @@
       +'bodyEl.addEventListener("dragend",function(){drag=null;[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});});}'
       +'render();})();'
       +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){var o=cp.textContent;cp.textContent="コピーしました";setTimeout(function(){cp.textContent=o;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
+      +'document.addEventListener("mouseover",function(e){var t=e.target.closest&&e.target.closest(".ruby-t");if(!t)return;var r=t.getBoundingClientRect();t.classList.toggle("rb-below",r.top<66);},true);'
       +'(function(){var inp=document.getElementById("olSearch");if(!inp)return;var cnt=document.getElementById("olSCount");var marks=[],idx=-1;'
       +'function clearHits(){marks.forEach(function(m){var p=m.parentNode;if(p){p.replaceChild(document.createTextNode(m.textContent),m);p.normalize();}});marks=[];idx=-1;}'
       +'function roots(){var r=[];var wr=document.querySelector(".wrap");if(wr)r.push(wr);var mp=document.getElementById("matPanel");if(mp)r.push(mp);return r;}'
@@ -3204,7 +3213,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23h 最下部の余白を縮小（45vh→15vh）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23k 右パネル可変幅の範囲拡大（280〜460px）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
