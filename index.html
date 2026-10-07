@@ -409,8 +409,10 @@
   .npc-row.collapsed{padding-bottom:10px}
   .block[data-type="npcref"]{margin:12px 0}
   .npc-card{padding:2px}
-  .npc-card-name{font-weight:700;font-size:1.08em;margin:0 0 4px}
+  .npc-card-name{font-weight:700;font-size:1.08em;margin:0 0 4px;display:flex;align-items:center}
   .npc-card-name .npc-tri{margin-right:5px}
+  .npc-card-name .npc-sp{flex:1}
+  .npc-card-name .npc-ccf{font-size:13px;padding:1px 8px}
   .npc-missing{color:var(--muted);font-style:italic}
   .npc-rule{border:0;border-top:1px solid var(--text);margin:5px 0;height:0}
   .npc-rule-dot{border-top-style:dotted}
@@ -1960,7 +1962,7 @@
     var status=[]; [['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['SAN',n.san],['装甲',n.armor]].forEach(function(s){ var v=num(s[1]); if(v!=null) status.push({label:s[0],value:v,max:v}); });
     var params=[]; [['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['DB',npcVal(n,'db')]].forEach(function(p){ if(p[1]!=null&&p[1]!=='') params.push({label:p[0],value:String(p[1])}); });
     var init=num(n.dex); if(init==null) init=0;
-    var data={name:(n.name||'NPC'),memo:'',initiative:init,externalUrl:'',status:status,params:params,iconUrl:null,faces:[],x:0,y:0,angle:0,width:100,height:100,active:false,secret:false,invisible:false,hideStatus:false,color:(n.color||'#888888'),commands:(n.chat||n.skills||''),owner:null};
+    var data={name:(n.name||'NPC'),memo:'',initiative:init,externalUrl:'',status:status,params:params,iconUrl:null,faces:[],x:0,y:0,angle:0,width:5,height:5,active:false,secret:false,invisible:false,hideStatus:false,color:(n.color||'#888888'),commands:(n.chat||n.skills||''),owner:null};
     return JSON.stringify({kind:'character',data:data});
   }
   function npcById(id){ return (state.npcs||[]).filter(function(n){return n.id===id;})[0]; }
@@ -1979,7 +1981,7 @@
     var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
     return r1+r2+cols+pol;
   }
-  function npcCardHTML(id, color){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var col=color||n.color; var tri='<span class="npc-tri"'+(col?' style="color:'+esc(col)+'"':'')+'>▶</span>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
+  function npcCardHTML(id, color){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var col=color||n.color; var tri='<span class="npc-tri"'+(col?' style="color:'+esc(col)+'"':'')+'>▶</span>'; var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
   function npcPanelHTML(n){
     function sp(s){ return '<span class="npc-stat"><b class="npc-k">＜'+s[0]+'＞</b>'+esc(String(s[1]))+'</span>'; }
     var chars=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san]].filter(function(s){return s[1]!=null&&s[1]!=='';});
@@ -2395,11 +2397,11 @@
     var mats=(state.materials||[]).filter(function(m){ return (m.title||m.body); });
     var npcs=(state.npcs||[]).filter(function(n){ return (n.name||n.notes||n.str||n.con||n.chat||n.skills||n.policy); });
     var panelInner=mats.map(function(m){ var b=/[<]/.test(m.body||'')?(m.body||''):esc(m.body||'').replace(/\n/g,'<br>'); return '<section class="mat-item"><h3>'+esc(m.title||'資料')+'</h3><div class="mat-body">'+b+'</div></section>'; }).join('');
-    if(npcs.length){
-      panelInner += '<div class="mat-sec">NPC・エネミー</div>' + npcs.map(function(n){
-        return npcPanelHTML(n);
-      }).join('');
-    }
+    var isEnemy=function(c){ c=(c||'').toLowerCase(); return c==='#ff0000'||c==='#f00'||c==='red'; };
+    var npcOnly=npcs.filter(function(n){ return !isEnemy(n.color); });
+    var enemyOnly=npcs.filter(function(n){ return isEnemy(n.color); });
+    if(npcOnly.length){ panelInner += '<div class="mat-sec">NPC</div>' + npcOnly.map(npcPanelHTML).join(''); }
+    if(enemyOnly.length){ panelInner += '<div class="mat-sec">エネミー</div>' + enemyOnly.map(npcPanelHTML).join(''); }
     var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
     var clipHTML='<aside class="mat-panel clip-panel" id="clipPanel"><div class="mat-phead">本文コピー<button class="mat-x" id="clipPClose" aria-label="閉じる">×</button></div>'
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button><div class="clip-hint">本文をドラッグ選択して「＋ 選択範囲を追加」で登録（この端末に保存）。グリップ（⠿）でドラッグし、項目やフォルダを整理できます。</div></div>'
@@ -2483,8 +2485,10 @@
       +' .npc-detb{padding:7px 10px;white-space:pre-wrap;font-size:.9em;line-height:1.55}'
       +' .block[data-type="npcref"]{margin:14px 0}'
       +' .npc-card{padding:2px}'
-      +' .npc-card-name{font-weight:700;font-size:1.08em;margin:0 0 4px}'
+      +' .npc-card-name{font-weight:700;font-size:1.08em;margin:0 0 4px;display:flex;align-items:center}'
       +' .npc-card-name .npc-tri{margin-right:5px}'
+      +' .npc-card-name .npc-sp{flex:1}'
+      +' .npc-card-name .npc-ccf{font-size:13px;padding:1px 8px}'
       +' .npc-missing{color:var(--line);font-style:italic}'
       +' .npc-rule{border:0;border-top:1px solid var(--text);margin:5px 0;height:0}'
       +' .npc-rule-dot{border-top-style:dotted}'
@@ -3153,7 +3157,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22w データ全画面化+ルビタブ/挿入データのリアルタイム反映'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22x 駒サイズ5/本文からも駒出力/データ欄NPC・エネミー分割'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
