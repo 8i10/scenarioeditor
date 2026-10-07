@@ -624,7 +624,7 @@
   <div class="dlg" style="max-width:660px">
     <div class="dlg-h">データ（この作品）</div>
     <div class="dlg-b">
-      <div class="mat-tabs"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button></div>
+      <div class="mat-tabs"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="let">🕊 レター</button></div>
       <div class="mat-pane" data-pane="mat" style="display:none">
         <div class="fhint">閲覧用HTMLの右側「データ」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
         <div id="matList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
@@ -635,6 +635,11 @@
         <div class="frow" style="gap:6px;margin:4px 0 0"><button class="hb2" id="npcAllOpen">すべて開く</button><button class="hb2" id="npcAllClose">すべて畳む</button></div>
         <div id="npcList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
         <div class="frow"><button class="hb2" id="npcAdd">＋ NPC/エネミーを追加</button></div>
+      </div>
+      <div class="mat-pane" data-pane="let" style="display:none">
+        <div class="fhint">閲覧用HTMLの「🕊 レター」パネルに表示されます。各レターの「コピー」ボタンで本文を一括コピーし、ココフォリアのチャット欄に貼り付けられます。本文ブロックの「⋯」メニュー →「レターに追加」でも登録できます。</div>
+        <div id="letList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
+        <div class="frow"><button class="hb2" id="letAdd">＋ レターを追加</button></div>
       </div>
     </div>
     <div class="dlg-f"><button class="hb2" id="matClose2">閉じる</button></div>
@@ -877,7 +882,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(!Array.isArray(o.letters))o.letters=[]; o.letters.forEach(function(l){ if(l&&!l.id) l.id=nid(); }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
     o.pages.forEach(function(p,i){ if(!p.id)p.id=pageId(); if(!p.name)p.name='ページ'+(i+1); if(!p.blocks)p.blocks=[]; });
     if(!o.curPage || !o.pages.some(function(p){return p.id===o.curPage;})) o.curPage=o.pages[0].id;
@@ -1404,6 +1409,7 @@
        +'<button data-act="up"><span class="ic">↑</span><span class="nm">上へ移動</span></button>'
        +'<button data-act="down"><span class="ic">↓</span><span class="nm">下へ移動</span></button>'
        +'<button data-act="dup"><span class="ic">⧉</span><span class="nm">複製</span></button>'
+       +'<button data-act="toletter"><span class="ic">🕊</span><span class="nm">レターに追加</span></button>'
        +'<button data-act="del"><span class="ic">🗑</span><span class="nm">削除</span></button>';
     }
     menu.innerHTML=h||'<div class="mcat">該当なし</div>';
@@ -1461,6 +1467,7 @@
     else if(act==='down'&&c.i<c.arr.length-1){ var a2=c.arr; var t2=a2[c.i+1]; a2[c.i+1]=a2[c.i]; a2[c.i]=t2; render(); }
     else if(act==='dup'){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid(); (x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); }
     else if(act==='del'){ c.arr.splice(c.i,1); if(!state.blocks.length) state.blocks.push(newBlock('p','')); render(); }
+    else if(act==='toletter'){ var lf=letterFromBlock(c); state.letters.push({id:nid(),title:lf.title,body:lf.body}); persist(); openLetterTab(); return; }
     persist();
   }
   var imgInput=document.createElement('input'); imgInput.type='file'; imgInput.accept='image/*'; imgInput.style.display='none'; document.body.appendChild(imgInput);
@@ -1801,6 +1808,8 @@
   var outlineEl=document.getElementById('outline');
   var HL={title:1,h1:1,h2:2,h3:3,h4:4,h5:5,th1:1,th2:2,th3:3,th4:4,th5:5};
   function plainText(html){ var d=document.createElement('div'); d.innerHTML=html||''; return (d.textContent||'').trim(); }
+  function blkPlainDeep(b){ var parts=[]; (function w(x){ var tx=plainText(x.html); if(tx) parts.push(tx); (x.children||[]).forEach(w); })(b); return parts.join('\n'); }
+  function letterFromBlock(c){ var b=c.b; if(HL[b.type]){ var lv=HL[b.type]; var out=[]; for(var j=c.i+1;j<c.arr.length;j++){ var nb=c.arr[j]; if(HL[nb.type]&&HL[nb.type]<=lv) break; var d=blkPlainDeep(nb); if(d) out.push(d); } return {title:plainText(b.html), body:out.join('\n').trim()}; } return {title:'', body:blkPlainDeep(b)}; }
   function outlineItems(){
     var items=[];
     (function walk(arr){ arr.forEach(function(b){ if(HL[b.type]) items.push({id:b.id,lv:HL[b.type],t:plainText(b.html)}); if(b.children) walk(b.children); }); })(state.blocks);
@@ -1898,6 +1907,16 @@
         +'<div class="mat-b-in" data-i="'+i+'" contenteditable="true">'+bodyHtml+'</div></div>';
     }).join('') : '<div class="fhint">まだ資料がありません。「＋ 資料を追加」で追加してください。</div>';
   }
+  function renderLetList(){
+    var el=document.getElementById('letList'); if(!el) return; var rows=state.letters||[];
+    el.innerHTML = rows.length ? rows.map(function(m,i){
+      return '<div class="let-row" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px">'
+        +'<div style="display:flex;gap:8px;align-items:center"><input type="text" class="let-t-in" data-i="'+i+'" placeholder="レタータイトル（任意）" value="'+esc(m.title||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'
+        +'<button class="let-up" data-i="'+i+'" title="上へ">▲</button><button class="let-dn" data-i="'+i+'" title="下へ">▼</button><button class="let-del" data-i="'+i+'" title="削除">🗑</button></div>'
+        +'<textarea class="let-b-in" data-i="'+i+'" placeholder="送信する本文（ココフォリアのチャット欄に貼り付ける内容）" style="min-height:90px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;line-height:1.6;resize:vertical">'+esc(m.body||'')+'</textarea></div>';
+    }).join('') : '<div class="fhint">まだレターがありません。「＋ レターを追加」で追加するか、本文ブロックの「⋯」メニューから「レターに追加」で登録できます。</div>';
+  }
+  function openLetterTab(){ if(!matOvl) return; renderLetList(); matOvl.classList.add('show'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')==='let'); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')==='let')?'':'none'; }); }
   var matImgInput=null;
   function matPickImage(i){
     if(!matImgInput){ matImgInput=document.createElement('input'); matImgInput.type='file'; matImgInput.accept='image/*'; matImgInput.style.display='none'; document.body.appendChild(matImgInput); }
@@ -1927,7 +1946,8 @@
     ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hlpCancel'){ close(); return; } var b=e.target.closest('.hlpick'); if(b){ var id=b.getAttribute('data-hid'); var label=selText || (b.querySelector('.nm')?b.querySelector('.nm').textContent:'見出し'); close(); matInsert(i,'<a class="hlink" data-h="'+id+'">'+esc(label)+'</a>'); } });
   }
   if(matOvl){
-    matOvl.addEventListener('input',function(e){ var t=e.target; var i=t.getAttribute('data-i'); if(i==null) return; i=+i; state.materials[i]=state.materials[i]||{title:'',body:''}; if(t.classList.contains('mat-t-in')) state.materials[i].title=t.value; else if(t.classList.contains('mat-b-in')) state.materials[i].body=sanitize(t.innerHTML); persist(); });
+    matOvl.addEventListener('input',function(e){ var t=e.target; if(!(t.classList.contains('mat-t-in')||t.classList.contains('mat-b-in'))) return; var i=+t.getAttribute('data-i'); if(isNaN(i)) return; state.materials[i]=state.materials[i]||{title:'',body:''}; if(t.classList.contains('mat-t-in')) state.materials[i].title=t.value; else state.materials[i].body=sanitize(t.innerHTML); persist(); });
+    matOvl.addEventListener('input',function(e){ var t=e.target; if(!(t.classList.contains('let-t-in')||t.classList.contains('let-b-in'))) return; var i=+t.getAttribute('data-i'); if(isNaN(i)) return; state.letters[i]=state.letters[i]||{id:nid(),title:'',body:''}; if(t.classList.contains('let-t-in')) state.letters[i].title=t.value; else state.letters[i].body=t.value; persist(); });
     matOvl.addEventListener('click',function(e){
       var ib=e.target.closest('.mat-imgb'); if(ib){ matPickImage(+ib.getAttribute('data-i')); return; }
       var fb=e.target.closest('.mat-frameb'); if(fb){ matInsertFrame(+fb.getAttribute('data-i')); return; }
@@ -1939,8 +1959,12 @@
       var up=e.target.closest('.mat-up'); if(up){ var i=+up.getAttribute('data-i'); if(i>0){ var a=state.materials; var tmp=a[i-1]; a[i-1]=a[i]; a[i]=tmp; renderMatList(); persist(); } return; }
       var dn=e.target.closest('.mat-dn'); if(dn){ var j=+dn.getAttribute('data-i'); var a2=state.materials; if(j<a2.length-1){ var t2=a2[j+1]; a2[j+1]=a2[j]; a2[j]=t2; renderMatList(); persist(); } return; }
       if(e.target.id==='matAdd'){ state.materials.push({title:'',body:''}); renderMatList(); persist(); var ins=matOvl.querySelectorAll('.mat-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
+      var ldel=e.target.closest('.let-del'); if(ldel){ state.letters.splice(+ldel.getAttribute('data-i'),1); renderLetList(); persist(); return; }
+      var lup=e.target.closest('.let-up'); if(lup){ var li=+lup.getAttribute('data-i'); if(li>0){ var la=state.letters; var ltm=la[li-1]; la[li-1]=la[li]; la[li]=ltm; renderLetList(); persist(); } return; }
+      var ldn=e.target.closest('.let-dn'); if(ldn){ var lj=+ldn.getAttribute('data-i'); var la2=state.letters; if(lj<la2.length-1){ var lt2=la2[lj+1]; la2[lj+1]=la2[lj]; la2[lj]=lt2; renderLetList(); persist(); } return; }
+      if(e.target.id==='letAdd'){ state.letters.push({id:nid(),title:'',body:''}); renderLetList(); persist(); var li2=matOvl.querySelectorAll('.let-t-in'); if(li2.length) li2[li2.length-1].focus(); return; }
       if(e.target.id==='matClose2' || e.target===matOvl){ matOvl.classList.remove('show'); return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='let') renderLetList(); return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
       var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); persist(); return; }
@@ -2378,6 +2402,7 @@
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
       +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn" id="vMat">📚 データ</button>':'')
+      +((state.letters||[]).filter(function(l){return (l.title||l.body);}).length?'<button class="hbtn" id="vLet">🕊 レター</button>':'')
       +'<button class="hbtn" id="vTheme">'+themeLabel+'</button></div>';
     var nav='<nav class="outline open" id="vOutlineNav">'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(state.pages||[]).map(function(p){ var its=headingsOf(p.blocks); return '<div class="pt-p">'+esc(p.name||'ページ')+'</div>'+its.map(function(it){return '<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>';}).join(''); }).join('')+'</div>';
@@ -2392,6 +2417,9 @@
       }).join('');
     }
     var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
+    var lets=(state.letters||[]).filter(function(l){ return (l.title||l.body); });
+    var letInner=lets.map(function(l,i){ return '<section class="let-item"><div class="let-ihead"><h3>'+esc(l.title||('レター'+(i+1)))+'</h3><button class="npc-copy let-copy" data-cp="'+encodeURIComponent(l.body||'')+'">コピー</button></div><div class="let-body">'+esc(l.body||'')+'</div></section>'; }).join('');
+    var letHTML = lets.length ? applyRubyToHTML('<aside class="mat-panel let-panel" id="letPanel"><div class="mat-phead">レター<button class="mat-x" id="letPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+letInner+'</div></aside>') : '';
     var body='<div class="wrap" style="--fs:'+FS[state.fs]+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
     var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
       +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
@@ -2405,7 +2433,11 @@
       +' .mat-panel.open{transform:none}'
       +' .mat-phead{flex:none;height:44px;display:flex;align-items:center;padding:0 14px;font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--header-bg);color:var(--header-text)}'
       +' .mat-phead .mat-x{margin-left:auto;background:transparent;border:0;color:inherit;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px}'
-      +' .mat-pbody{flex:1;overflow:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}'
+      +' .mat-pbody{flex:1;overflow:auto;padding:14px 16px;-webkit-overflow-scrolling:touch;font-size:13px;line-height:1.5}'
+      +' .let-item{margin:0 0 18px}'
+      +' .let-item .let-ihead{display:flex;align-items:center;gap:8px;margin:0 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px}'
+      +' .let-item .let-ihead h3{font-weight:700;font-size:1.0em;margin:0;flex:1}'
+      +' .let-item .let-body{white-space:pre-wrap;line-height:1.6;font-size:.95em;-webkit-user-select:text;user-select:text}'
       +' .mat-item{margin:0 0 20px}'
       +' .mat-item h3{font-weight:700;font-size:1.05em;margin:0 0 6px;border-bottom:1px solid var(--line);padding-bottom:4px}'
       +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55}'
@@ -2469,14 +2501,14 @@
       +'var FS={xs:0.66,sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.getElementById("vTheme").onclick=function(){var d=root.getAttribute("data-theme")==="dark";root.setAttribute("data-theme",d?"light":"dark");this.textContent=d?"🌙 ダーク":"☀ ライト";};'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
-      +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel");if(vm&&mp){vm.onclick=function(){mp.classList.toggle("open");};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");};}'
+      +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel"),vl=document.getElementById("vLet"),lp=document.getElementById("letPanel");if(vm&&mp){vm.onclick=function(){if(lp)lp.classList.remove("open");mp.classList.toggle("open");};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");};}if(vl&&lp){vl.onclick=function(){if(mp)mp.classList.remove("open");lp.classList.toggle("open");};}var lx=document.getElementById("letPClose");if(lx&&lp){lx.onclick=function(){lp.classList.remove("open");};}'
       +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){var o=cp.textContent;cp.textContent="コピーしました";setTimeout(function(){cp.textContent=o;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
       +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="'+state.theme+'"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
-      +'<body class="ol-open">'+vhead+nav+body+matHTML+vjs
+      +'<body class="ol-open">'+vhead+nav+body+matHTML+letHTML+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
       +'</body></html>';
     var blob=new Blob([html],{type:'text/html'});
@@ -3079,7 +3111,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22n 本文チャパレコピー/背景色変更/メニュー文字調整'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22p レター送信機能（コピー式）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
