@@ -389,6 +389,9 @@
   .ruby-row .ruby-del:hover{background:var(--hover)}
   .fitem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .mat-tabs{display:flex;gap:6px;margin:0 0 10px;border-bottom:1px solid var(--line)}
+  .mat-tabs-fp{flex:none;margin:0;padding:0 16px;background:var(--card);overflow-x:auto}
+  .mat-scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg)}
+  .mat-inner{max-width:720px;margin:0 auto;padding:16px 16px 60px}
   .mat-tab{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 12px;cursor:pointer;font-family:inherit}
   .mat-tab.on{color:var(--text);border-bottom-color:var(--accent2)}
   .npc-grid{display:grid;gap:5px}
@@ -620,35 +623,30 @@
     <div class="pv-body"><iframe id="previewFrame" title="プレビュー"></iframe></div>
   </div>
 </div>
-<div class="ovl" id="matOvl">
-  <div class="dlg" style="max-width:660px">
-    <div class="dlg-h">データ（この作品）</div>
-    <div class="dlg-b">
-      <div class="mat-tabs"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button></div>
-      <div class="mat-pane" data-pane="mat" style="display:none">
-        <div class="fhint">閲覧用HTMLの右側「データ」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
-        <div id="matList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
-        <div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>
-      </div>
-      <div class="mat-pane" data-pane="npc">
-        <div class="fhint">NPC・エネミーの能力値や技能を登録できます。各データは見出しの▸/▾で開閉できます。閲覧用HTMLの「資料」パネルに表示されます。</div>
-        <div class="frow" style="gap:6px;margin:4px 0 0"><button class="hb2" id="npcAllOpen">すべて開く</button><button class="hb2" id="npcAllClose">すべて畳む</button></div>
-        <div id="npcList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
-        <div class="frow"><button class="hb2" id="npcAdd">＋ NPC/エネミーを追加</button></div>
+<div class="ovl fpage" id="matOvl">
+  <div class="dlg fdlg">
+    <div class="fpg-head"><span class="fpg-ttl">データ（この作品）</span><span style="margin-left:auto;display:flex;gap:8px"><button class="hb2" id="matClose2">✕ 閉じる</button></span></div>
+    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
+    <div class="mat-scroll">
+      <div class="mat-inner">
+        <div class="mat-pane" data-pane="npc">
+          <div class="fhint">NPC・エネミーの能力値や技能を登録できます。各データは見出しの▸/▾で開閉できます。閲覧用HTMLの「データ」パネルに表示されます。</div>
+          <div class="frow" style="gap:6px;margin:4px 0 0"><button class="hb2" id="npcAllOpen">すべて開く</button><button class="hb2" id="npcAllClose">すべて畳む</button></div>
+          <div id="npcList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
+          <div class="frow"><button class="hb2" id="npcAdd">＋ NPC/エネミーを追加</button></div>
+        </div>
+        <div class="mat-pane" data-pane="mat" style="display:none">
+          <div class="fhint">閲覧用HTMLの右側「データ」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
+          <div id="matList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
+          <div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>
+        </div>
+        <div class="mat-pane" data-pane="ruby" style="display:none">
+          <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
+          <div class="flist" id="rubyList"></div>
+          <div class="frow"><button class="hb2" id="rubyAdd">＋ 行を追加</button></div>
+        </div>
       </div>
     </div>
-    <div class="dlg-f"><button class="hb2" id="matClose2">閉じる</button></div>
-  </div>
-</div>
-<div class="ovl" id="rubyOvl">
-  <div class="dlg">
-    <div class="dlg-h">ルビ設定（この作品）</div>
-    <div class="dlg-b">
-      <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
-      <div class="flist" id="rubyList"></div>
-      <div class="frow"><button class="hb2" id="rubyAdd">＋ 行を追加</button></div>
-    </div>
-    <div class="dlg-f"><button class="hb2" id="rubyClose">閉じる</button></div>
   </div>
 </div>
 <div class="ovl fpage" id="fileOvl">
@@ -1885,7 +1883,6 @@
   if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(); return; } rightInsert(it.getAttribute('data-rt')); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   /* ---- ルビ設定（作品ごと） ---- */
-  var rubyOvl=document.getElementById('rubyOvl');
   var matOvl=document.getElementById('matOvl');
   function renderMatList(){
     var el=document.getElementById('matList'); if(!el) return; var rows=state.materials||[];
@@ -1941,13 +1938,13 @@
       var dn=e.target.closest('.mat-dn'); if(dn){ var j=+dn.getAttribute('data-i'); var a2=state.materials; if(j<a2.length-1){ var t2=a2[j+1]; a2[j+1]=a2[j]; a2[j]=t2; renderMatList(); persist(); } return; }
       if(e.target.id==='matAdd'){ state.materials.push({title:'',body:''}); renderMatList(); persist(); var ins=matOvl.querySelectorAll('.mat-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
       if(e.target.id==='matClose2' || e.target===matOvl){ matOvl.classList.remove('show'); return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
-      var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); persist(); return; }
+      var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); render(); persist(); return; }
       var ntog=e.target.closest('.npc-tog'); if(ntog){ var ti=+ntog.getAttribute('data-i'); var nn=state.npcs[ti]; var key=(nn&&nn.id)||ti; npcExpanded[key]=!npcExpanded[key]; renderNpcList(); return; }
       var ndup=e.target.closest('.npc-dup'); if(ndup){ var di=+ndup.getAttribute('data-i'); var nc2=JSON.parse(JSON.stringify(state.npcs[di]||{name:''})); nc2.id=nid(); nc2.name=(nc2.name||'')+'のコピー'; state.npcs.splice(di+1,0,nc2); npcExpanded[nc2.id]=!!npcExpanded[(state.npcs[di]&&state.npcs[di].id)||di]; renderNpcList(); persist(); return; }
-      var ndel=e.target.closest('.npc-del'); if(ndel){ state.npcs.splice(+ndel.getAttribute('data-i'),1); renderNpcList(); persist(); return; }
+      var ndel=e.target.closest('.npc-del'); if(ndel){ state.npcs.splice(+ndel.getAttribute('data-i'),1); renderNpcList(); render(); persist(); return; }
       if(e.target.id==='npcAllOpen'){ (state.npcs||[]).forEach(function(n,i){ npcExpanded[(n.id||i)]=true; }); renderNpcList(); return; }
       if(e.target.id==='npcAllClose'){ npcExpanded={}; renderNpcList(); return; }
       if(e.target.id==='npcAdd'){ var nb={id:nid(),name:''}; state.npcs.push(nb); npcExpanded[nb.id]=true; renderNpcList(); persist(); var nin=matOvl.querySelectorAll('.npc-name'); if(nin.length) nin[nin.length-1].focus(); return; }
@@ -1958,6 +1955,14 @@
   function npcMp(pow){ return (pow==null||pow==='')?'':(+pow||0); }
   function npcDb(str,siz){ if((str==null||str==='')&&(siz==null||siz==='')) return ''; var s=(+str||0)+(+siz||0); if(s<=12) return '-1D6'; if(s<=16) return '-1D4'; if(s<=24) return '±0'; if(s<=32) return '+1D4'; if(s<=40) return '+1D6'; if(s<=56) return '+2D6'; return '+'+(2+Math.floor((s-57)/16)+1)+'D6'; }
   function npcVal(n,k){ /* 手動値があれば優先、無ければ自動算出 */ if(n[k]!=null && n[k]!=='') return n[k]; if(k==='hp') return npcHp(n.con,n.siz); if(k==='mp') return npcMp(n.pow); if(k==='db') return npcDb(n.str,n.siz); return (n[k]!=null?n[k]:''); }
+  function npcCcfolia(n){
+    function num(v){ var x=parseInt(v,10); return isNaN(x)?null:x; }
+    var status=[]; [['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['SAN',n.san],['装甲',n.armor]].forEach(function(s){ var v=num(s[1]); if(v!=null) status.push({label:s[0],value:v,max:v}); });
+    var params=[]; [['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['DB',npcVal(n,'db')]].forEach(function(p){ if(p[1]!=null&&p[1]!=='') params.push({label:p[0],value:String(p[1])}); });
+    var init=num(n.dex); if(init==null) init=0;
+    var data={name:(n.name||'NPC'),memo:'',initiative:init,externalUrl:'',status:status,params:params,iconUrl:null,faces:[],x:0,y:0,angle:0,width:100,height:100,active:false,secret:false,invisible:false,hideStatus:false,color:(n.color||'#888888'),commands:(n.chat||n.skills||''),owner:null};
+    return JSON.stringify({kind:'character',data:data});
+  }
   function npcById(id){ return (state.npcs||[]).filter(function(n){return n.id===id;})[0]; }
   function npcInner(n, openAll){
     var sl=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]];
@@ -1984,7 +1989,8 @@
     function detF(lbl,v,copyable){ if(!v) return ''; var cp=copyable?'<button class="npc-copy" data-cp="'+encodeURIComponent(v)+'" title="内容をコピー">コピー</button>':''; return '<details class="npc-pd" open><summary>'+lbl+cp+'</summary><div class="npc-pdb">'+esc(v).replace(/\n/g,'<br>')+'</div></details>'; }
     var fields=detF('チャパレ',n.chat||n.skills,true)+detF('メモ',n.notes,false)+detF('行動方針',n.policy,false);
     var tri='<span class="npc-tri"'+(n.color?' style="color:'+esc(n.color)+'"':'')+'>▶</span>';
-    return '<details class="npc-item"><summary>'+tri+esc(n.name||'NPC')+'</summary><div class="npc-item-body">'+rows+fields+'</div></details>';
+    var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>';
+    return '<details class="npc-item"><summary>'+tri+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</summary><div class="npc-item-body">'+rows+fields+'</div></details>';
   }
   function insertNpcRef(){
     var list=(state.npcs||[]).filter(function(n){ return (n.name||n.str||n.con||n.chat); });
@@ -2024,7 +2030,7 @@
   }
   (function(){ var ml=document.getElementById('npcList'); if(ml && matOvl){ matOvl.addEventListener('input',function(e){ var t=e.target; if(!t.classList.contains('npc-in')) return; var i=+t.getAttribute('data-i'), k=t.getAttribute('data-k'); if(isNaN(i)||!k) return; state.npcs[i]=state.npcs[i]||{name:''}; state.npcs[i][k]=t.value;
     if(k==='con'||k==='siz'||k==='pow'||k==='str'){ var row=t.closest('.npc-row'); if(row){ var hpI=row.querySelector('.npc-in[data-k="hp"]'),mpI=row.querySelector('.npc-in[data-k="mp"]'),dbI=row.querySelector('.npc-in[data-k="db"]'); if(hpI) hpI.placeholder=String(npcHp(state.npcs[i].con,state.npcs[i].siz)); if(mpI) mpI.placeholder=String(npcMp(state.npcs[i].pow)); if(dbI) dbI.placeholder=String(npcDb(state.npcs[i].str,state.npcs[i].siz)); } }
-    persist(); }); } })();
+    render(); persist(); }); } })();
   function renderRubyList(){
     var el=document.getElementById('rubyList'); if(!el) return;
     var rows=state.ruby||[];
@@ -2032,22 +2038,22 @@
       return '<div class="ruby-row"><input type="text" class="ruby-t-in" data-i="'+i+'" placeholder="語句" value="'+esc(r.t||'')+'"><input type="text" class="ruby-y-in" data-i="'+i+'" placeholder="読み" value="'+esc(r.y||'')+'"><button class="ruby-del" data-i="'+i+'" title="削除">🗑</button></div>';
     }).join('') : '<div class="fhint">まだ登録がありません。「＋ 行を追加」で追加してください。</div>';
   }
-  if(rubyOvl){
-    rubyOvl.addEventListener('input',function(e){
-      var t=e.target; var i=t.getAttribute('data-i'); if(i==null) return; i=+i;
+  if(matOvl){
+    matOvl.addEventListener('input',function(e){
+      var t=e.target; if(!(t.classList.contains('ruby-t-in')||t.classList.contains('ruby-y-in'))) return;
+      var i=+t.getAttribute('data-i'); if(isNaN(i)) return;
       state.ruby[i]=state.ruby[i]||{t:'',y:''};
-      if(t.classList.contains('ruby-t-in')) state.ruby[i].t=t.value;
-      else if(t.classList.contains('ruby-y-in')) state.ruby[i].y=t.value;
+      if(t.classList.contains('ruby-t-in')) state.ruby[i].t=t.value; else state.ruby[i].y=t.value;
       persist();
     });
-    rubyOvl.addEventListener('click',function(e){
+    matOvl.addEventListener('click',function(e){
       var del=e.target.closest('.ruby-del');
-      if(del){ var i=+del.getAttribute('data-i'); state.ruby.splice(i,1); renderRubyList(); persist(); return; }
-      if(e.target.id==='rubyAdd'){ state.ruby.push({t:'',y:''}); renderRubyList(); persist(); var ins=rubyOvl.querySelectorAll('.ruby-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
-      if(e.target.id==='rubyClose' || e.target===rubyOvl){ rubyOvl.classList.remove('show'); return; }
+      if(del){ state.ruby.splice(+del.getAttribute('data-i'),1); renderRubyList(); persist(); return; }
+      if(e.target.id==='rubyAdd'){ state.ruby.push({t:'',y:''}); renderRubyList(); persist(); var ins=matOvl.querySelectorAll('.ruby-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
     });
   }
-  (function(){ var b=document.getElementById('btnRuby'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); renderRubyList(); rubyOvl.classList.add('show'); }; })();
+  function openMat(tab){ tab=tab||'npc'; renderNpcList(); renderMatList(); renderRubyList(); matOvl.classList.add('show'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===tab)?'':'none'; }); }
+  (function(){ var b=document.getElementById('btnRuby'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); openMat('ruby'); }; })();
   function applyRubyToHTML(html){
     var list=(state.ruby||[]).filter(function(r){ return r.t; });
     if(!list.length) return html;
@@ -2086,8 +2092,8 @@
   outlineEl.addEventListener('click',function(e){
     if(e.target.id==='olX'){ state.outlineOpen=false; applyOutline(); persist(); return; }
     if(e.target.id==='olAdd'){ addPage(); return; }
-    if(e.target.id==='olRuby'){ renderRubyList(); rubyOvl.classList.add('show'); return; }
-    if(e.target.id==='olMat'){ renderMatList(); renderNpcList(); matOvl.classList.add('show'); return; }
+    if(e.target.id==='olRuby'){ openMat('ruby'); return; }
+    if(e.target.id==='olMat'){ openMat('npc'); return; }
     var pup=e.target.closest('[data-pup]'); if(pup){ movePage(pup.getAttribute('data-pup'),-1); return; }
     var pdn=e.target.closest('[data-pdn]'); if(pdn){ movePage(pdn.getAttribute('data-pdn'),1); return; }
     var ped=e.target.closest('[data-pedit]'); if(ped){ renamePage(ped.getAttribute('data-pedit')); return; }
@@ -2431,11 +2437,17 @@
       +' .clip-item.dragover{outline:2px dashed var(--muted);outline-offset:1px}'
       +' .clip-item{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 9px;background:var(--card)}'
       +' .clip-item .clip-row{display:flex;align-items:center;gap:6px}'
-      +' .clip-item .clip-row .clip-hin{flex:1;min-width:0;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;font-size:12px;font-family:inherit}'
+      +' .clip-item .clip-sp{flex:1;min-width:0}'
+      +' .clip-hname{font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}'
+      +' .clip-hname.empty{color:var(--muted);font-weight:400}'
+      +' .clip-hedit{flex:1;min-width:0;height:26px;border:1px solid var(--text);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-size:12px;font-family:inherit;-webkit-user-select:text;user-select:text}'
+      +' .clip-ren{border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--text);font-size:11px;cursor:pointer;padding:1px 6px;font-family:inherit}'
+      +' .clip-row2{display:flex;justify-content:flex-end;margin:3px 0 0}'
+      +' .clip-row2 .clip-del{border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--muted);font-size:13px;line-height:1;cursor:pointer;padding:0 8px;font-family:inherit}'
       +' .clip-item .clip-ihead{display:flex;align-items:center;gap:6px;margin:0 0 5px}'
       +' .clip-item .clip-ihead .sp{flex:1}'
       +' .clip-item .clip-del{border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;padding:1px 7px;font-family:inherit}'
-      +' .clip-item .clip-text{white-space:pre-wrap;line-height:1.55;font-size:.95em;-webkit-user-select:text;user-select:text}'
+      +' .clip-item .clip-text{white-space:pre-wrap;line-height:1.55;font-size:.9em;-webkit-user-select:text;user-select:text;margin-top:4px;max-height:15.5em;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}'
       +' .clip-item .clip-cat{display:flex;gap:6px;margin-top:7px}'
       +' .clip-item .clip-cat input{flex:1;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-size:11px;font-family:inherit}'
       +' .clip-empty{font-size:12px;color:var(--muted);line-height:1.6;padding:6px 2px}'
@@ -2445,7 +2457,9 @@
       +' .mat-item .mat-body img{max-width:100%;height:auto;border-radius:4px}'
       +' .mat-sec{font-weight:700;letter-spacing:.06em;margin:4px 0 12px;padding-bottom:4px;border-bottom:2px solid var(--text);font-size:.95em}'
       +' .npc-item{margin:0 0 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden}'
-      +' .npc-item>summary{cursor:pointer;list-style:none;font-weight:700;font-size:1.0em;padding:8px 11px;background:var(--hover)}'
+      +' .npc-item>summary{cursor:pointer;list-style:none;font-weight:700;font-size:1.0em;padding:8px 11px;background:var(--hover);display:flex;align-items:center}'
+      +' .npc-item>summary .npc-sp{flex:1}'
+      +' .npc-item>summary .npc-ccf{font-size:13px;padding:1px 8px}'
       +' .npc-item>summary::-webkit-details-marker{display:none}'
       +' .npc-item>summary .npc-tri{margin-right:5px}'
       +' .npc-item-body{padding:9px 12px}'
@@ -2506,23 +2520,25 @@
       +'(function(){var CKEY='+JSON.stringify('clip:'+(state.id||state.name||'scn'))+';var panel=document.getElementById("clipPanel"),bodyEl=document.getElementById("clipBody"),vb=document.getElementById("vClip"),px=document.getElementById("clipPClose"),addb=document.getElementById("clipAddSel"),addf=document.getElementById("clipAddFolder");'
       +'if(vb&&panel){vb.onclick=function(){if(mp)mp.classList.remove("open");panel.classList.toggle("open");};}if(px&&panel){px.onclick=function(){panel.classList.remove("open");};}'
       +'function rid(p){return (p||"x")+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}'
-      +'var folders=[],items=[];'
+      +'var folders=[],items=[],collapsed={},editKey=null;'
       +'(function load(){try{var raw=JSON.parse(localStorage.getItem(CKEY)||"null");if(Array.isArray(raw)){var fm={};raw.forEach(function(it){var fid="",h1=(it.h1||"").trim();if(h1){if(!fm[h1]){var f={id:rid("f"),name:h1,parentId:""};folders.push(f);fm[h1]=f.id;}fid=fm[h1];}items.push({id:it.id||rid("c"),text:it.text||"",h:(it.h2||it.h||"").trim(),folderId:fid});});}else if(raw&&typeof raw==="object"){folders=raw.folders||[];items=raw.items||[];}}catch(e){folders=[];items=[];}})();'
-      +'var collapsed={};'
       +'function save(){try{localStorage.setItem(CKEY,JSON.stringify({v:2,folders:folders,items:items}));}catch(e){}}'
       +'function eH(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\\"/g,"&quot;").replace(/\\u0027/g,"&#39;");}'
       +'function fById(id){return folders.filter(function(f){return f.id===id;})[0];}'
       +'function isDesc(id,anc){var f=fById(id);while(f){if(f.parentId===anc)return true;f=fById(f.parentId);}return false;}'
-      +'function itemsGrouped(list,fid){var h="";list.forEach(function(it){h+="<div class=\\u0027clip-item\\u0027 data-id=\\u0027"+it.id+"\\u0027 title=\\u0027"+eH(it.text||"")+"\\u0027><div class=\\u0027clip-row\\u0027><span class=\\u0027clip-grip igrip\\u0027 draggable=\\u0027true\\u0027 data-id=\\u0027"+it.id+"\\u0027 title=\\u0027ドラッグで移動\\u0027>\\u283F</span><input class=\\u0027clip-hin\\u0027 data-id=\\u0027"+it.id+"\\u0027 placeholder=\\u0027見出し\\u0027 value=\\u0027"+eH(it.h||"")+"\\u0027><button class=\\u0027npc-copy\\u0027 data-cp=\\u0027"+encodeURIComponent(it.text||"")+"\\u0027>コピー</button><button class=\\u0027clip-del\\u0027 data-id=\\u0027"+it.id+"\\u0027 title=\\u0027削除\\u0027>\\u00D7</button></div></div>";});return h;}'
-      +'function tree(pid){var h="";folders.filter(function(f){return (f.parentId||"")===(pid||"");}).forEach(function(f){var col=!!collapsed["f:"+f.id];h+="<div class=\\u0027clip-folder\\u0027 data-fid=\\u0027"+f.id+"\\u0027><div class=\\u0027clip-h1"+(col?"":" open")+"\\u0027 data-fk=\\u0027"+f.id+"\\u0027><span class=\\u0027clip-grip fgrip\\u0027 draggable=\\u0027true\\u0027 data-fid=\\u0027"+f.id+"\\u0027 title=\\u0027ドラッグで移動\\u0027>\\u283F</span><span class=\\u0027tw tgl\\u0027>\\u25B6</span><input class=\\u0027clip-fname\\u0027 data-fid=\\u0027"+f.id+"\\u0027 value=\\u0027"+eH(f.name||"")+"\\u0027 placeholder=\\u0027フォルダ名\\u0027><button class=\\u0027clip-fdel\\u0027 data-fid=\\u0027"+f.id+"\\u0027>🗑</button></div><div class=\\u0027clip-g1b ind\\u0027"+(col?" style=\\u0027display:none\\u0027":"")+">"+tree(f.id)+itemsGrouped(items.filter(function(it){return (it.folderId||"")===f.id;}),f.id)+"</div></div>";});return h;}'
-      +'function render(){if(!bodyEl)return;if(!folders.length&&!items.length){bodyEl.innerHTML="<div class=\\u0027clip-empty\\u0027>まだ登録がありません。本文をドラッグ選択して「＋ 選択範囲を追加」で登録できます。「＋ フォルダを作成」でフォルダを作り、項目やフォルダをグリップ（⠿）でドラッグして整理できます。</div>";return;}bodyEl.innerHTML=tree("")+itemsGrouped(items.filter(function(it){return !(it.folderId||"");}),"");}'
+      +'function nameCell(kind,id,val){if(editKey===kind+":"+id)return "<input class=\\u0027clip-hedit\\u0027 data-k=\\u0027"+kind+":"+id+"\\u0027 value=\\u0027"+eH(val||"")+"\\u0027>";var e=(val||"").trim();return "<span class=\\u0027clip-hname"+(e?"":" empty")+"\\u0027>"+(e?eH(e):(kind==="f"?"（フォルダ名）":"（見出し）"))+"</span>";}'
+      +'function itemsGrouped(list,fid){var h="";list.forEach(function(it){h+="<div class=\\u0027clip-item\\u0027 data-id=\\u0027"+it.id+"\\u0027><div class=\\u0027clip-row\\u0027><span class=\\u0027clip-grip igrip\\u0027 draggable=\\u0027true\\u0027 data-id=\\u0027"+it.id+"\\u0027 title=\\u0027ドラッグで移動\\u0027>\\u283F</span>"+nameCell("i",it.id,it.h)+"<span class=\\u0027clip-sp\\u0027></span><button class=\\u0027clip-ren\\u0027 data-k=\\u0027i:"+it.id+"\\u0027 title=\\u0027見出しを編集\\u0027>\\uD83D\\uDD8A</button><button class=\\u0027npc-copy\\u0027 data-cp=\\u0027"+encodeURIComponent(it.text||"")+"\\u0027>コピー</button></div><div class=\\u0027clip-row2\\u0027><button class=\\u0027clip-del\\u0027 data-id=\\u0027"+it.id+"\\u0027 title=\\u0027削除\\u0027>\\u00D7</button></div><div class=\\u0027clip-text\\u0027>"+eH(it.text||"")+"</div></div>";});return h;}'
+      +'function tree(pid){var h="";folders.filter(function(f){return (f.parentId||"")===(pid||"");}).forEach(function(f){var col=!!collapsed["f:"+f.id];h+="<div class=\\u0027clip-folder\\u0027 data-fid=\\u0027"+f.id+"\\u0027><div class=\\u0027clip-h1"+(col?"":" open")+"\\u0027 data-fk=\\u0027"+f.id+"\\u0027><span class=\\u0027clip-grip fgrip\\u0027 draggable=\\u0027true\\u0027 data-fid=\\u0027"+f.id+"\\u0027 title=\\u0027ドラッグで移動\\u0027>\\u283F</span><span class=\\u0027tw tgl\\u0027>\\u25B6</span>"+nameCell("f",f.id,f.name)+"<span class=\\u0027clip-sp\\u0027></span><button class=\\u0027clip-ren\\u0027 data-k=\\u0027f:"+f.id+"\\u0027 title=\\u0027フォルダ名を編集\\u0027>\\uD83D\\uDD8A</button><button class=\\u0027clip-fdel\\u0027 data-fid=\\u0027"+f.id+"\\u0027 title=\\u0027削除\\u0027>\\uD83D\\uDDD1</button></div><div class=\\u0027clip-g1b ind\\u0027"+(col?" style=\\u0027display:none\\u0027":"")+">"+tree(f.id)+itemsGrouped(items.filter(function(it){return (it.folderId||"")===f.id;}),f.id)+"</div></div>";});return h;}'
+      +'function render(){if(!bodyEl)return;if(!folders.length&&!items.length){bodyEl.innerHTML="<div class=\\u0027clip-empty\\u0027>まだ登録がありません。本文をドラッグ選択して「＋ 選択範囲を追加」で登録、「＋ フォルダを作成」で整理できます。</div>";return;}bodyEl.innerHTML=tree("")+itemsGrouped(items.filter(function(it){return !(it.folderId||"");}),"");if(editKey){var ei=bodyEl.querySelector(".clip-hedit");if(ei){ei.focus();ei.select();}}}'
       +'var lastSel="";function grabSel(){var sel=window.getSelection?window.getSelection():null;if(!sel)return;var s=(sel.toString()||"").replace(/\\r/g,"");if(!s.trim())return;var inWrap=false,inPanel=false;try{var n=sel.anchorNode;while(n){if(n.nodeType===1){if(n.classList&&n.classList.contains("wrap"))inWrap=true;if(n.id==="clipPanel")inPanel=true;}n=n.parentNode;}}catch(e){inWrap=true;}if(inWrap&&!inPanel)lastSel=s;}'
       +'document.addEventListener("mouseup",function(){setTimeout(grabSel,0);});document.addEventListener("keyup",function(){setTimeout(grabSel,0);});'
       +'if(addb)addb.onclick=function(){if(!lastSel.trim()){alert("先に本文をドラッグして選択してください。");return;}items.push({id:rid("c"),text:lastSel,h:"",folderId:""});save();render();if(panel)panel.classList.add("open");};'
-      +'if(addf)addf.onclick=function(){var f={id:rid("f"),name:"新しいフォルダ",parentId:""};folders.push(f);save();render();var inp=bodyEl.querySelector(".clip-fname[data-fid=\\u0027"+f.id+"\\u0027]");if(inp){inp.focus();inp.select();}};'
+      +'if(addf)addf.onclick=function(){var f={id:rid("f"),name:"新しいフォルダ",parentId:""};folders.push(f);editKey="f:"+f.id;save();render();};'
       +'if(bodyEl){var drag=null;'
-      +'bodyEl.addEventListener("click",function(e){var tg=e.target.closest&&e.target.closest(".tgl");if(tg){var hd=tg.closest(".clip-h1")||tg.closest(".clip-h2");if(hd){var fk=hd.getAttribute("data-fk"),k=(fk!=null)?("f:"+fk):hd.getAttribute("data-hk");if(k!=null){collapsed[k]=!collapsed[k];render();}}return;}var d=e.target.closest&&e.target.closest(".clip-del");if(d){var id=d.getAttribute("data-id");items=items.filter(function(x){return x.id!==id;});save();render();return;}var fd=e.target.closest&&e.target.closest(".clip-fdel");if(fd){var fid=fd.getAttribute("data-fid");var par=(fById(fid)||{}).parentId||"";items.forEach(function(it){if(it.folderId===fid)it.folderId=par;});folders.forEach(function(f){if(f.parentId===fid)f.parentId=par;});folders=folders.filter(function(f){return f.id!==fid;});save();render();return;}});'
-      +'bodyEl.addEventListener("input",function(e){var t=e.target;if(!t.getAttribute)return;if(t.classList.contains("clip-hin")){var it=items.filter(function(x){return x.id===t.getAttribute("data-id");})[0];if(it){it.h=t.value;save();}}else if(t.classList.contains("clip-fname")){var f=fById(t.getAttribute("data-fid"));if(f){f.name=t.value;save();}}});'
+      +'bodyEl.addEventListener("click",function(e){var rn=e.target.closest&&e.target.closest(".clip-ren");if(rn){editKey=rn.getAttribute("data-k");render();return;}var tg=e.target.closest&&e.target.closest(".tgl");if(tg){var hd=tg.closest(".clip-h1");if(hd){var k="f:"+hd.getAttribute("data-fk");collapsed[k]=!collapsed[k];render();}return;}var d=e.target.closest&&e.target.closest(".clip-del");if(d){var id=d.getAttribute("data-id");items=items.filter(function(x){return x.id!==id;});save();render();return;}var fd=e.target.closest&&e.target.closest(".clip-fdel");if(fd){var fid=fd.getAttribute("data-fid");var par=(fById(fid)||{}).parentId||"";items.forEach(function(it){if(it.folderId===fid)it.folderId=par;});folders.forEach(function(f){if(f.parentId===fid)f.parentId=par;});folders=folders.filter(function(f){return f.id!==fid;});save();render();return;}});'
+      +'bodyEl.addEventListener("input",function(e){var t=e.target;if(!t.classList||!t.classList.contains("clip-hedit"))return;var k=t.getAttribute("data-k")||"";if(k.slice(0,2)==="i:"){var it=items.filter(function(x){return x.id===k.slice(2);})[0];if(it){it.h=t.value;save();}}else if(k.slice(0,2)==="f:"){var f=fById(k.slice(2));if(f){f.name=t.value;save();}}});'
+      +'bodyEl.addEventListener("keydown",function(e){if(e.target.classList&&e.target.classList.contains("clip-hedit")&&e.key==="Enter"){e.preventDefault();e.target.blur();}});'
+      +'bodyEl.addEventListener("focusout",function(e){if(e.target.classList&&e.target.classList.contains("clip-hedit")){editKey=null;render();}});'
       +'bodyEl.addEventListener("dragstart",function(e){var ig=e.target.closest&&e.target.closest(".igrip");if(ig){drag={kind:"item",id:ig.getAttribute("data-id")};}else{var fg=e.target.closest&&e.target.closest(".fgrip");if(fg){drag={kind:"folder",id:fg.getAttribute("data-fid")};}else{return;}}if(e.dataTransfer){e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","1");}catch(_){}}});'
       +'bodyEl.addEventListener("dragover",function(e){if(!drag)return;e.preventDefault();[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});var it=e.target.closest&&e.target.closest(".clip-item");var fh=e.target.closest&&e.target.closest(".clip-h1");if(it)it.classList.add("dragover");else if(fh)fh.classList.add("dragover");});'
       +'bodyEl.addEventListener("drop",function(e){if(!drag)return;e.preventDefault();[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});var itEl=e.target.closest&&e.target.closest(".clip-item");var fhEl=e.target.closest&&e.target.closest(".clip-h1");if(drag.kind==="item"){var from=items.map(function(x){return x.id;}).indexOf(drag.id);if(from<0){drag=null;return;}var m=items.splice(from,1)[0];if(itEl&&itEl.getAttribute("data-id")!==drag.id){var tid=itEl.getAttribute("data-id");var t=items.filter(function(x){return x.id===tid;})[0];if(t)m.folderId=t.folderId||"";var to=items.map(function(x){return x.id;}).indexOf(tid);if(to<0)to=items.length;items.splice(to,0,m);}else if(fhEl){m.folderId=fhEl.getAttribute("data-fk")||"";items.push(m);}else{m.folderId="";items.push(m);}save();render();}else if(drag.kind==="folder"){var fid=drag.id;var dest=fhEl?fhEl.getAttribute("data-fk"):"";if(dest!==fid&&!isDesc(dest,fid)){var f=fById(fid);if(f)f.parentId=dest||"";save();render();}}drag=null;});'
@@ -3137,7 +3153,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22u データ複製/フォルダ名編集/本文コピー1行化'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-22w データ全画面化+ルビタブ/挿入データのリアルタイム反映'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
