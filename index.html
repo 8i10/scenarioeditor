@@ -2415,8 +2415,17 @@
       +' .v-head .v-sp{margin-left:auto}'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
       +' @media (min-width:821px){ body.ol-open .wrap{margin-left:244px!important;max-width:min(940px,calc(100vw - 284px))!important} }'
-      +' .outline{top:46px;height:calc(100vh - 46px);background:#e7e6e2;border-right:1px solid #d8d7d2}'
-      +' .ol-search{padding:10px 12px 8px;position:sticky;top:0;background:#e7e6e2;z-index:2}'
+      +' .outline{top:46px;height:calc(100vh - 46px);background:#f1f0ec;border-right:1px solid #d6d5d0}'
+      +' .outline .ol-list{padding:8px 6px}'
+      +' .outline .ol-page{font-size:13.5px;padding:6px 9px;color:#1a1a1a}'
+      +' .outline .ol-hrow{color:#2a2a2a;font-size:13px;line-height:1.7;padding:4px 9px}'
+      +' .outline .ol-hrow.lv2{font-size:12.5px;color:#2a2a2a}'
+      +' .outline .ol-hrow.lv3{font-size:12.5px;color:#3a3a3a}'
+      +' .outline .ol-hrow.lv4,.outline .ol-hrow.lv5{font-size:12px;color:#565656}'
+      +' .outline .ol-hrow .ol-tw,.outline .ol-page .ol-tw{color:#9a9a9a;font-size:11px}'
+      +' .outline .ol-page:hover,.outline .ol-hrow:hover{background:#e2e1db;color:#000}'
+      +' .outline .ol-page.cur{background:#e2e1db}'
+      +' .ol-search{padding:10px 12px 8px;position:sticky;top:0;background:#f1f0ec;z-index:2}'
       +' .ol-search input{width:100%;height:32px;border:1px solid #c9c8c3;border-radius:8px;background:#fff;color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;box-sizing:border-box}'
       +' .ol-search input:focus{outline:none;border-color:var(--text)}'
       +' .ol-scount{display:block;font-size:11px;color:var(--muted);margin:4px 2px 0;min-height:12px}'
@@ -3179,7 +3188,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23b 閲覧しおりと本文の間隔を縮小'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23c 閲覧しおりの視認性改善（文字濃く/大きく/行間）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
