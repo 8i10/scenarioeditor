@@ -2413,7 +2413,8 @@
       +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'
       +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
       +' .v-head .v-sp{margin-left:auto}'
-      +' body>.wrap{padding-top:66px}'
+      +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
+      +' @media (min-width:821px){ body.ol-open .wrap{margin-left:244px!important;max-width:min(940px,calc(100vw - 284px))!important} }'
       +' .outline{top:46px;height:calc(100vh - 46px);background:#e7e6e2;border-right:1px solid #d8d7d2}'
       +' .ol-search{padding:10px 12px 8px;position:sticky;top:0;background:#e7e6e2;z-index:2}'
       +' .ol-search input{width:100%;height:32px;border:1px solid #c9c8c3;border-radius:8px;background:#fff;color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;box-sizing:border-box}'
@@ -3178,7 +3179,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23a しおり背景灰色/ダークモード削除/データ内検索'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23b 閲覧しおりと本文の間隔を縮小'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
