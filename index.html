@@ -628,7 +628,7 @@
 <div class="ovl fpage" id="matOvl">
   <div class="dlg fdlg">
     <div class="fpg-head"><span class="fpg-ttl">データ（この作品）</span><span style="margin-left:auto;display:flex;gap:8px"><button class="hb2" id="matClose2">✕ 閉じる</button></span></div>
-    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
+    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="evt">イベント・質問</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
     <div class="mat-scroll">
       <div class="mat-inner">
         <div class="mat-pane" data-pane="npc">
@@ -641,6 +641,11 @@
           <div class="fhint">閲覧用HTMLの右側「データ」パネルに表示されます（開閉可能）。ハンドアウトなどにどうぞ。</div>
           <div id="matList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
           <div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>
+        </div>
+        <div class="mat-pane" data-pane="evt" style="display:none">
+          <div class="fhint">イベントや質問（Q&amp;A）を登録できます。閲覧用HTMLの「💡 イベント・質問」パネルに表示されます。</div>
+          <div id="evtList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
+          <div class="frow"><button class="hb2" id="evtAdd">＋ イベント・質問を追加</button></div>
         </div>
         <div class="mat-pane" data-pane="ruby" style="display:none">
           <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
@@ -798,7 +803,7 @@
   var userInteracted=false;
   /* ---- Undo / Redo ---- */
   var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
-  function snapshot(){ try{ return JSON.stringify({pages:state.pages,curPage:state.curPage,name:state.name,materials:state.materials,npcs:state.npcs,letters:state.letters,ruby:state.ruby,bgColor:state.bgColor,headBg:state.headBg,theme:state.theme,fs:state.fs,font:state.font,pagelines:state.pagelines,colline:state.colline}); }catch(e){ return JSON.stringify({name:state.name}); } }
+  function snapshot(){ try{ return JSON.stringify({pages:state.pages,curPage:state.curPage,name:state.name,materials:state.materials,npcs:state.npcs,letters:state.letters,events:state.events,ruby:state.ruby,bgColor:state.bgColor,headBg:state.headBg,theme:state.theme,fs:state.fs,font:state.font,pagelines:state.pagelines,colline:state.colline}); }catch(e){ return JSON.stringify({name:state.name}); } }
   function commitUndo(){
     if(applyingSnap) return;
     var s=snapshot();
@@ -817,10 +822,11 @@
     if(Array.isArray(o.materials)) state.materials=o.materials;
     if(Array.isArray(o.npcs)) state.npcs=o.npcs;
     if(Array.isArray(o.letters)) state.letters=o.letters;
+    if(Array.isArray(o.events)) state.events=o.events;
     if(Array.isArray(o.ruby)) state.ruby=o.ruby;
     ['bgColor','headBg','theme','fs','font','pagelines','colline'].forEach(function(k){ if(o[k]!==undefined) state[k]=o[k]; });
     render(); applyOutline(); updateDocName(); renderOutline();
-    try{ if(typeof renderNpcList==='function') renderNpcList(); if(typeof renderMatList==='function') renderMatList(); if(typeof renderRubyList==='function') renderRubyList(); }catch(_){}
+    try{ if(typeof renderNpcList==='function') renderNpcList(); if(typeof renderMatList==='function') renderMatList(); if(typeof renderRubyList==='function') renderRubyList(); if(typeof renderEvtList==='function') renderEvtList(); }catch(_){}
     lastSnap=snapshot();
     try{ localStorage.setItem(K_DOC(state.id), JSON.stringify(state)); }catch(e){}
     if(typeof cloudPush==='function') cloudPush();
@@ -886,7 +892,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(!Array.isArray(o.letters))o.letters=[]; o.letters.forEach(function(l){ if(l&&!l.id) l.id=nid(); }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(!Array.isArray(o.letters))o.letters=[]; o.letters.forEach(function(l){ if(l&&!l.id) l.id=nid(); }); if(!Array.isArray(o.events))o.events=[]; if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
     o.pages.forEach(function(p,i){ if(!p.id)p.id=pageId(); if(!p.name)p.name='ページ'+(i+1); if(!p.blocks)p.blocks=[]; });
     if(!o.curPage || !o.pages.some(function(p){return p.id===o.curPage;})) o.curPage=o.pages[0].id;
@@ -1936,8 +1942,19 @@
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
     ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hlpCancel'){ close(); return; } var b=e.target.closest('.hlpick'); if(b){ var id=b.getAttribute('data-hid'); var label=selText || (b.querySelector('.nm')?b.querySelector('.nm').textContent:'見出し'); close(); matInsert(i,'<a class="hlink" data-h="'+id+'">'+esc(label)+'</a>'); } });
   }
+  function renderEvtList(){
+    var el=document.getElementById('evtList'); if(!el) return; var rows=state.events||[];
+    el.innerHTML = rows.length ? rows.map(function(m,i){
+      return '<div class="evt-row" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px">'
+        +'<div style="display:flex;gap:8px;align-items:center"><input type="text" class="evt-t-in" data-i="'+i+'" placeholder="イベント名／質問" value="'+esc(m.title||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'
+        +'<button class="evt-up" data-i="'+i+'" title="上へ">▲</button><button class="evt-dn" data-i="'+i+'" title="下へ">▼</button><button class="evt-dup" data-i="'+i+'" title="複製">⧉</button><button class="evt-del" data-i="'+i+'" title="削除">🗑</button></div>'
+        +'<textarea class="evt-b-in npc-ta" data-i="'+i+'" placeholder="内容／回答">'+esc(m.body||'')+'</textarea></div>';
+    }).join('') : '<div class="fhint">まだありません。「＋ イベント・質問を追加」で追加してください。</div>';
+    setTimeout(function(){ [].forEach.call(el.querySelectorAll('.npc-ta'), npcAutoGrow); },0);
+  }
   if(matOvl){
     matOvl.addEventListener('input',function(e){ var t=e.target; if(!(t.classList.contains('mat-t-in')||t.classList.contains('mat-b-in'))) return; var i=+t.getAttribute('data-i'); if(isNaN(i)) return; state.materials[i]=state.materials[i]||{title:'',body:''}; if(t.classList.contains('mat-t-in')) state.materials[i].title=t.value; else state.materials[i].body=sanitize(t.innerHTML); persist(); });
+    matOvl.addEventListener('input',function(e){ var t=e.target; if(!(t.classList.contains('evt-t-in')||t.classList.contains('evt-b-in'))) return; var i=+t.getAttribute('data-i'); if(isNaN(i)) return; state.events[i]=state.events[i]||{title:'',body:''}; if(t.classList.contains('evt-t-in')) state.events[i].title=t.value; else { state.events[i].body=t.value; npcAutoGrow(t); } persist(); });
     matOvl.addEventListener('click',function(e){
       var ib=e.target.closest('.mat-imgb'); if(ib){ matPickImage(+ib.getAttribute('data-i')); return; }
       var fb=e.target.closest('.mat-frameb'); if(fb){ matInsertFrame(+fb.getAttribute('data-i')); return; }
@@ -1950,8 +1967,13 @@
       var up=e.target.closest('.mat-up'); if(up){ var i=+up.getAttribute('data-i'); if(i>0){ var a=state.materials; var tmp=a[i-1]; a[i-1]=a[i]; a[i]=tmp; renderMatList(); persist(); } return; }
       var dn=e.target.closest('.mat-dn'); if(dn){ var j=+dn.getAttribute('data-i'); var a2=state.materials; if(j<a2.length-1){ var t2=a2[j+1]; a2[j+1]=a2[j]; a2[j]=t2; renderMatList(); persist(); } return; }
       if(e.target.id==='matAdd'){ state.materials.push({title:'',body:''}); renderMatList(); persist(); var ins=matOvl.querySelectorAll('.mat-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
+      var edup=e.target.closest('.evt-dup'); if(edup){ var ei=+edup.getAttribute('data-i'); var ec=JSON.parse(JSON.stringify(state.events[ei]||{title:'',body:''})); ec.title=(ec.title||'')+'のコピー'; state.events.splice(ei+1,0,ec); renderEvtList(); persist(); return; }
+      var edel=e.target.closest('.evt-del'); if(edel){ state.events.splice(+edel.getAttribute('data-i'),1); renderEvtList(); persist(); return; }
+      var eup=e.target.closest('.evt-up'); if(eup){ var evi=+eup.getAttribute('data-i'); if(evi>0){ var ea=state.events; var etmp=ea[evi-1]; ea[evi-1]=ea[evi]; ea[evi]=etmp; renderEvtList(); persist(); } return; }
+      var edn=e.target.closest('.evt-dn'); if(edn){ var evj=+edn.getAttribute('data-i'); var ea2=state.events; if(evj<ea2.length-1){ var et2=ea2[evj+1]; ea2[evj+1]=ea2[evj]; ea2[evj]=et2; renderEvtList(); persist(); } return; }
+      if(e.target.id==='evtAdd'){ state.events.push({title:'',body:''}); renderEvtList(); persist(); var eins=matOvl.querySelectorAll('.evt-t-in'); if(eins.length) eins[eins.length-1].focus(); return; }
       if(e.target.id==='matClose2' || e.target===matOvl){ matOvl.classList.remove('show'); return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
       var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); render(); persist(); return; }
@@ -2066,7 +2088,7 @@
       if(e.target.id==='rubyAdd'){ state.ruby.push({t:'',y:''}); renderRubyList(); persist(); var ins=matOvl.querySelectorAll('.ruby-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
     });
   }
-  function openMat(tab){ tab=tab||'npc'; renderNpcList(); renderMatList(); renderRubyList(); matOvl.classList.add('show'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===tab)?'':'none'; }); }
+  function openMat(tab){ tab=tab||'npc'; renderNpcList(); renderMatList(); renderRubyList(); renderEvtList(); matOvl.classList.add('show'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===tab)?'':'none'; }); }
   (function(){ var b=document.getElementById('btnRuby'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); openMat('ruby'); }; })();
   function applyRubyToHTML(html){
     var list=(state.ruby||[]).filter(function(r){ return r.t; });
@@ -2399,8 +2421,9 @@
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
-      +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn" id="vMat">📚 データ</button>':'')
-      +'<button class="hbtn" id="vClip">📋 本文コピー</button></div>';
+      +(((state.materials||[]).filter(function(m){return (m.title||m.body);}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn vhb-emoji" id="vMat" title="データ">📚</button>':'')
+      +((state.events||[]).filter(function(ev){return (ev.title||ev.body);}).length?'<button class="hbtn vhb-emoji" id="vEvt" title="イベント・質問">💡</button>':'')
+      +'<button class="hbtn vhb-emoji" id="vClip" title="本文コピー">📋</button></div>';
     var nav='<nav class="outline open" id="vOutlineNav"><div class="ol-search"><input type="search" id="olSearch" placeholder="🔍 データ内検索" autocomplete="off"><span class="ol-scount" id="olSCount"></span></div>'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(state.pages||[]).map(function(p){ var its=headingsOf(p.blocks); return '<div class="pt-p">'+esc(p.name||'ページ')+'</div>'+its.map(function(it){return '<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>';}).join(''); }).join('')+'</div>';
     var pagesHTML=(state.pages||[]).map(function(p,i){ return '<section class="scn-page'+(i===0?' scn-cur':'')+(i>0?' pb':'')+'" id="pg_'+p.id+'"><div class="doc">'+(p.blocks||[]).map(staticBlockHTML).join('')+'</div></section>'; }).join('');
@@ -2416,7 +2439,10 @@
     if(mats.length){ panelInner += matGroup('資料', matsInner); }
     if(npcOnly.length){ panelInner += matGroup('NPC', npcOnly.map(npcPanelHTML).join('')); }
     if(enemyOnly.length){ panelInner += matGroup('エネミー', enemyOnly.map(npcPanelHTML).join('')); }
-    var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
+    var matHTML = (mats.length||npcs.length) ? applyRubyToHTML('<aside class="mat-panel" id="matPanel"><div class="mat-phead">📚 データ<button class="mat-x" id="matPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+panelInner+'</div></aside>') : '';
+    var evts=(state.events||[]).filter(function(ev){ return (ev.title||ev.body); });
+    var evtInner=evts.map(function(ev,i){ var b=esc(ev.body||'').replace(/\n/g,'<br>'); return '<details class="mat-item" open><summary class="mat-isum">'+esc(ev.title||('項目'+(i+1)))+'</summary><div class="mat-body">'+b+'</div></details>'; }).join('');
+    var evtHTML = evts.length ? applyRubyToHTML('<aside class="mat-panel" id="evtPanel"><div class="mat-phead">💡 イベント・質問<button class="mat-x" id="evtPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+evtInner+'</div></aside>') : '';
     var clipHTML='<aside class="mat-panel clip-panel" id="clipPanel"><div class="mat-phead">本文コピー<button class="mat-x" id="clipPClose" aria-label="閉じる">×</button></div>'
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button></div>'
       +'<div class="mat-pbody" id="clipBody"></div></aside>';
@@ -2426,6 +2452,7 @@
       +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'
       +'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}'
       +' .v-head .v-sp{margin-left:auto}'
+      +' .v-head .vhb-emoji{font-size:17px;line-height:1;padding:5px 9px}'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
       +' html{--pw:clamp(236px,26vw,460px)}'
       +' @media (min-width:821px){ body.ol-open{padding-left:236px} body.rpanel-open{padding-right:var(--pw,236px)} body.ol-open .wrap,body.rpanel-open .wrap{margin-left:auto!important;margin-right:auto!important;max-width:100%!important} }'
@@ -2486,7 +2513,7 @@
       +' .clip-item .clip-cat input{flex:1;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-size:11px;font-family:inherit}'
       +' .clip-empty{font-size:12px;color:var(--muted);line-height:1.6;padding:6px 2px}'
       +' .mat-item{margin:0 0 14px}'
-      +' .mat-item>.mat-isum{font-weight:700;font-size:1.05em;margin:0 0 6px;border-bottom:1px solid var(--line);padding:0 0 4px;background:transparent;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
+      +' .mat-item>.mat-isum{font-weight:700;font-size:1.0em;margin:0 0 6px;padding:5px 9px;background:var(--hover);border:1px solid var(--line);border-radius:6px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
       +' .mat-item>.mat-isum::-webkit-details-marker{display:none}'
       +' .mat-item>.mat-isum::before{content:"\\25BE";font-size:.8em;color:var(--mk,var(--muted));width:1em;display:inline-block}'
       +' .mat-item:not([open])>.mat-isum{margin-bottom:0}'
@@ -2565,10 +2592,12 @@
       +'var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));'
       +'var FS={xs:0.66,sm:0.8,md:1};document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
-      +'function syncRP(){var a=document.getElementById("matPanel"),b=document.getElementById("clipPanel");document.body.classList.toggle("rpanel-open",(a&&a.classList.contains("open"))||(b&&b.classList.contains("open")));}'
-      +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel");if(vm&&mp){vm.onclick=function(){var cp=document.getElementById("clipPanel");if(cp)cp.classList.remove("open");mp.classList.toggle("open");syncRP();};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");syncRP();};}'
+      +'function syncRP(){var a=document.getElementById("matPanel"),b=document.getElementById("clipPanel"),c=document.getElementById("evtPanel");document.body.classList.toggle("rpanel-open",(a&&a.classList.contains("open"))||(b&&b.classList.contains("open"))||(c&&c.classList.contains("open")));}'
+      +'function closeRP(except){["matPanel","clipPanel","evtPanel"].forEach(function(id){if(id!==except){var el=document.getElementById(id);if(el)el.classList.remove("open");}});}'
+      +'var vm=document.getElementById("vMat"),mp=document.getElementById("matPanel");if(vm&&mp){vm.onclick=function(){closeRP("matPanel");mp.classList.toggle("open");syncRP();};}var mx=document.getElementById("matPClose");if(mx&&mp){mx.onclick=function(){mp.classList.remove("open");syncRP();};}'
+      +'var ve=document.getElementById("vEvt"),ep=document.getElementById("evtPanel");if(ve&&ep){ve.onclick=function(){closeRP("evtPanel");ep.classList.toggle("open");syncRP();};}var ex=document.getElementById("evtPClose");if(ex&&ep){ex.onclick=function(){ep.classList.remove("open");syncRP();};}'
       +'(function(){var CKEY='+JSON.stringify('clip:'+(state.id||state.name||'scn'))+';var panel=document.getElementById("clipPanel"),bodyEl=document.getElementById("clipBody"),vb=document.getElementById("vClip"),px=document.getElementById("clipPClose"),addb=document.getElementById("clipAddSel"),addf=document.getElementById("clipAddFolder");'
-      +'if(vb&&panel){vb.onclick=function(){if(mp)mp.classList.remove("open");panel.classList.toggle("open");if(typeof syncRP==="function")syncRP();};}if(px&&panel){px.onclick=function(){panel.classList.remove("open");if(typeof syncRP==="function")syncRP();};}'
+      +'if(vb&&panel){vb.onclick=function(){if(typeof closeRP==="function")closeRP("clipPanel");panel.classList.toggle("open");if(typeof syncRP==="function")syncRP();};}if(px&&panel){px.onclick=function(){panel.classList.remove("open");if(typeof syncRP==="function")syncRP();};}'
       +'function rid(p){return (p||"x")+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}'
       +'var folders=[],items=[],collapsed={},editKey=null;'
       +'(function load(){try{var raw=JSON.parse(localStorage.getItem(CKEY)||"null");if(Array.isArray(raw)){var fm={};raw.forEach(function(it){var fid="",h1=(it.h1||"").trim();if(h1){if(!fm[h1]){var f={id:rid("f"),name:h1,parentId:""};folders.push(f);fm[h1]=f.id;}fid=fm[h1];}items.push({id:it.id||rid("c"),text:it.text||"",h:(it.h2||it.h||"").trim(),folderId:fid});});}else if(raw&&typeof raw==="object"){folders=raw.folders||[];items=raw.items||[];}}catch(e){folders=[];items=[];}})();'
@@ -2607,9 +2636,10 @@
       +'})();<\/script>';
     var html='<!DOCTYPE html><html lang="ja" data-theme="light"><head><meta charset="UTF-8">'
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
+      +'<link rel="icon" type="image/png" href="data:image/png;base64,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">'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
-      +'<body class="ol-open">'+vhead+nav+body+matHTML+clipHTML+vjs
+      +'<body class="ol-open">'+vhead+nav+body+matHTML+evtHTML+clipHTML+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
       +'</body></html>';
     var blob=new Blob([html],{type:'text/html'});
@@ -3212,7 +3242,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23u データ表示を資料式に統一(見出し色=▶色)/しおり選択強調'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23w ヘッダー背景色/イベント質問タブ追加/右上ボタン絵文字化'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
