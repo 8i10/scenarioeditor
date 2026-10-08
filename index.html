@@ -2513,7 +2513,7 @@
       +' .clip-item .clip-cat input{flex:1;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-size:11px;font-family:inherit}'
       +' .clip-empty{font-size:12px;color:var(--muted);line-height:1.6;padding:6px 2px}'
       +' .mat-item{margin:0 0 14px}'
-      +' .mat-item>.mat-isum{font-weight:700;font-size:1.0em;margin:0 0 6px;padding:5px 9px;background:var(--hover);border:1px solid var(--line);border-radius:6px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
+      +' .mat-item>.mat-isum{font-weight:700;font-size:1.0em;margin:0 0 6px;padding:4px 8px;background:var(--hover);border-bottom:1px solid var(--line);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
       +' .mat-item>.mat-isum::-webkit-details-marker{display:none}'
       +' .mat-item>.mat-isum::before{content:"\\25BE";font-size:.8em;color:var(--mk,var(--muted));width:1em;display:inline-block}'
       +' .mat-item:not([open])>.mat-isum{margin-bottom:0}'
@@ -3242,7 +3242,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23w ヘッダー背景色/イベント質問タブ追加/右上ボタン絵文字化'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23x 見出しを下線帯＋背景色に(箱型をやめる)'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
