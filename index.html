@@ -2396,6 +2396,7 @@
     var olHTML=outlineInnerHTML();
     var fsXs=(state.fs==='xs'?' class="on"':''), fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
     var vhead='<div class="v-head">'
+      +'<button class="hbtn" id="vOutline" title="しおりの開閉" style="margin-right:6px">☰</button>'
       +'<span class="v-title">'+esc(state.name)+'</span>'
       +'<span class="v-sp"></span>'
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
@@ -2491,7 +2492,7 @@
       +' .mat-item>.mat-isum::before{content:"\\25BE";font-size:.8em;color:var(--muted);width:1em;display:inline-block}'
       +' .mat-item:not([open])>.mat-isum{margin-bottom:0}'
       +' .mat-item:not([open])>.mat-isum::before{content:"\\25B8"}'
-      +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55;margin-top:2px}'
+      +' .mat-item .mat-body{white-space:pre-wrap;line-height:1.55;margin-top:2px;font-size:.9em}'
       +' .mat-item .mat-body img{max-width:100%;height:auto;border-radius:4px}'
       +' .mat-group{margin:4px 0 12px}'
       +' .mat-sec{font-weight:700;letter-spacing:.06em;margin:0 0 10px;padding-bottom:4px;border-bottom:2px solid var(--text);font-size:.95em;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}'
@@ -2500,8 +2501,9 @@
       +' .mat-group:not([open])>.mat-sec{margin-bottom:0}'
       +' .mat-group:not([open])>.mat-sec::before{content:"\\25B8"}'
       +' .mat-gbody{margin:0}'
-      +' .npc-item{margin:0 0 10px;border:1px solid var(--line);border-radius:8px;overflow:hidden}'
-      +' .npc-item>summary{cursor:pointer;list-style:none;font-weight:700;font-size:1.0em;padding:4px 11px;background:var(--hover);display:flex;align-items:center}'
+      +' .npc-item{margin:0 0 10px;border:1px solid var(--line);border-radius:8px}'
+      +' .npc-item>summary{cursor:pointer;list-style:none;font-weight:700;font-size:1.0em;padding:4px 11px;background:var(--hover);display:flex;align-items:center;border-radius:7px 7px 0 0}'
+      +' .npc-item:not([open])>summary{border-radius:7px}'
       +' .npc-item>summary .npc-sp{flex:1}'
       +' .npc-item>summary .npc-ccf{font-size:13px;padding:1px 8px}'
       +' .npc-item>summary::-webkit-details-marker{display:none}'
@@ -2512,8 +2514,9 @@
       +' .npc-item .npc-statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:3px 8px;font-size:.86em;margin:3px 0}'
       +' .npc-item .npc-statrow .npc-stat{min-width:0;white-space:nowrap}'
       +' .npc-item .npc-drow{margin-top:5px}'
-      +' .npc-pd{margin:8px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}'
-      +' .npc-pd>summary{cursor:pointer;list-style:none;font-weight:700;font-size:.82em;color:var(--text);display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--hover)}'
+      +' .npc-pd{margin:8px 0 0;border:1px solid var(--line);border-radius:6px}'
+      +' .npc-pd>summary{cursor:pointer;list-style:none;font-weight:700;font-size:.82em;color:var(--text);display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--hover);border-radius:5px 5px 0 0}'
+      +' .npc-pd:not([open])>summary{border-radius:5px}'
       +' .npc-pd>summary::-webkit-details-marker{display:none}'
       +' .npc-pd>summary::before{content:"\\25B8 "}'
       +' .npc-pd[open]>summary::before{content:"\\25BE "}'
@@ -2550,7 +2553,8 @@
       +' .ruby-t.rb-below:hover::before{top:100%;bottom:auto;border-top-color:transparent;border-bottom-color:#2b2b2b}'
       +' .outline .ol-pedit,.outline .ol-pdel,.outline .ol-pmv,.outline .ol-pdup,.outline .ol-add,.outline .ol-ruby{display:none!important}'
       +' .outline .ol-ttl{display:none!important}'
-      +' .outline{transform:none!important}'
+      +' .outline{transform:translateX(-100%)}'
+      +' .outline.open{transform:none}'
       +' .scn-page .doc .block{display:block}'
       +' .scn-page .doc .be{white-space:pre-wrap}'
       +' .scn-page{display:none}'
@@ -3212,7 +3216,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23r ふりがな：上端語はヘッダーに重ならず下側表示'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-23t データ欄のふりがなが項目枠でクリップされない様修正'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
