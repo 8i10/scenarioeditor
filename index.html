@@ -76,15 +76,6 @@
 
   /* ── format bar ── */
   .fbar{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:var(--head-h,44px);z-index:95}
-  #editTargetBar{align-items:center;gap:12px;padding:8px 16px;background:var(--accent2,#8a6d3b);color:#fff;position:sticky;top:var(--topbar-h,92px);z-index:94;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  #editTargetBar .hb2{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;font-weight:700}
-  #editTargetBar .hb2:hover{background:rgba(255,255,255,.3)}
-  #editTargetBar .etb-label{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #editTargetBar .etb-kind{display:inline-block;background:rgba(0,0,0,.22);border-radius:5px;padding:1px 7px;margin-right:7px;font-size:11px;font-weight:700}
-  .entry-edit{align-self:flex-start;font-weight:700}
-  .entry-prev{font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 9px;cursor:pointer}
-  .entry-prev:hover{border-color:var(--accent2)}
-  .entry-prev-empty{color:var(--muted);opacity:.7}
   .fbar-in{max-width:none;width:100%;margin:0;padding:6px 16px;display:flex;flex-direction:column;gap:7px}
   .fbrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .fcell{display:flex;align-items:center;gap:6px}
@@ -404,16 +395,18 @@
   /* データパネルを上ツールバーの下・右パレットの左に収め、閲覧編集と一体化 */
   #matOvl{top:var(--topbar-h,92px);bottom:0;left:0;right:0}
   @media (min-width:821px){ body.rb-open #matOvl{right:212px} }
-  #matEditPane{flex:1;min-height:0;display:none;flex-direction:column;background:var(--bg)}
-  #matOvl.editing #matEditPane{display:flex}
-  #matOvl.editing .mat-scroll{display:none}
-  .mat-edit-bar{flex:none;display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--accent2,#8a6d3b);color:#fff;font-size:13px}
-  .mat-edit-bar .hb2{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;font-weight:700}
-  .mat-edit-bar .hb2:hover{background:rgba(255,255,255,.3)}
-  .mat-edit-bar .mat-edit-ttl{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mat-edit-bar .mat-edit-kind{display:inline-block;background:rgba(0,0,0,.22);border-radius:5px;padding:1px 7px;margin-right:7px;font-size:11px;font-weight:700}
-  .mat-edit-scroll{flex:1;min-height:0;overflow:auto;background:var(--bg)}
-  #matEditPane .wrap{min-height:0;margin-left:auto!important;margin-right:auto!important;max-width:min(794px,100%)!important}
+  /* データ／イベント項目：折り畳み＋その場編集 */
+  .entry-row{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg)}
+  .entry-row.open{border-color:var(--accent2);box-shadow:0 1px 6px rgba(0,0,0,.06)}
+  .entry-rhead{display:flex;gap:8px;align-items:center;padding:10px}
+  .entry-tog{flex:0 0 auto;width:26px;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--muted);cursor:pointer;font-size:12px}
+  .entry-tog:hover{color:var(--text);border-color:var(--accent2)}
+  .entry-tin{flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;font-weight:700}
+  .entry-rbody{border-top:1px solid var(--line)}
+  .entry-prev{font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-wrap;word-break:break-word;padding:9px 12px;cursor:pointer}
+  .entry-prev:hover{background:var(--hover)}
+  .entry-prev-empty{color:var(--muted);opacity:.7}
+  .entry-inline{padding:8px 14px 20px!important;margin:0!important;max-width:100%!important;width:100%!important;min-height:120px}
   .mat-tab{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 12px;cursor:pointer;font-family:inherit}
   .mat-tab.on{color:var(--text);border-bottom-color:var(--accent2)}
   .npc-grid{display:grid;gap:5px}
@@ -676,10 +669,6 @@
         </div>
       </div>
     </div>
-    <div id="matEditPane">
-      <div class="mat-edit-bar"><button class="hb2" id="matEditBack">◀ 一覧に戻る</button><span class="mat-edit-ttl" id="matEditTtl"></span></div>
-      <div class="mat-edit-scroll"><div class="wrap" id="matEditWrap"></div></div>
-    </div>
   </div>
 </div>
 <div class="ovl fpage" id="fileOvl">
@@ -732,7 +721,6 @@
   </div>
 </div>
 
-<div id="editTargetBar" style="display:none"></div>
 <div class="wrap"><div class="print-toc" id="printToc"></div><div class="doc" id="doc" contenteditable="true" spellcheck="false"></div></div>
 <div class="menu" id="menu"></div>
 
@@ -1033,9 +1021,11 @@
   function scenarioWrapEl(){ var pt=document.getElementById('printToc'); return pt?pt.parentNode:document.querySelector('.wrap'); }
   function showMatTab(which){ if(!matOvl) return; [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===which); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc')renderNpcList(); if(which==='mat')renderMatList(); if(which==='evt')renderEvtList(); if(which==='ruby')renderRubyList(); }
   function detachEntryEdit(){ if(!editTarget) return; var sw=scenarioWrapEl(); if(sw&&doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing','show'); editTarget=null; }
-  function openEntryEdit(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(matOvl){ matOvl.classList.add('show'); matOvl.classList.add('editing'); } var mount=document.getElementById('matEditWrap'); if(mount && doc.parentNode!==mount) mount.appendChild(doc); var ttl=document.getElementById('matEditTtl'); if(ttl){ var kindLbl=(kind==='data')?'データ':'イベント・質問'; var nm=(found.title||'').trim()||'(無題)'; ttl.innerHTML='<span class="mat-edit-kind">'+kindLbl+'</span>'+esc(nm)+' を編集中'; } render(); applyFs(); applyFont(); var sc=matOvl?matOvl.querySelector('.mat-edit-scroll'):null; if(sc) sc.scrollTop=0; var be=doc.querySelector('.be'); if(be&&typeof setCaretStart==='function') setCaretStart(be); afterPageChange(); persist(); }
-  function exitPanelEdit(reopenList){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); editTarget=null; var sw=scenarioWrapEl(); if(sw && doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing'); render(); applyFs(); applyFont(); try{ renderMatList(); renderEvtList(); }catch(_){} afterPageChange(); if(reopenList) showMatTab(kind==='data'?'mat':'evt'); }
-  function exitEntryEdit(){ exitPanelEdit(true); }
+  /* データ／イベント項目をその場（一覧内）で本文と同じエディタで開閉 */
+  function openEntryInline(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); stashInlineDoc(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); persist(); }
+  function collapseEntryInline(){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); stashInlineDoc(); editTarget=null; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); }
+  function toggleEntryInline(kind,id){ if(editTarget && editTarget.kind===kind && editTarget.id===id) collapseEntryInline(); else openEntryInline(kind,id); }
+  function exitEntryEdit(){ collapseEntryInline(); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
   function deleteDoc(id){
     var idx=readIndex(), e=null; for(var i=0;i<idx.length;i++){ if(idx[i].id===id){ e=idx[i]; break; } }
@@ -1945,16 +1935,26 @@
   /* ---- ルビ設定（作品ごと） ---- */
   var matOvl=document.getElementById('matOvl');
   function entryPreview(m){ if(!m) return ''; var t=''; if(m.blocks&&m.blocks.length){ t=plainText((m.blocks||[]).map(function(b){ return (b.html||'')+' '; }).join(' ')); } else if(m.body){ t=plainText(/[<]/.test(m.body)?m.body:esc(m.body)); } t=(t||'').replace(/\s+/g,' ').trim(); return t.length>90?t.slice(0,90)+'…':t; }
+  function stashInlineDoc(){ if(doc){ var sw=scenarioWrapEl(); if(sw && doc.parentNode!==sw) sw.appendChild(doc); } }
+  function mountInlineDoc(el){ var mount=el.querySelector('#entryInlineMount'); if(!mount) return; mount.appendChild(doc); render(); applyFs(); applyFont(); var be=doc.querySelector('.be'); if(be&&typeof setCaretStart==='function') setCaretStart(be); }
   function renderMatList(){
     var el=document.getElementById('matList'); if(!el) return; var rows=state.materials||[];
+    if(el.contains(doc)) stashInlineDoc();
+    var ovlShown=matOvl&&matOvl.classList.contains('show');
+    var openId=(ovlShown&&editTarget&&editTarget.kind==='data')?editTarget.id:null;
     el.innerHTML = rows.length ? rows.map(function(m,i){
-      var prev=entryPreview(m);
-      return '<div class="mat-row" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px">'
-        +'<div style="display:flex;gap:8px;align-items:center"><input type="text" class="mat-t-in" data-i="'+i+'" placeholder="資料タイトル" value="'+esc(m.title||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'
+      var isOpen=(m.id===openId); var prev=entryPreview(m);
+      return '<div class="mat-row entry-row'+(isOpen?' open':'')+'">'
+        +'<div class="entry-rhead">'
+        +'<button class="mat-tog entry-tog" data-i="'+i+'" title="開閉">'+(isOpen?'▾':'▸')+'</button>'
+        +'<input type="text" class="mat-t-in entry-tin" data-i="'+i+'" placeholder="資料タイトル" value="'+esc(m.title||'')+'">'
         +'<button class="mat-up" data-i="'+i+'" title="上へ">▲</button><button class="mat-dn" data-i="'+i+'" title="下へ">▼</button><button class="mat-dup" data-i="'+i+'" title="複製">⧉</button><button class="mat-del" data-i="'+i+'" title="削除">🗑</button></div>'
-        +'<button class="mat-edit entry-edit hb2" data-i="'+i+'" style="align-self:flex-start">✏ 本文を編集（本文と同じ記法）</button>'
-        +'<div class="entry-prev mat-edit" data-i="'+i+'">'+(prev?esc(prev):'<span class="entry-prev-empty">（内容なし）クリックして編集</span>')+'</div></div>';
+        +(isOpen
+            ? '<div class="entry-rbody"><div class="entry-inline wrap" id="entryInlineMount"></div></div>'
+            : '<div class="entry-rbody"><div class="entry-prev mat-tog" data-i="'+i+'">'+(prev?esc(prev):'<span class="entry-prev-empty">（内容なし）クリックして編集</span>')+'</div></div>')
+        +'</div>';
     }).join('') : '<div class="fhint">まだ資料がありません。「＋ 資料を追加」で追加してください。</div>';
+    if(openId) mountInlineDoc(el);
   }
   var matImgInput=null;
   function matPickImage(i){
@@ -1986,14 +1986,22 @@
   }
   function renderEvtList(){
     var el=document.getElementById('evtList'); if(!el) return; var rows=state.events||[];
+    if(el.contains(doc)) stashInlineDoc();
+    var ovlShown=matOvl&&matOvl.classList.contains('show');
+    var openId=(ovlShown&&editTarget&&editTarget.kind==='event')?editTarget.id:null;
     el.innerHTML = rows.length ? rows.map(function(m,i){
-      var prev=entryPreview(m);
-      return '<div class="evt-row" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px">'
-        +'<div style="display:flex;gap:8px;align-items:center"><input type="text" class="evt-t-in" data-i="'+i+'" placeholder="イベント名／質問" value="'+esc(m.title||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'
+      var isOpen=(m.id===openId); var prev=entryPreview(m);
+      return '<div class="evt-row entry-row'+(isOpen?' open':'')+'">'
+        +'<div class="entry-rhead">'
+        +'<button class="evt-tog entry-tog" data-i="'+i+'" title="開閉">'+(isOpen?'▾':'▸')+'</button>'
+        +'<input type="text" class="evt-t-in entry-tin" data-i="'+i+'" placeholder="イベント名／質問" value="'+esc(m.title||'')+'">'
         +'<button class="evt-up" data-i="'+i+'" title="上へ">▲</button><button class="evt-dn" data-i="'+i+'" title="下へ">▼</button><button class="evt-dup" data-i="'+i+'" title="複製">⧉</button><button class="evt-del" data-i="'+i+'" title="削除">🗑</button></div>'
-        +'<button class="evt-edit entry-edit hb2" data-i="'+i+'" style="align-self:flex-start">✏ 本文を編集（本文と同じ記法）</button>'
-        +'<div class="entry-prev evt-edit" data-i="'+i+'">'+(prev?esc(prev):'<span class="entry-prev-empty">（内容なし）クリックして編集</span>')+'</div></div>';
+        +(isOpen
+            ? '<div class="entry-rbody"><div class="entry-inline wrap" id="entryInlineMount"></div></div>'
+            : '<div class="entry-rbody"><div class="entry-prev evt-tog" data-i="'+i+'">'+(prev?esc(prev):'<span class="entry-prev-empty">（内容なし）クリックして編集</span>')+'</div></div>')
+        +'</div>';
     }).join('') : '<div class="fhint">まだありません。「＋ イベント・質問を追加」で追加してください。</div>';
+    if(openId) mountInlineDoc(el);
   }
   if(matOvl){
     matOvl.addEventListener('input',function(e){ var t=e.target; if(!(t.classList.contains('mat-t-in')||t.classList.contains('mat-b-in'))) return; var i=+t.getAttribute('data-i'); if(isNaN(i)) return; state.materials[i]=state.materials[i]||{title:'',body:''}; if(t.classList.contains('mat-t-in')) state.materials[i].title=t.value; else state.materials[i].body=sanitize(t.innerHTML); persist(); });
@@ -2005,22 +2013,21 @@
       var hb=e.target.closest('.mat-hrb'); if(hb){ matInsertHr(+hb.getAttribute('data-i')); return; }
       var clb=e.target.closest('.mat-colb'); if(clb){ matInsertCols(+clb.getAttribute('data-i')); return; }
       var lb=e.target.closest('.mat-linkb'); if(lb){ matInsertHLink(+lb.getAttribute('data-i')); return; }
-      var medit=e.target.closest('.mat-edit'); if(medit){ var mo=state.materials[+medit.getAttribute('data-i')]; if(mo) openEntryEdit('data',mo.id); return; }
+      var mtog=e.target.closest('.mat-tog'); if(mtog){ var mto=state.materials[+mtog.getAttribute('data-i')]; if(mto) toggleEntryInline('data',mto.id); return; }
       var mdup=e.target.closest('.mat-dup'); if(mdup){ var mi=+mdup.getAttribute('data-i'); var mc=JSON.parse(JSON.stringify(state.materials[mi]||{title:'',blocks:[]})); mc.id=entryId('mt'); mc.blocks=cloneBlocksNewIds(mc.blocks||[]); mc.title=(mc.title||'')+'のコピー'; state.materials.splice(mi+1,0,mc); renderMatList(); persist(); return; }
-      var del=e.target.closest('.mat-del'); if(del){ state.materials.splice(+del.getAttribute('data-i'),1); renderMatList(); persist(); return; }
+      var del=e.target.closest('.mat-del'); if(del){ var dmi=+del.getAttribute('data-i'); var dmo=state.materials[dmi]; if(editTarget&&editTarget.kind==='data'&&dmo&&editTarget.id===dmo.id){ stashInlineDoc(); editTarget=null; } state.materials.splice(dmi,1); renderMatList(); persist(); return; }
       var up=e.target.closest('.mat-up'); if(up){ var i=+up.getAttribute('data-i'); if(i>0){ var a=state.materials; var tmp=a[i-1]; a[i-1]=a[i]; a[i]=tmp; renderMatList(); persist(); } return; }
       var dn=e.target.closest('.mat-dn'); if(dn){ var j=+dn.getAttribute('data-i'); var a2=state.materials; if(j<a2.length-1){ var t2=a2[j+1]; a2[j+1]=a2[j]; a2[j]=t2; renderMatList(); persist(); } return; }
-      if(e.target.id==='matAdd'){ state.materials.push({id:entryId('mt'),title:'',blocks:[]}); renderMatList(); persist(); var ins=matOvl.querySelectorAll('.mat-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
-      var eedit=e.target.closest('.evt-edit'); if(eedit){ var eo=state.events[+eedit.getAttribute('data-i')]; if(eo) openEntryEdit('event',eo.id); return; }
+      if(e.target.id==='matAdd'){ var newm={id:entryId('mt'),title:'',blocks:[]}; state.materials.push(newm); openEntryInline('data',newm.id); var ins=matOvl.querySelectorAll('.mat-t-in'); if(ins.length) ins[ins.length-1].focus(); return; }
+      var etog=e.target.closest('.evt-tog'); if(etog){ var eto=state.events[+etog.getAttribute('data-i')]; if(eto) toggleEntryInline('event',eto.id); return; }
       var edup=e.target.closest('.evt-dup'); if(edup){ var ei=+edup.getAttribute('data-i'); var ec=JSON.parse(JSON.stringify(state.events[ei]||{title:'',blocks:[]})); ec.id=entryId('ev'); ec.blocks=cloneBlocksNewIds(ec.blocks||[]); ec.title=(ec.title||'')+'のコピー'; state.events.splice(ei+1,0,ec); renderEvtList(); persist(); return; }
-      var edel=e.target.closest('.evt-del'); if(edel){ state.events.splice(+edel.getAttribute('data-i'),1); renderEvtList(); persist(); return; }
+      var edel=e.target.closest('.evt-del'); if(edel){ var dei=+edel.getAttribute('data-i'); var deo=state.events[dei]; if(editTarget&&editTarget.kind==='event'&&deo&&editTarget.id===deo.id){ stashInlineDoc(); editTarget=null; } state.events.splice(dei,1); renderEvtList(); persist(); return; }
       var eup=e.target.closest('.evt-up'); if(eup){ var evi=+eup.getAttribute('data-i'); if(evi>0){ var ea=state.events; var etmp=ea[evi-1]; ea[evi-1]=ea[evi]; ea[evi]=etmp; renderEvtList(); persist(); } return; }
       var edn=e.target.closest('.evt-dn'); if(edn){ var evj=+edn.getAttribute('data-i'); var ea2=state.events; if(evj<ea2.length-1){ var et2=ea2[evj+1]; ea2[evj+1]=ea2[evj]; ea2[evj]=et2; renderEvtList(); persist(); } return; }
       if(e.target.id==='evtAdd'){ state.events.push({id:entryId('ev'),title:'',blocks:[]}); renderEvtList(); persist(); var eins=matOvl.querySelectorAll('.evt-t-in'); if(eins.length) eins[eins.length-1].focus(); return; }
-      if(e.target.id==='matEditBack'){ exitPanelEdit(true); return; }
-      if(e.target.id==='matClose2'){ if(editTarget) exitPanelEdit(false); matOvl.classList.remove('show'); return; }
-      if(e.target===matOvl){ if(!editTarget){ matOvl.classList.remove('show'); } return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ if(editTarget) exitPanelEdit(false); var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); if(which==='mat') renderMatList(); return; }
+      if(e.target.id==='matClose2'){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } matOvl.classList.remove('show'); return; }
+      if(e.target===matOvl){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } matOvl.classList.remove('show'); return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); if(which==='mat') renderMatList(); return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
       var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); render(); persist(); return; }
@@ -2032,7 +2039,6 @@
       if(e.target.id==='npcAdd'){ var nb={id:nid(),name:''}; state.npcs.push(nb); npcExpanded[nb.id]=true; renderNpcList(); persist(); var nin=matOvl.querySelectorAll('.npc-name'); if(nin.length) nin[nin.length-1].focus(); return; }
     });
   }
-  (function(){ var bar=document.getElementById('editTargetBar'); if(bar) bar.addEventListener('click',function(e){ if(e.target.closest('#editBackBtn')) exitEntryEdit(); }); })();
   var NPC_CHARS=[['str','STR'],['con','CON'],['pow','POW'],['dex','DEX'],['app','APP'],['siz','SIZ'],['int','INT'],['edu','EDU']];
   function npcHp(con,siz){ if((con==null||con==='')&&(siz==null||siz==='')) return ''; return Math.round(((+con||0)+(+siz||0))/2); }
   function npcMp(pow){ return (pow==null||pow==='')?'':(+pow||0); }
@@ -3302,7 +3308,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24b データ・イベントをパネル内で本文と同じ記法で編集'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24c データ・イベントを折り畳み＋一覧内でその場編集'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
