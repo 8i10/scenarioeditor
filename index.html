@@ -657,7 +657,7 @@
 <div class="ovl fpage" id="matOvl">
   <div class="dlg fdlg">
     <div class="fpg-head"><span class="fpg-ttl">データ（この作品）</span><span style="margin-left:auto;display:flex;gap:8px"><button class="hb2" id="matClose2">✕ 閉じる</button></span></div>
-    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="evt">イベント・質問</button><button class="mat-tab" data-tab="pc">参加PC</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
+    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="evt">イベント・質問</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
     <div class="mat-scroll">
       <div class="mat-inner">
         <div class="mat-pane" data-pane="npc">
@@ -675,14 +675,6 @@
           <div class="fhint">イベントや質問（Q&amp;A）を登録できます。閲覧用HTMLの「💡 イベント・質問」パネルに表示されます。</div>
           <div id="evtList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
           <div class="frow"><button class="hb2" id="evtAdd">＋ イベント・質問を追加</button></div>
-        </div>
-        <div class="mat-pane" data-pane="pc" style="display:none">
-          <div class="fhint">ココフォリアの駒、いあきゃら・キャラシート保管所・きゃらえの・ゆとシート（SW2.5／DX3rd）などの「コマ出力（JSON）」を貼り付けて、参加PCの情報を取り込めます。閲覧用HTMLの「👥 参加PC」パネルに表示されます。</div>
-          <textarea id="pcPaste" class="npc-ta" placeholder="ここにコマ出力（JSON）を貼り付け" rows="3" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);padding:8px 10px;font-size:12px;font-family:inherit;margin:6px 0"></textarea>
-          <div class="frow" style="gap:6px;flex-wrap:wrap;margin:0 0 4px"><button class="hb2" id="pcAddPaste">＋ 貼り付けから追加</button><button class="hb2" id="pcAddClip">📋 クリップボードから追加</button><button class="hb2" id="pcAddFile">🗎 TXT/JSON追加</button></div>
-          <div class="frow" style="gap:6px;margin:0 0 0"><button class="hb2" id="pcAllOpen">すべて開く</button><button class="hb2" id="pcAllClose">すべて畳む</button></div>
-          <div id="pcList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
-          <div class="frow"><button class="hb2" id="pcAddBlank">＋ 空のPCを追加</button></div>
         </div>
         <div class="mat-pane" data-pane="ruby" style="display:none">
           <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
@@ -810,6 +802,31 @@
   function entryId(pfx){ return pfx+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
   var COPY_ICON='<svg class="cpi" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>';
   var CHECK_ICON='<svg class="cki" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a9e4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+  /* 閲覧用HTMLの「参加PC」パネル実行スクリプト（端末ローカル保存） */
+  var PCVIEWER = [
+    'var panel=document.getElementById("pcPanel"),bodyEl=document.getElementById("pcBody"),ta=document.getElementById("pcPaste"),ap=document.getElementById("pcAddPaste"),ac=document.getElementById("pcAddClip"),af=document.getElementById("pcAddFile");',
+    'if(panel&&bodyEl){',
+    'var pcs=[];try{pcs=JSON.parse(localStorage.getItem(PKEY)||"[]")||[];}catch(e){pcs=[];}',
+    'function save(){try{localStorage.setItem(PKEY,JSON.stringify(pcs));}catch(e){}}',
+    'function eH(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}',
+    'function nI(v){var x=parseInt(v,10);return isNaN(x)?null:x;}',
+    'function dHp(c,s){c=nI(c);s=nI(s);if(c==null&&s==null)return "";return Math.round(((c||0)+(s||0))/2);}',
+    'function dDb(st,sz){st=nI(st);sz=nI(sz);if(st==null&&sz==null)return "";var s=(st||0)+(sz||0);if(s<=12)return "-1D6";if(s<=16)return "-1D4";if(s<=24)return "0";if(s<=32)return "+1D4";if(s<=40)return "+1D6";if(s<=56)return "+2D6";return "+"+(2+Math.floor((s-57)/16)+1)+"D6";}',
+    'function dv(n,k){if(n[k]!=null&&n[k]!=="")return n[k];var iv=nI(n.int),pv=nI(n.pow),ev=nI(n.edu);if(k==="idea")return iv!=null?iv*5:"";if(k==="luck")return pv!=null?pv*5:"";if(k==="know")return ev!=null?ev*5:"";if(k==="san")return pv!=null?pv*5:"";if(k==="hp")return dHp(n.con,n.siz);if(k==="mp")return pv!=null?pv:"";if(k==="db")return dDb(n.str,n.siz);return n[k]!=null?n[k]:"";}',
+    'function pSkills(cmds){var out=[];(cmds||"").split(/\\r?\\n/).forEach(function(ln){ln=(ln||"").trim();if(!ln)return;var pct=null;var m=ln.match(/(?:<=|\u2266|\u2264|\uFF1C\uFF1D|\\(|\\uFF08)\\s*([0-9]{1,3})/);if(m)pct=m[1];var nm="";var b=ln.match(/[\u3010\u300A\u300C\\[]([^\u3011\u300B\u300D\\]]+)[\u3011\u300B\u300D\\]]/);if(b){nm=b[1];}else{nm=ln.replace(/^[0-9DdedKkCcBb()\uFF08\uFF09<>=\u2266\u2264\\s\\+\\-\\*]+/,"").replace(/[0-9\\s<>=\u2266\u2264\uFF08\uFF09()%\uFF05\\+\\-\\*]+$/,"").trim();}if(nm&&!/^[0-9dD\\s\\+\\-\\*]+$/.test(nm))out.push({name:nm,val:pct==null?"":pct});});return out;}',
+    'function parse(text){if(!text)return null;var data=null;try{var j=JSON.parse(text);if(Array.isArray(j))j=j[0];if(j&&j.kind==="character"&&j.data)data=j.data;else if(j&&(j.params||j.status||j.name!=null))data=j.data||j;}catch(e){return null;}if(!data)return null;var P={},S={};(data.params||[]).forEach(function(p){if(p&&p.label!=null)P[String(p.label).toUpperCase().replace(/\\s/g,"")]=p.value;});(data.status||[]).forEach(function(s){if(s&&s.label!=null)S[String(s.label).toUpperCase().replace(/\\s/g,"")]=s.value;});function pk(o,ks){for(var i=0;i<ks.length;i++){if(o[ks[i]]!=null&&o[ks[i]]!=="")return o[ks[i]];}return "";}var pc={id:"pc"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:data.name||"PC",color:data.color||"",ho:"",str:pk(P,["STR"]),con:pk(P,["CON"]),pow:pk(P,["POW"]),dex:pk(P,["DEX"]),app:pk(P,["APP"]),siz:pk(P,["SIZ"]),int:pk(P,["INT"]),edu:pk(P,["EDU"]),db:pk(P,["DB"]),hp:pk(S,["HP"]),mp:pk(S,["MP"]),san:pk(S,["SAN","\u6B63\u6C17\u5EA6","SANITY"]),armor:pk(S,["\u88C5\u7532","ARMOR"]),idea:pk(P,["\u30A2\u30A4\u30C7\u30A2","IDEA"]),luck:pk(P,["\u5E78\u904B","LUCK"]),know:pk(P,["\u77E5\u8B58","KNOW"]),commands:data.commands||"",memo:data.memo||""};pc.skills=pSkills(pc.commands);return pc;}',
+    'function sp(l,v){return "<span class=\\"npc-stat\\"><b class=\\"npc-k\\">\uFF1C"+l+"\uFF1E</b>"+eH(String(v))+"</span>";}',
+    'function det(lbl,v,cp){if(!v)return "";var c=cp?"<button class=\\"npc-copy\\" data-cp=\\""+encodeURIComponent(v)+"\\" title=\\"\u5185\u5BB9\u3092\u30B3\u30D4\u30FC\\">"+CPIC+"</button>":"";return "<details class=\\"npc-pd\\" open><summary>"+eH(lbl)+c+"</summary><div class=\\"npc-pdb\\">"+eH(v).replace(/\\n/g,"<br>")+"</div></details>";}',
+    'function card(n){var chars=[["STR",n.str],["CON",n.con],["POW",n.pow],["DEX",n.dex],["APP",n.app],["SIZ",n.siz],["INT",n.int],["EDU",n.edu]].filter(function(s){return s[1]!=null&&s[1]!=="";});var der=[["SAN",dv(n,"san")],["HP",dv(n,"hp")],["MP",dv(n,"mp")],["DB",dv(n,"db")],["\u88C5\u7532",n.armor],["\u30A2\u30A4\u30C7\u30A2",dv(n,"idea")],["\u5E78\u904B",dv(n,"luck")],["\u77E5\u8B58",dv(n,"know")]].filter(function(s){return s[1]!=null&&s[1]!=="";});var rows="";for(var i=0;i<chars.length;i+=4){rows+="<div class=\\"npc-statrow\\">"+chars.slice(i,i+4).map(function(s){return sp(s[0],s[1]);}).join("")+"</div>";}for(var j=0;j<der.length;j+=4){rows+="<div class=\\"npc-statrow npc-drow\\">"+der.slice(j,j+4).map(function(s){return sp(s[0],s[1]);}).join("")+"</div>";}var sk=(n.skills||[]).filter(function(s){return s&&s.name;});var skh="";if(sk.length){skh="<div class=\\"pc-skh\\">\u6280\u80FD</div><div class=\\"pc-skgrid\\">"+sk.map(function(s){var v=(s.val!=null&&s.val!=="")?("<span class=\\"pc-skv\\">"+eH(String(s.val))+(/[%\uFF05]/.test(String(s.val))?"":"%")+"</span>"):"";return "<span class=\\"pc-skc\\"><span class=\\"pc-skn\\">"+eH(s.name)+"</span>"+v+"</span>";}).join("")+"</div>";}var f=det("\u30C1\u30E3\u30D1\u30EC",n.commands,true)+det("\u30E1\u30E2",n.memo,false);var ho=n.ho?"<span class=\\"pc-ho\\">"+eH(n.ho)+"</span>":"";var mk=n.color?" style=\\"--mk:"+eH(n.color)+"\\"":"";return "<details class=\\"mat-item npc-item pc-item\\" open><summary class=\\"mat-isum\\""+mk+">"+eH(n.name||"PC")+ho+"<span class=\\"npc-sp\\"></span><button class=\\"pc-del\\" data-id=\\""+n.id+"\\" title=\\"\u524A\u9664\\">\uD83D\uDDD1</button></summary><div class=\\"npc-item-body\\">"+rows+skh+f+"</div></details>";}',
+    'function render(){bodyEl.innerHTML=pcs.length?pcs.map(card).join(""):"<div class=\\"clip-empty\\">\u53C2\u52A0PC\u306E\u30B3\u30DE\u51FA\u529B\uFF08JSON\uFF09\u3092\u8CBC\u308A\u4ED8\u3051\u3066\u300C\uFF0B \u8CBC\u308A\u4ED8\u3051\u304B\u3089\u8FFD\u52A0\u300D\u3067\u767B\u9332\u3067\u304D\u307E\u3059\u3002</div>";}',
+    'function addText(t){var pc=parse(t);if(!pc){alert("\u30B3\u30DE\u51FA\u529B\uFF08JSON\uFF09\u3068\u3057\u3066\u8AAD\u307F\u53D6\u308C\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u30B3\u30B3\u30D5\u30A9\u30EA\u30A2\u306E\u99D2\u3084\u3044\u3042\u304D\u3083\u3089\u7B49\u306E\u300C\u30B3\u30DE\u51FA\u529B\u300D\u3092\u8CBC\u308A\u4ED8\u3051\u3066\u304F\u3060\u3055\u3044\u3002");return false;}pcs.push(pc);save();render();if(panel){panel.classList.add("open");}if(typeof syncRP==="function")syncRP();return true;}',
+    'if(ap)ap.onclick=function(){if(!ta||!(ta.value||"").trim()){alert("\u30C6\u30AD\u30B9\u30C8\u6B04\u306B\u8CBC\u308A\u4ED8\u3051\u3066\u304F\u3060\u3055\u3044\u3002");return;}if(addText(ta.value))ta.value="";};',
+    'if(ac)ac.onclick=function(){if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(addText,function(){alert("\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u3092\u8AAD\u307F\u53D6\u308C\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u30C6\u30AD\u30B9\u30C8\u6B04\u306B\u8CBC\u308A\u4ED8\u3051\u3066\u304F\u3060\u3055\u3044\u3002");});}else{alert("\u3053\u306E\u74B0\u5883\u3067\u306F\u30AF\u30EA\u30C3\u30D7\u30DC\u30FC\u30C9\u8AAD\u307F\u53D6\u308A\u304C\u4F7F\u3048\u307E\u305B\u3093\u3002\u30C6\u30AD\u30B9\u30C8\u6B04\u306B\u8CBC\u308A\u4ED8\u3051\u3066\u304F\u3060\u3055\u3044\u3002");}};',
+    'if(af)af.onclick=function(){var inp=document.createElement("input");inp.type="file";inp.accept=".json,.txt,application/json,text/plain";inp.onchange=function(){var fl=inp.files&&inp.files[0];if(!fl)return;var rd=new FileReader();rd.onload=function(){addText(String(rd.result||""));};rd.readAsText(fl);};inp.click();};',
+    'bodyEl.addEventListener("click",function(e){var d=e.target.closest&&e.target.closest(".pc-del");if(d){e.preventDefault();e.stopPropagation();var id=d.getAttribute("data-id");if(confirm("\u3053\u306EPC\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F")){pcs=pcs.filter(function(x){return x.id!==id;});save();render();}return;}});',
+    'render();',
+    '}'
+  ].join('');
   var state=normalizeState({ id:'', name:'無題のシナリオ', theme:'light', fs:'sm', outlineOpen:true, rightMenu:false, headBg:'#000000', font:'', embedFonts:false, pagelines:false, colline:true, ruby:[], blocks:[] });
   var uid=0; function nid(){ return 'b'+(++uid)+'_'+Math.random().toString(36).slice(2,7); }
   function docId(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -2585,7 +2602,7 @@
       +'<div class="seg" id="vFs"><button data-fs="xs"'+fsXs+'>極小</button><button data-fs="sm"'+fsSm+'>小</button><button data-fs="md"'+fsMd+'>中</button></div>'
       +(((state.materials||[]).filter(function(m){return (m&&((m.title&&m.title.trim())||(m.blocks&&m.blocks.length)||m.body));}).length || (state.npcs||[]).filter(function(n){return (n.name||n.notes||n.str||n.chat||n.skills||n.policy);}).length)?'<button class="hbtn vhb-emoji" id="vMat" title="データ">📚</button>':'')
       +((state.events||[]).filter(function(ev){return (ev&&((ev.title&&ev.title.trim())||(ev.blocks&&ev.blocks.length)||ev.body));}).length?'<button class="hbtn vhb-emoji" id="vEvt" title="イベント・質問">💡</button>':'')
-      +((state.pcs||[]).filter(function(p){return p&&(p.name||p.str||p.commands||(p.skills&&p.skills.length)||p.memo);}).length?'<button class="hbtn vhb-emoji" id="vPc" title="参加PC">👥</button>':'')
+      +'<button class="hbtn vhb-emoji" id="vPc" title="参加PC">👥</button>'
       +'<button class="hbtn vhb-emoji" id="vClip" title="本文コピー">📋</button></div>';
     var nav='<nav class="outline open" id="vOutlineNav"><div class="ol-search"><input type="search" id="olSearch" placeholder="🔍 データ内検索" autocomplete="off"><span class="ol-scount" id="olSCount"></span></div>'+olHTML+'</nav>';
     var ptHTML='<div class="print-toc">'+(state.pages||[]).map(function(p){ var its=headingsOf(p.blocks); return '<div class="pt-p">'+esc(p.name||'ページ')+'</div>'+its.map(function(it){return '<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>';}).join(''); }).join('')+'</div>';
@@ -2608,8 +2625,11 @@
     var evts=(state.events||[]).filter(entryHasContent);
     var evtInner=evts.map(function(ev,i){ return '<details class="mat-item"'+(ev.vopen===false?'':' open')+'><summary class="mat-isum">'+esc(ev.title||('項目'+(i+1)))+'</summary><div class="mat-body">'+entryInnerHTML(ev)+'</div></details>'; }).join('');
     var evtHTML = evts.length ? applyRubyToHTML('<aside class="mat-panel" id="evtPanel"><div class="mat-phead">💡 イベント・質問<button class="mat-x" id="evtPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+evtInner+'</div></aside>') : '';
-    var pcs=(state.pcs||[]).filter(function(p){ return p && (p.name||p.str||p.commands||(p.skills&&p.skills.length)||p.memo); });
-    var pcHTML = pcs.length ? applyRubyToHTML('<aside class="mat-panel" id="pcPanel"><div class="mat-phead">👥 参加PC<button class="mat-x" id="pcPClose" aria-label="閉じる">×</button></div><div class="mat-pbody">'+pcs.map(pcPanelHTML).join('')+'</div></aside>') : '';
+    var pcHTML = '<aside class="mat-panel clip-panel" id="pcPanel"><div class="mat-phead">👥 参加PC<button class="mat-x" id="pcPClose" aria-label="閉じる">×</button></div>'
+      +'<div class="clip-add pc-add"><textarea id="pcPaste" class="pc-paste" placeholder="ココフォリアの駒・いあきゃら等のコマ出力（JSON）を貼り付け"></textarea>'
+      +'<button class="clip-addbtn" id="pcAddPaste">＋ 貼り付けから追加</button><button class="clip-addbtn" id="pcAddClip">📋 クリップボードから追加</button><button class="clip-addbtn" id="pcAddFile">🗎 TXT/JSON追加</button>'
+      +'<div class="clip-hint">各自のPCのコマ出力（JSON）を貼り付けて追加できます。登録はこの端末にのみ保存されます。</div></div>'
+      +'<div class="mat-pbody" id="pcBody"></div></aside>';
     var clipHTML='<aside class="mat-panel clip-panel" id="clipPanel"><div class="mat-phead">本文コピー<button class="mat-x" id="clipPClose" aria-label="閉じる">×</button></div>'
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button><button class="clip-reset" id="clipResetCopied" title="コピー状況をリセット" aria-label="コピー状況をリセット"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg></button></div>'
       +'<div class="mat-pbody" id="clipBody"></div></aside>';
@@ -2657,6 +2677,9 @@
       +' .clip-item.clip-copied .clip-cmark{display:inline}'
       +' .clip-item.clip-copied{opacity:.72;border-color:#9bd3af}'
       +' .clip-add .clip-hint{flex-basis:100%;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}'
+      +' .pc-add .pc-paste{flex-basis:100%;width:100%;box-sizing:border-box;min-height:52px;max-height:160px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical;margin:0 0 2px}'
+      +' .pc-add .clip-addbtn{min-width:96px}'
+      +' .pc-item>summary .pc-del{border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;padding:1px 7px;margin-left:auto}'
       +' .clip-folder{margin:0 0 2px}'
       +' .clip-h1 .tgl,.clip-h2 .tgl{cursor:pointer}'
       +' .clip-fname{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 6px;font-size:.95em;font-weight:800;font-family:inherit;-webkit-user-select:text;user-select:text;cursor:text}'
@@ -2819,6 +2842,7 @@
       +'bodyEl.addEventListener("dragend",function(){drag=null;[].forEach.call(bodyEl.querySelectorAll(".dragover"),function(x){x.classList.remove("dragover");});});}'
       +'render();})();'
       +'document.addEventListener("click",function(e){var cp=e.target.closest&&e.target.closest(".npc-copy");if(!cp)return;e.preventDefault();e.stopPropagation();var t=decodeURIComponent(cp.getAttribute("data-cp")||"");var done=function(){if(!cp.classList.contains("copied"))cp.setAttribute("data-oic",cp.innerHTML);cp.classList.add("copied");cp.innerHTML=CK;clearTimeout(cp._ct);cp._ct=setTimeout(function(){cp.innerHTML=cp.getAttribute("data-oic")||"";cp.classList.remove("copied");},1300);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){});}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);done();}},true);'
+      +'(function(){var PKEY='+JSON.stringify('pc:'+(state.id||state.name||'scn'))+';'+PCVIEWER+'})();'
       +'document.addEventListener("mouseover",function(e){var t=e.target.closest&&e.target.closest(".ruby-t");if(!t)return;var r=t.getBoundingClientRect();t.classList.toggle("rb-below",r.top<104);},true);'
       +'(function(){var inp=document.getElementById("olSearch");if(!inp)return;var cnt=document.getElementById("olSCount");var marks=[],idx=-1;'
       +'function clearHits(){marks.forEach(function(m){var p=m.parentNode;if(p){p.replaceChild(document.createTextNode(m.textContent),m);p.normalize();}});marks=[];idx=-1;}'
@@ -3437,7 +3461,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24e 情報枠コピーをホバー化／初期開閉設定／本文コピー記録・リセット／参加PCタブ'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24f 参加PCを閲覧側パネルに移動（コマJSON取込・端末保存）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
