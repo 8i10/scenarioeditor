@@ -401,6 +401,19 @@
   .mat-tabs-fp{flex:none;margin:0;padding:0 16px;background:var(--card);overflow-x:auto}
   .mat-scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg)}
   .mat-inner{max-width:720px;margin:0 auto;padding:16px 16px 60px}
+  /* データパネルを上ツールバーの下・右パレットの左に収め、閲覧編集と一体化 */
+  #matOvl{top:var(--topbar-h,92px);bottom:0;left:0;right:0}
+  @media (min-width:821px){ body.rb-open #matOvl{right:212px} }
+  #matEditPane{flex:1;min-height:0;display:none;flex-direction:column;background:var(--bg)}
+  #matOvl.editing #matEditPane{display:flex}
+  #matOvl.editing .mat-scroll{display:none}
+  .mat-edit-bar{flex:none;display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--accent2,#8a6d3b);color:#fff;font-size:13px}
+  .mat-edit-bar .hb2{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;font-weight:700}
+  .mat-edit-bar .hb2:hover{background:rgba(255,255,255,.3)}
+  .mat-edit-bar .mat-edit-ttl{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mat-edit-bar .mat-edit-kind{display:inline-block;background:rgba(0,0,0,.22);border-radius:5px;padding:1px 7px;margin-right:7px;font-size:11px;font-weight:700}
+  .mat-edit-scroll{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+  #matEditPane .wrap{min-height:0;margin-left:auto!important;margin-right:auto!important;max-width:min(794px,100%)!important}
   .mat-tab{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 12px;cursor:pointer;font-family:inherit}
   .mat-tab.on{color:var(--text);border-bottom-color:var(--accent2)}
   .npc-grid{display:grid;gap:5px}
@@ -663,6 +676,10 @@
         </div>
       </div>
     </div>
+    <div id="matEditPane">
+      <div class="mat-edit-bar"><button class="hb2" id="matEditBack">◀ 一覧に戻る</button><span class="mat-edit-ttl" id="matEditTtl"></span></div>
+      <div class="mat-edit-scroll"><div class="wrap" id="matEditWrap"></div></div>
+    </div>
   </div>
 </div>
 <div class="ovl fpage" id="fileOvl">
@@ -917,7 +934,8 @@
   function applyColLine(){ var on=state.colline!==false; [].forEach.call(doc.querySelectorAll('.cols-row'),function(r){ r.classList.toggle('colline',on); }); var b=document.getElementById('btnColLine'); if(b) b.classList.toggle('on',on); }
   function applyPageLines(){
     var b=document.getElementById('btnPageLines'); if(b) b.textContent=(state.pagelines?'ページ区切りを非表示':'ページ区切りを表示');
-    var wrap=document.querySelector('.wrap'); if(!wrap) return;
+    if(editTarget){ var ov0=document.getElementById('pageOverlay'); if(ov0&&ov0.parentNode) ov0.parentNode.removeChild(ov0); return; }
+    var wrap=scenarioWrapEl(); if(!wrap) return;
     var ov=document.getElementById('pageOverlay');
     if(!state.pagelines){ if(ov) ov.parentNode.removeChild(ov); wrap.style.minHeight=''; return; }
     if(!ov){ ov=document.createElement('div'); ov.id='pageOverlay'; ov.setAttribute('contenteditable','false'); wrap.insertBefore(ov, wrap.firstChild); }
@@ -993,7 +1011,7 @@
   }
   function addPage(){
     var np={ id:pageId(), name:'新規ページ', blocks:[ newBlock('h1',''), newBlock('p','') ] };
-    beforePageChange(); editTarget=null; updateEditBar();
+    beforePageChange(); detachEntryEdit();
     state.pages.splice(curPageIdx()+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
     render(); applyOutline(); renderOutline(); window.scrollTo(0,0); afterPageChange();
     var be=doc.querySelector('.be'); if(be) setCaretStart(be); persist();
@@ -1002,18 +1020,22 @@
     var src=null, idx=-1;
     (state.pages||[]).forEach(function(p,i){ if(p.id===id){ src=p; idx=i; } });
     if(!src) return;
-    beforePageChange(); editTarget=null; updateEditBar();
+    beforePageChange(); detachEntryEdit();
     var np={ id:pageId(), name:(src.name||'ページ')+' のコピー', blocks:cloneBlocksNewIds(src.blocks||[]) };
     state.pages.splice(idx+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
     render(); applyOutline(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist();
   }
-  function switchPage(id){ if(!(state.pages||[]).some(function(p){return p.id===id;})) return; if(id===state.curPage && !editTarget) return; beforePageChange(); editTarget=null; updateEditBar(); state.curPage=id; render(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist(); }
+  function switchPage(id){ if(!(state.pages||[]).some(function(p){return p.id===id;})) return; if(id===state.curPage && !editTarget) return; beforePageChange(); detachEntryEdit(); state.curPage=id; render(); renderOutline(); window.scrollTo(0,0); afterPageChange(); persist(); }
   function renamePage(id){ var p=null; (state.pages||[]).forEach(function(x){if(x.id===id)p=x;}); if(!p) return; var nm=prompt('ページ名を入力', p.name); if(nm==null) return; p.name=(nm.trim()||p.name); renderOutline(); persist(); }
   function deletePage(id){ if((state.pages||[]).length<=1){ alert('最後のページは削除できません。'); return; } if(!confirm('このページを削除しますか？（元に戻せません）')) return; beforePageChange(); var i=-1; state.pages.forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; state.pages.splice(i,1); if(state.curPage===id) state.curPage=state.pages[Math.max(0,i-1)].id; render(); renderOutline(); afterPageChange(); persist(); }
   function movePage(id,dir){ var i=-1; (state.pages||[]).forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; var j=i+dir; if(j<0||j>=state.pages.length) return; var t=state.pages[i]; state.pages[i]=state.pages[j]; state.pages[j]=t; renderOutline(); persist(); }
-  function updateEditBar(){ var bar=document.getElementById('editTargetBar'); if(!bar) return; if(editTarget){ var et=editTargetObj(); var kindLbl=(editTarget.kind==='data')?'データ':'イベント・質問'; var nm=(et&&(et.title||'').trim())||'(無題)'; bar.innerHTML='<button class="hb2" id="editBackBtn">◀ シナリオ本文に戻る</button><span class="etb-label"><span class="etb-kind">'+kindLbl+'</span>'+esc(nm)+' を編集中</span>'; bar.style.display='flex'; } else { bar.style.display='none'; bar.innerHTML=''; } }
-  function openEntryEdit(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(matOvl) matOvl.classList.remove('show'); render(); applyOutline(); renderOutline(); updateEditBar(); window.scrollTo(0,0); var be=doc.querySelector('.be'); if(be&&typeof setCaretStart==='function') setCaretStart(be); afterPageChange(); persist(); }
-  function exitEntryEdit(){ if(!editTarget) return; beforePageChange(); editTarget=null; render(); applyOutline(); renderOutline(); updateEditBar(); try{ renderMatList(); renderEvtList(); }catch(_){} window.scrollTo(0,0); afterPageChange(); }
+  function updateEditBar(){ var bar=document.getElementById('editTargetBar'); if(bar){ bar.style.display='none'; bar.innerHTML=''; } }
+  function scenarioWrapEl(){ var pt=document.getElementById('printToc'); return pt?pt.parentNode:document.querySelector('.wrap'); }
+  function showMatTab(which){ if(!matOvl) return; [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===which); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc')renderNpcList(); if(which==='mat')renderMatList(); if(which==='evt')renderEvtList(); if(which==='ruby')renderRubyList(); }
+  function detachEntryEdit(){ if(!editTarget) return; var sw=scenarioWrapEl(); if(sw&&doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing','show'); editTarget=null; }
+  function openEntryEdit(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(matOvl){ matOvl.classList.add('show'); matOvl.classList.add('editing'); } var mount=document.getElementById('matEditWrap'); if(mount && doc.parentNode!==mount) mount.appendChild(doc); var ttl=document.getElementById('matEditTtl'); if(ttl){ var kindLbl=(kind==='data')?'データ':'イベント・質問'; var nm=(found.title||'').trim()||'(無題)'; ttl.innerHTML='<span class="mat-edit-kind">'+kindLbl+'</span>'+esc(nm)+' を編集中'; } render(); applyFs(); applyFont(); var sc=matOvl?matOvl.querySelector('.mat-edit-scroll'):null; if(sc) sc.scrollTop=0; var be=doc.querySelector('.be'); if(be&&typeof setCaretStart==='function') setCaretStart(be); afterPageChange(); persist(); }
+  function exitPanelEdit(reopenList){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); editTarget=null; var sw=scenarioWrapEl(); if(sw && doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing'); render(); applyFs(); applyFont(); try{ renderMatList(); renderEvtList(); }catch(_){} afterPageChange(); if(reopenList) showMatTab(kind==='data'?'mat':'evt'); }
+  function exitEntryEdit(){ exitPanelEdit(true); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
   function deleteDoc(id){
     var idx=readIndex(), e=null; for(var i=0;i<idx.length;i++){ if(idx[i].id===id){ e=idx[i]; break; } }
@@ -1705,7 +1727,7 @@
     syncSelectionHtml();
     persist(); return true;
   }
-  function gotoHeading(id){ var pg=pageOfBlock(id); if(pg){ olOpen[pg.id]=true; if(pg.id!==state.curPage||editTarget){ beforePageChange(); editTarget=null; updateEditBar(); state.curPage=pg.id; render(); afterPageChange(); } renderOutline(); } expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function gotoHeading(id){ var pg=pageOfBlock(id); if(pg){ olOpen[pg.id]=true; if(pg.id!==state.curPage||editTarget){ beforePageChange(); detachEntryEdit(); state.curPage=pg.id; render(); afterPageChange(); } renderOutline(); } expandTo(id); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
   doc.addEventListener('click',function(e){ var a=e.target.closest('.hlink'); if(a){ e.preventDefault(); var id=a.getAttribute('data-h'); if(id) gotoHeading(id); } });
   function wrapSelectionFont(fontValue){
     doc.focus();
@@ -1995,8 +2017,10 @@
       var eup=e.target.closest('.evt-up'); if(eup){ var evi=+eup.getAttribute('data-i'); if(evi>0){ var ea=state.events; var etmp=ea[evi-1]; ea[evi-1]=ea[evi]; ea[evi]=etmp; renderEvtList(); persist(); } return; }
       var edn=e.target.closest('.evt-dn'); if(edn){ var evj=+edn.getAttribute('data-i'); var ea2=state.events; if(evj<ea2.length-1){ var et2=ea2[evj+1]; ea2[evj+1]=ea2[evj]; ea2[evj]=et2; renderEvtList(); persist(); } return; }
       if(e.target.id==='evtAdd'){ state.events.push({id:entryId('ev'),title:'',blocks:[]}); renderEvtList(); persist(); var eins=matOvl.querySelectorAll('.evt-t-in'); if(eins.length) eins[eins.length-1].focus(); return; }
-      if(e.target.id==='matClose2' || e.target===matOvl){ matOvl.classList.remove('show'); return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); return; }
+      if(e.target.id==='matEditBack'){ exitPanelEdit(true); return; }
+      if(e.target.id==='matClose2'){ if(editTarget) exitPanelEdit(false); matOvl.classList.remove('show'); return; }
+      if(e.target===matOvl){ if(!editTarget){ matOvl.classList.remove('show'); } return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ if(editTarget) exitPanelEdit(false); var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); if(which==='mat') renderMatList(); return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
       var ncc=e.target.closest('.npc-cc'); if(ncc){ var ci=+ncc.getAttribute('data-i'); state.npcs[ci]=state.npcs[ci]||{name:''}; state.npcs[ci].color=ncc.getAttribute('data-c')||''; renderNpcList(); render(); persist(); return; }
@@ -2171,7 +2195,7 @@
   function applyTheme(){ root.setAttribute('data-theme',state.theme); document.getElementById('btnTheme').textContent=state.theme==='dark'?'☀ ライト':'🌙 ダーク'; applyBgColor(); }
   function applyBgColor(){ if(state.bgColor){ root.style.setProperty('--bg',state.bgColor); } else { root.style.removeProperty('--bg'); } var bp=document.getElementById('bgColorPick'); if(bp && state.bgColor) bp.value=state.bgColor; }
   var FS={xs:0.66,sm:0.8,md:1};
-  function applyFs(){ document.querySelector('.wrap').style.setProperty('--fs',FS[state.fs]); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
+  function applyFs(){ document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--fs',FS[state.fs]); }); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
   var GOTHIC='"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif';
   var FONTS=[
     {n:'ゴシック（既定）', v:GOTHIC},
@@ -2191,7 +2215,7 @@
     {n:'システムフォント', v:'system-ui,-apple-system,sans-serif'}
   ];
   function applyFont(){
-    var w=document.querySelector('.wrap'); if(w) w.style.setProperty('--doc-font', state.font||GOTHIC);
+    document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--doc-font', state.font||GOTHIC); });
     var sel=document.getElementById('fontSel'); if(sel && [].some.call(sel.options,function(o){return o.value===(state.font||GOTHIC);})) sel.value=state.font||GOTHIC;
     var eb=document.getElementById('embedFonts'); if(eb) eb.checked=!!state.embedFonts;
   }
@@ -3278,7 +3302,7 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24a データ・イベントを本文エディタで編集（フル記法）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24b データ・イベントをパネル内で本文と同じ記法で編集'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
