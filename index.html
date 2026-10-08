@@ -407,6 +407,10 @@
   .entry-prev:hover{background:var(--hover)}
   .entry-prev-empty{color:var(--muted);opacity:.7}
   .entry-inline{padding:8px 14px 20px!important;margin:0!important;max-width:100%!important;width:100%!important;min-height:120px}
+  #selReg{position:fixed;z-index:9997;display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,.22)}
+  #selReg .selreg-btn{border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;font-weight:700;padding:5px 9px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  #selReg .selreg-btn:hover{background:var(--hover);border-color:var(--accent2)}
+  #selReg .selreg-btn.done{color:#1a9e4b;border-color:#1a9e4b}
   .vopen-btn{flex:0 0 auto;font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--muted);padding:0 7px;height:30px;cursor:pointer;white-space:nowrap}
   .vopen-btn.on{color:#fff;background:var(--accent2);border-color:var(--accent2)}
   .pc-skills{display:flex;flex-direction:column;gap:5px;margin:4px 0 2px}
@@ -736,6 +740,7 @@
 </div>
 
 <div class="wrap"><div class="print-toc" id="printToc"></div><div class="doc" id="doc" contenteditable="true" spellcheck="false"></div></div>
+<div id="selReg" style="display:none"><button class="selreg-btn" id="selRegMat" title="選択範囲をデータに登録">📚 データに登録</button><button class="selreg-btn" id="selRegEvt" title="選択範囲をイベント・質問に登録">💡 イベント・質問に登録</button></div>
 <div class="menu" id="menu"></div>
 
 <script>
@@ -3468,7 +3473,40 @@
   })();
   function normBreaks(){ (state.pages||[]).forEach(function(pg){ (function proc(arr){ for(var i=0;i<arr.length;i++){ var b=arr[i]; if(b.children) proc(b.children); if(b.html && /<br\b/i.test(b.html)){ var segs=splitHtmlByBr(b.html); if(segs.length>1){ b.html=sanitize(segs[0]); var at=i+1; for(var k=1;k<segs.length;k++){ arr.splice(at,0,newBlock('p',sanitize(segs[k]))); at++; } i=at-1; } } } })(pg.blocks||[]); }); }
   normBreaks(); /* 表示用の正規化のみ。state.updatedを動かすと同期の新旧判定が狂うためpersist/pushはしない */
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24h 参加PC：技能は初期値超のみ／ゼブラ薄く／追加はクリップボードのみ'; })();
+  /* ---- 本文の選択範囲を データ／イベント・質問 に登録 ---- */
+  (function(){
+    var pop=document.getElementById('selReg'); if(!pop||!doc) return;
+    var matBtn=document.getElementById('selRegMat'), evtBtn=document.getElementById('selRegEvt');
+    function selInDoc(){ var s=window.getSelection(); if(!s||!s.rangeCount||s.isCollapsed) return null; var r=s.getRangeAt(0); if(!doc.contains(r.commonAncestorContainer)) return null; if((s.toString()||'').replace(/\s+/g,'')==='') return null; return r; }
+    function hide(){ pop.style.display='none'; }
+    function showAt(r){ pop.style.display='flex'; pop.style.visibility='hidden'; var rect=r.getBoundingClientRect(); var pw=pop.offsetWidth, ph=pop.offsetHeight; var left=rect.left+rect.width/2-pw/2; left=Math.max(8,Math.min(left,window.innerWidth-pw-8)); var tb=(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'),10)||92); var top=rect.top-ph-8; if(top<tb+4) top=rect.bottom+8; pop.style.left=Math.round(left)+'px'; pop.style.top=Math.round(top)+'px'; pop.style.visibility=''; }
+    function update(){ if(editTarget){ hide(); return; } var r=selInDoc(); if(r) showAt(r); else hide(); }
+    doc.addEventListener('mouseup', function(){ setTimeout(update,0); });
+    doc.addEventListener('keyup', function(){ setTimeout(update,0); });
+    document.addEventListener('mousedown', function(e){ if(pop.contains(e.target)) return; hide(); });
+    document.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
+    function register(kind, btn){
+      var r=selInDoc(); if(!r) return;
+      var div=document.createElement('div'); div.appendChild(r.cloneContents()); var raw=div.innerHTML;
+      var txt=(window.getSelection().toString()||'').replace(/\r/g,'');
+      var lines=txt.split(/\n+/).filter(function(l){ return l.trim(); });
+      var blocks;
+      if(lines.length>1){ blocks=lines.map(function(l){ return newBlock('p', esc(l)); }); }
+      else { var clean=sanitize(raw||esc(txt)); if(!plainText(clean)) clean=esc(txt); blocks=[newBlock('p', clean||'<br>')]; }
+      if(!blocks.length) return;
+      var title=(lines[0]||plainText(blocks[0].html)||'').replace(/\s+/g,' ').slice(0,18);
+      var entry={ id:entryId(kind==='data'?'mt':'ev'), title:title, blocks:blocks, vopen:true };
+      if(kind==='data') state.materials.push(entry); else state.events.push(entry);
+      persist(); try{ if(kind==='data') renderMatList(); else renderEvtList(); }catch(_){}
+      var o=btn.innerHTML; btn.textContent='✓ 登録しました'; btn.classList.add('done');
+      setTimeout(function(){ btn.innerHTML=o; btn.classList.remove('done'); hide(); try{ window.getSelection().removeAllRanges(); }catch(_){} }, 950);
+    }
+    [matBtn,evtBtn].forEach(function(b){ if(b) b.addEventListener('mousedown', function(e){ e.preventDefault(); }); });
+    if(matBtn) matBtn.addEventListener('click', function(){ register('data', matBtn); });
+    if(evtBtn) evtBtn.addEventListener('click', function(){ register('event', evtBtn); });
+  })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24i 本文の選択範囲をデータ／イベント・質問に登録'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
