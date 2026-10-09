@@ -2827,8 +2827,8 @@
       +' .npc-pd .npc-pdb{white-space:pre-wrap;font-size:.9em;line-height:1.55;margin:0;padding:7px 9px;-webkit-user-select:text;user-select:text}'
       +' .npc-pd>summary .npc-copy{margin-left:auto}'
       +' .npc-pd.npc-chatpd{border:0;border-radius:0}'
-      +' .npc-pd.npc-chatpd>summary{background:transparent;border-radius:0;padding:5px 2px}'
-      +' .npc-pd.npc-chatpd>.npc-pdb{padding:5px 2px 2px}'
+      +' .npc-pd.npc-chatpd>summary{background:transparent;border-radius:0;padding:3px 2px 0}'
+      +' .npc-pd.npc-chatpd>.npc-pdb{color:var(--accent);border-left:2px solid var(--line);margin:1px 0 0 4px;padding:0 2px 0 10px}'
       +' .npc-copy{font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--text);padding:2px 5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;line-height:0}'
       +' .npc-copy svg{display:block}'
       +' .npc-copy.npc-ccf{line-height:1;font-size:14px;padding:2px 6px}'
@@ -3593,7 +3593,7 @@
     if(matBtn) matBtn.addEventListener('click', function(){ if(registerSelection('data', matBtn)) setTimeout(hide,950); });
     if(evtBtn) evtBtn.addEventListener('click', function(){ if(registerSelection('event', evtBtn)) setTimeout(hide,950); });
   })();
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24s NPC・参加PCのチャパレトグルを囲いなしに・コピーボタンを右端へ'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24t チャパレを左線＋薄字表示に・トグルと内容の余白を縮小'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
