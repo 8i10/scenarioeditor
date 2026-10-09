@@ -369,7 +369,7 @@
   .rbar .macc-body{display:none;padding:3px 0}
   .rbar .macc.open .macc-body{display:block}
   .hm-item.on{color:var(--red);font-weight:700}
-  @media (min-width:821px){ body.rb-open .wrap{margin-right:242px} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 580px))} }
+  @media (min-width:821px){ body.rb-open .wrap{margin-right:242px} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 580px))} .rbar .rb-x{display:none} }
 
   /* ── ファイル管理ダイアログ ── */
   .ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:18px}
@@ -1984,7 +1984,8 @@
       +'<button class="rb-item rb-reg" data-reg="event"><span class="ic">💡</span><span class="nm">イベント・質問に登録</span></button>';
     return h;
   }
-  function applyRightMenu(){ if(rbar && !rbar.innerHTML) rbar.innerHTML=rightBarInnerHTML(); if(rbar) rbar.classList.toggle('open',!!state.rightMenu); document.body.classList.toggle('rb-open',!!state.rightMenu); var b=document.getElementById('btnRightMenu'); if(b) b.classList.toggle('on',!!state.rightMenu); }
+  function applyRightMenu(){ if(rbar && !rbar.innerHTML) rbar.innerHTML=rightBarInnerHTML(); var pc=(window.matchMedia&&window.matchMedia('(min-width:821px)').matches); var open=pc?true:!!state.rightMenu; if(rbar) rbar.classList.toggle('open',open); document.body.classList.toggle('rb-open',open); var b=document.getElementById('btnRightMenu'); if(b){ b.classList.toggle('on',open); b.style.display=pc?'none':''; } }
+  window.addEventListener('resize', function(){ if(typeof applyRightMenu==='function') applyRightMenu(); });
   function rightInsert(type){
     var c=focusedId?ctx(focusedId):null;
     if(!c){ var bs=state.blocks; if(!bs.length){ bs.push(newBlock('p','')); render(); } c=ctx(state.blocks[state.blocks.length-1].id); }
@@ -3593,7 +3594,7 @@
     if(matBtn) matBtn.addEventListener('click', function(){ if(registerSelection('data', matBtn)) setTimeout(hide,950); });
     if(evtBtn) evtBtn.addEventListener('click', function(){ if(registerSelection('event', evtBtn)) setTimeout(hide,950); });
   })();
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24t チャパレを左線＋薄字表示に・トグルと内容の余白を縮小'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24u エディタ挿入メニューをPC幅で常時表示（スマホはトグルのまま）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
