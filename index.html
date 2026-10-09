@@ -1088,7 +1088,7 @@
   function detachEntryEdit(){ if(!editTarget) return; var sw=scenarioWrapEl(); if(sw&&doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing','show'); editTarget=null; }
   /* データ／イベント項目をその場（一覧内）で本文と同じエディタで開閉 */
   function openEntryInline(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); stashInlineDoc(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); persist(); }
-  function collapseEntryInline(){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); stashInlineDoc(); editTarget=null; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); }
+  function collapseEntryInline(){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); stashInlineDoc(); editTarget=null; render(); if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); }
   function toggleEntryInline(kind,id){ if(editTarget && editTarget.kind===kind && editTarget.id===id) collapseEntryInline(); else openEntryInline(kind,id); }
   function exitEntryEdit(){ collapseEntryInline(); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
@@ -3594,7 +3594,7 @@
     if(matBtn) matBtn.addEventListener('click', function(){ if(registerSelection('data', matBtn)) setTimeout(hide,950); });
     if(evtBtn) evtBtn.addEventListener('click', function(){ if(registerSelection('event', evtBtn)) setTimeout(hide,950); });
   })();
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24u エディタ挿入メニューをPC幅で常時表示（スマホはトグルのまま）'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24v データ項目を編集して閉じた際にエディタへ内容が残るバグを修正'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
