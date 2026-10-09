@@ -277,7 +277,7 @@
   .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:2px}
   .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 1px 12px;margin:0}
   /* 技能枠：見出しと左線のみ（上・右・下線なし、下マージンなし） */
-  .block[data-type="skill"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:5px!important;padding-bottom:0!important}
+  .block[data-type="skill"],.block[data-type="skill2"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:5px!important;padding-bottom:0!important}
   /* ■探索箇所＜＞ */
   .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
   .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
@@ -3594,7 +3594,7 @@
     if(matBtn) matBtn.addEventListener('click', function(){ if(registerSelection('data', matBtn)) setTimeout(hide,950); });
     if(evtBtn) evtBtn.addEventListener('click', function(){ if(registerSelection('event', evtBtn)) setTimeout(hide,950); });
   })();
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24v データ項目を編集して閉じた際にエディタへ内容が残るバグを修正'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24w 技能枠(※あり)も見出し＋左線のみに統一'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
