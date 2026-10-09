@@ -276,6 +276,8 @@
   .block[data-type="lbox"]>.lbl{position:static;display:flex;align-items:flex-end;background:transparent;border:0;color:var(--text);font-weight:400;font-size:1.13em;letter-spacing:.02em;padding:0;margin:0;line-height:1.1;border-radius:0;min-height:1.4em;border-radius:0;font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
   .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:2px}
   .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 1px 12px;margin:0}
+  /* 技能枠：見出しと左線のみ（上・右・下線なし、下マージンなし） */
+  .block[data-type="skill"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:5px!important;padding-bottom:0!important}
   /* ■探索箇所＜＞ */
   .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
   .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
@@ -3587,7 +3589,7 @@
     if(matBtn) matBtn.addEventListener('click', function(){ if(registerSelection('data', matBtn)) setTimeout(hide,950); });
     if(evtBtn) evtBtn.addEventListener('click', function(){ if(registerSelection('event', evtBtn)) setTimeout(hide,950); });
   })();
-  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24p 挿入メニューのトグルを白枠カード化・ヒント文削除／閲覧しおりの選択ハイライト刷新・ページ選択でも開閉'; })();
+  (function(){ var v=document.getElementById('appVer'); if(v) v.textContent='2026-08-24q 技能枠を見出し＋左線のみに（上・右・下線なし、下マージンなし）'; })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
 
