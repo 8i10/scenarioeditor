@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>クリティカル / ファンブル管理</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2c2c3c">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./offline.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+:root{
+  --bg:#0d0d12; --surface:#16161f; --surface2:#1e1e2e; --border:#4a4a63;
+  --accent:#c8a97e; --accent2:#7e9ec8; --text:#e8e4da; --text-muted:#8a8499;
+}
+body.light{
+  --bg:#fff; --surface:#ffffff; --surface2:#eeeeee; --border:#cccccc;
+  --accent:#555555; --accent2:#3366aa; --text:#111; --text-muted:#7a6e62;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface2);color:var(--text);font-family:'Zen Kaku Gothic New','MS PGothic',sans-serif;font-size:13px;min-height:100vh;padding-top:44px}
+#hdr{position:fixed;top:0;left:0;width:100%;display:flex;align-items:center;gap:8px;padding:5px 16px;background:#333;color:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 5px rgba(0,0,0,.35);z-index:999}
+#hdr .title{font-weight:bold;font-size:14px;flex:1}
+.hbtn{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer}
+.hbtn:hover{border-color:var(--accent)}
+.container{max-width:760px;margin:0 auto;padding:12px}
+#search{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);font-size:13px;margin-bottom:10px}
+.crit-c{color:#2ea86a}
+.fmbl-c{color:#d8615e}
+
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:7px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:8px;padding:9px 10px;cursor:pointer;user-select:none}
+.chead .arrow{flex:0 0 auto;font-size:11px;color:var(--text-muted)}
+.chead .cname{flex:1;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chead .ctot{flex:0 0 auto;font-size:13px;white-space:nowrap}
+.chead .ctot b{font-size:15px}
+.cbody{display:none;padding:4px 10px 8px;border-top:1px solid var(--border)}
+.ccard.open .cbody{display:block}
+
+.srow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;padding:5px 0;border-bottom:1px dashed var(--border)}
+.srow:last-child{border-bottom:none}
+.sname{flex:1 1 auto;min-width:0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sctl{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.cnum{width:52px;height:24px;text-align:center;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:4px;font-size:13px}
+.lab{font-size:11px;font-weight:bold;width:8px;flex:0 0 auto}
+.snone{font-size:12px;color:var(--text-muted);padding:6px 0}
+.csave{font-size:11px;color:var(--text-muted);margin-left:2px}
+.csave.ok{color:#2ea86a}
+.csave.ng{color:#d8615e}
+#msg{padding:24px 12px;text-align:center;color:var(--text-muted)}
+#msg a{color:var(--accent2)}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div class="title">🎲 クリティカル / ファンブル管理</div>
+  <div style="display:flex;gap:6px">
+    <button class="hbtn" id="theme_btn" onclick="toggleTheme()">☀️</button>
+    <button class="hbtn" onclick="location.href='index.html'">← 一覧へ</button>
+  </div>
+</div>
+
+<div class="container">
+  <input id="search" type="text" placeholder="PC名で絞り込み..." oninput="renderList()" style="display:none">
+  <div id="list"></div>
+  <div id="msg">読込中...</div>
+</div>
+
+<script>
+const SUPABASE_URL='https://cicodhxebyqewfnngfwt.supabase.co/';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpY29kaHhlYnlxZXdmbm5nZnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzM4NDYsImV4cCI6MjA5NTY0OTg0Nn0.huLOglTPbW1CcGDbDB_yf5ftqEkqmtJ1HBY9WTx9J8E';
+const {createClient}=supabase;
+const db=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* ===== テーマ（index.htmlと共通の保存キー） ===== */
+const THEME_KEY='coc_theme', THEME_VER='v2';
+function applyTheme(mode){
+  document.body.classList.toggle('light',mode==='light');
+  localStorage.setItem(THEME_KEY,mode);
+  localStorage.setItem(THEME_KEY+'_ver',THEME_VER);
+  const b=document.getElementById('theme_btn'); if(b)b.textContent=mode==='light'?'🌙':'☀️';
+}
+function toggleTheme(){applyTheme(document.body.classList.contains('light')?'dark':'light');}
+(function(){const ver=localStorage.getItem(THEME_KEY+'_ver');const saved=(ver===THEME_VER)?(localStorage.getItem(THEME_KEY)||'light'):'light';applyTheme(saved);})();
+
+/* ===== データ ===== */
+let chars=[]; // {id, name, scenarios:[..], counts:{<scenario>:{crit,fumble}}, open:false}
+const saveTimers={};
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function parseRow(row){
+  let sheet={}; try{sheet=JSON.parse(row.data)||{};}catch(e){}
+  const inp=sheet.inputs||{};
+  const name=inp.pcname||row.char_name||'名無し';
+  // 通過シナリオ（改行単位に分割・空欄除外・重複除外）
+  const seen={}, scenarios=[];
+  (sheet.scenarios||[]).forEach(block=>{String(block||'').split(/\r?\n/).forEach(line=>{const t=line.trim();if(t&&!seen[t]){seen[t]=1;scenarios.push(t);}});});
+  const by=(sheet.counters&&sheet.counters.byScenario)||{};
+  const counts={};
+  scenarios.forEach(s=>{const c=by[s]||{};counts[s]={crit:parseInt(c.crit)||0,fumble:parseInt(c.fumble)||0};});
+  return {id:row.id,name,scenarios,counts,open:false};
+}
+
+async function load(){
+  const msg=document.getElementById('msg');
+  try{
+    const {data:{user}}=await db.auth.getUser();
+    if(!user){msg.innerHTML='ログインが必要です。<br><a href="index.html">一覧ページ</a>でログインしてください。';return;}
+    const {data:list,error}=await db
+      .from('character_sheets')
+      .select('id,char_name,data,updated_at')
+      .eq('user_id',user.id)
+      .order('updated_at',{ascending:false});
+    if(error)throw error;
+    chars=(list||[]).map(parseRow);
+    if(chars.length===0){msg.textContent='保存されたキャラクターがありません。';return;}
+    msg.style.display='none';
+    document.getElementById('search').style.display='block';
+    renderList();
+  }catch(e){ msg.textContent='読込エラー: '+e.message; }
+}
+
+function totals(c){
+  let tc=0,tf=0; c.scenarios.forEach(s=>{tc+=c.counts[s].crit;tf+=c.counts[s].fumble;});
+  return {tc,tf};
+}
+
+function renderList(){
+  const wrap=document.getElementById('list');
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  wrap.innerHTML='';
+  chars.filter(c=>!q||c.name.toLowerCase().includes(q)).forEach(c=>{
+    const {tc,tf}=totals(c);
+    const card=document.createElement('div');card.className='ccard'+(c.open?' open':'');
+    let body='';
+    if(c.scenarios.length===0){
+      body='<div class="snone">通過シナリオがありません（シート側で追加してください）</div>';
+    }else{
+      body=c.scenarios.map((s,i)=>`
+        <div class="srow" data-s="${i}">
+          <span class="sname" title="${esc(s)}">${esc(s)}</span>
+          <span class="sctl">
+            <input class="cnum" type="number" inputmode="numeric" min="0" step="1" data-fld="crit" value="${c.counts[s].crit}">
+            <span class="lab crit-c">c</span>
+          </span>
+          <span class="sctl">
+            <input class="cnum" type="number" inputmode="numeric" min="0" step="1" data-fld="fumble" value="${c.counts[s].fumble}">
+            <span class="lab fmbl-c">f</span>
+          </span>
+        </div>`).join('');
+    }
+    card.innerHTML=`
+      <div class="chead">
+        <span class="arrow">${c.open?'▼':'▶'}</span>
+        <span class="cname" title="${esc(c.name)}">${esc(c.name)}</span>
+        <span class="ctot"><b class="crit-c">${tc}</b>c　<b class="fmbl-c">${tf}</b>f <span class="csave"></span></span>
+      </div>
+      <div class="cbody">${body}</div>`;
+
+    const head=card.querySelector('.chead');
+    const arrow=card.querySelector('.arrow');
+    const statusEl=card.querySelector('.csave');
+    const critTotEl=card.querySelector('.ctot b.crit-c');
+    const fmblTotEl=card.querySelector('.ctot b.fmbl-c');
+    head.addEventListener('click',()=>{c.open=!c.open;card.classList.toggle('open',c.open);arrow.textContent=c.open?'▼':'▶';});
+
+    function refreshTotals(){const t=totals(c);critTotEl.textContent=t.tc;fmblTotEl.textContent=t.tf;}
+
+    card.querySelectorAll('.srow').forEach(rowEl=>{
+      const s=c.scenarios[parseInt(rowEl.dataset.s)];
+      rowEl.querySelectorAll('input.cnum').forEach(inp=>{
+        const fld=inp.dataset.fld;
+        inp.addEventListener('input',()=>{
+          let v=parseInt(inp.value); if(isNaN(v)||v<0)v=0;
+          c.counts[s][fld]=v; refreshTotals(); queueSave(c,statusEl);
+        });
+        inp.addEventListener('change',()=>{ inp.value=c.counts[s][fld]; });
+      });
+    });
+    wrap.appendChild(card);
+  });
+}
+
+function queueSave(c,statusEl){
+  statusEl.className='csave'; statusEl.textContent='…';
+  clearTimeout(saveTimers[c.id]);
+  saveTimers[c.id]=setTimeout(()=>saveCounters(c,statusEl),600);
+}
+
+async function saveCounters(c,statusEl){
+  try{
+    // 最新dataを取得し counters.byScenario だけ差し替え（他項目を壊さない）
+    const {data:row,error:e1}=await db.from('character_sheets').select('data').eq('id',c.id).single();
+    if(e1)throw e1;
+    let obj={}; try{obj=JSON.parse(row.data)||{};}catch(_){obj={};}
+    const by={}; c.scenarios.forEach(s=>{by[s]={crit:c.counts[s].crit,fumble:c.counts[s].fumble};});
+    obj.counters=Object.assign({},obj.counters,{byScenario:by});
+    const {error:e2}=await db.from('character_sheets').update({data:JSON.stringify(obj)}).eq('id',c.id);
+    if(e2)throw e2;
+    statusEl.className='csave ok'; statusEl.textContent='✓';
+    setTimeout(()=>{if(statusEl.textContent==='✓')statusEl.textContent='';},1500);
+  }catch(err){
+    statusEl.className='csave ng'; statusEl.textContent='✗';
+    console.error(err); alert('保存に失敗しました: '+err.message);
+  }
+}
+
+load();
+</script>
+</body>
+</html>
