@@ -1,46 +1,58 @@
-/* CoC CS管理 Service Worker — アプリシェルをキャッシュしオフライン起動を可能にする */
-const CACHE='coc-cs-v1';
-// アプリの中核ファイル（相対パス）。GitHub Pagesが落ちてもここから起動できる
-const SHELL=[
-  './','./index.html','./sheet.html','./view.html','./status.html',
-  './placement.html','./counter.html','./manifest.json',
-  './icon-192.png','./icon-512.png','./icon-512-maskable.png',
-  // 外部ライブラリ（CDN）: 初回オンライン時にキャッシュ
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
-];
-self.addEventListener('install',e=>{
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c=>Promise.allSettled(SHELL.map(u=>c.add(u)))));
-});
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
-});
-self.addEventListener('message',e=>{ if(e.data==='skipWaiting')self.skipWaiting(); });
+/* シナリオエディタ オフライン用 Service Worker
+   index.html と同じ場所（同一フォルダ）に置いてください。
+   更新時は下の CACHE のバージョン番号を上げると確実に新しい内容へ切り替わります。 */
+var CACHE  = 'scenario-editor-v1';
+var PREFIX = 'scenario-editor-';
 
-self.addEventListener('fetch',e=>{
-  const req=e.request;
-  if(req.method!=='GET')return;                 // 書込(API POST等)は介入しない
-  const url=new URL(req.url);
-  // Supabase API はキャッシュしない（アプリ側のIndexedDBミラーでオフライン対応）
-  if(url.hostname.endsWith('supabase.co'))return;
+self.addEventListener('install', function(e){ self.skipWaiting(); });
 
-  const isDoc = req.mode==='navigate' || (req.destination==='document');
-  if(isDoc){
-    // ページ: ネット優先・失敗時キャッシュ（GitHub落ち対策）→無ければindex
+self.addEventListener('activate', function(e){
+  e.waitUntil(
+    caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){
+        if(k.indexOf(PREFIX)===0 && k!==CACHE) return caches.delete(k);
+      }));
+    }).then(function(){ return self.clients.claim(); })
+  );
+});
+
+self.addEventListener('fetch', function(e){
+  var req = e.request;
+  if(req.method !== 'GET') return;
+  var url;
+  try{ url = new URL(req.url); }catch(_){ return; }
+
+  // GitHub同期系（Gist/API）はキャッシュせず常にネットワークへ（オフライン時はアプリ側で失敗を処理）
+  if(url.hostname === 'api.github.com' || /githubusercontent\.com$/.test(url.hostname)) return;
+
+  var isHTML = (req.mode === 'navigate') || ((req.headers.get('accept')||'').indexOf('text/html') >= 0);
+
+  if(isHTML){
+    // アプリ本体(HTML)はネットワーク優先：オンライン時は常に最新を取得し、取れた版をキャッシュ。オフライン時はキャッシュを返す
     e.respondWith(
-      fetch(req).then(res=>{ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); return res; })
-        .catch(()=>caches.match(req).then(r=>r||caches.match('./index.html')))
+      fetch(req).then(function(res){
+        try{ var copy = res.clone(); caches.open(CACHE).then(function(c){ c.put(req, copy); }); }catch(_){}
+        return res;
+      }).catch(function(){
+        return caches.match(req).then(function(c){ return c || caches.match('./') || caches.match('index.html'); });
+      })
     );
     return;
   }
-  // それ以外(スクリプト/画像/CDN): キャッシュ優先・無ければ取得してキャッシュ
+
+  // フォント・ライブラリ等の静的リソースはキャッシュ優先（初回オンライン時に取得・保存→以後オフラインでも利用可）
   e.respondWith(
-    caches.match(req).then(hit=> hit || fetch(req).then(res=>{
-      if(res&&res.status===200){ const cp=res.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); }
-      return res;
-    }).catch(()=>hit))
+    caches.match(req).then(function(cached){
+      if(cached) return cached;
+      return fetch(req).then(function(res){
+        try{
+          if(res && (res.status === 200 || res.type === 'opaque')){
+            var copy = res.clone();
+            caches.open(CACHE).then(function(c){ c.put(req, copy); });
+          }
+        }catch(_){}
+        return res;
+      }).catch(function(){ return cached; });
+    })
   );
 });
