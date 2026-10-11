@@ -224,7 +224,7 @@ ipcMain.handle('shell-check-update', () => checkUpdatesManually());
 let tabsWin = null;
 ipcMain.handle('shell-tabs', (_e, section) => {
   if (tabsWin && !tabsWin.isDestroyed()) { tabsWin.focus(); return; }
-  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 480, height: 760, title: 'タブ・キャラクター・シーンの設定', resizable: true, minimizable: false,
+  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 480, height: 520, title: 'タブ・キャラクター・シーンの設定', resizable: true, minimizable: false,
     webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true } });
   tabsWin.setMenuBarVisibility(false);
   tabsWin.loadFile(path.join(__dirname, 'tabs.html'), section ? { hash: String(section) } : undefined);
