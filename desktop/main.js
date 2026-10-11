@@ -11,9 +11,7 @@ app.setPath('userData', path.join(app.getPath('appData'), 'scenario-sender'));
 
 const BAR_H = 44;
 let win = null, viewer = null;
-const rooms = []; // { id, win }
-let roomSeq = 0;
-let cfg = { html: '', room: '', target: '', keepClipboard: false, manualTabs: [] };
+let cfg = { html: '', room: '', target: '', keepClipboard: false, manualTabs: [], manualChars: [] };
 
 const cfgPath = () => path.join(app.getPath('userData'), 'config.json');
 function loadCfg() { try { Object.assign(cfg, JSON.parse(fs.readFileSync(cfgPath(), 'utf8'))); } catch (_) {} }
@@ -23,7 +21,7 @@ function status(msg, level) { if (win && !win.isDestroyed()) win.webContents.sen
 // 送信できる部屋の一覧（アプリのウィンドウ＋連携ブラウザのタブ）
 let browserOn = false;
 async function allRooms() {
-  const list = rooms.filter((r) => !r.win.isDestroyed()).map((r) => ({ key: 'w' + r.id, kind: 'app', title: r.win.getTitle() || ('部屋' + r.id), url: r.win.webContents.getURL(), win: r.win }));
+  const list = [];
   const b = await br.listRooms();
   browserOn = !!b;
   (b || []).forEach((t) => list.push({ key: 'b' + t.id, kind: 'browser', id: t.id, title: t.title, url: t.url, ws: t.ws }));
@@ -68,26 +66,6 @@ function normRoomUrl(u) {
   return u;
 }
 
-// ココフォリアの部屋は別ウィンドウで開く（複数可）
-function openRoom(u) {
-  u = normRoomUrl(u) || 'https://ccfolia.com/';
-  cfg.room = u; saveCfg();
-  const id = ++roomSeq;
-  const rw = new BrowserWindow({
-    width: 1280, height: 860, title: 'ココフォリア',
-    webPreferences: { partition: 'persist:ccfolia', contextIsolation: true, sandbox: true, backgroundThrottling: false },
-  });
-  rooms.push({ id, win: rw });
-  externalOnly(rw.webContents, (url) => /^https:\/\/([a-z0-9-]+\.)*ccfolia\.com\//i.test(url) || /accounts\.google\.com|twitter\.com|x\.com|discord\.com/i.test(url));
-  const touch = () => { const url = rw.webContents.getURL(); if (/ccfolia\.com\/rooms\//.test(url)) { cfg.room = url; saveCfg(); } state(); };
-  rw.webContents.on('did-navigate', touch);
-  rw.webContents.on('did-navigate-in-page', touch);
-  rw.on('page-title-updated', () => setTimeout(state, 0));
-  rw.on('closed', () => { const i = rooms.findIndex((r) => r.id === id); if (i >= 0) rooms.splice(i, 1); if (cfg.target === 'w' + id) { cfg.target = ''; saveCfg(); } state(); });
-  rw.loadURL(u).catch((e) => status('ココフォリアを開けませんでした：' + e.message, 'err'));
-  state();
-}
-
 // 送信先の部屋を決める（自動＝開いている部屋が1つのとき）
 async function targetRoom() {
   const list = await allRooms();
@@ -101,17 +79,8 @@ async function targetRoom() {
   if (list.length === 1) return { room: list[0] };
   return { error: '部屋が複数開いています。上の「送信先の部屋」で選んでください' };
 }
-function evalIn(room, expr) {
-  if (room.kind === 'app') return room.win.webContents.executeJavaScript(expr, true);
-  return br.evaluate(room.ws, expr);
-}
-async function enterIn(room) {
-  if (room.kind === 'browser') return br.pressEnter(room.ws);
-  const wc = room.win.webContents;
-  wc.sendInputEvent({ type: 'keyDown', keyCode: 'Enter' });
-  wc.sendInputEvent({ type: 'char', keyCode: '\r' });
-  wc.sendInputEvent({ type: 'keyUp', keyCode: 'Enter' });
-}
+function evalIn(room, expr) { return br.evaluate(room.ws, expr); }
+async function enterIn(room) { return br.pressEnter(room.ws); }
 
 function injected(fnName, arg) {
   return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.readCharacters.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
@@ -121,7 +90,7 @@ function injected(fnName, arg) {
 let busy = Promise.resolve();
 async function sendToRoom(p) {
   const payload = { text: String((p && p.text) || ''), tab: String((p && p.tab) || ''), name: String((p && p.name) || '') };
-  if (!payload.text.trim()) return { ok: false, error: '送信する文章がありません' };
+  if (payload.text === '') return { ok: false, error: '送信する文章がありません' };
   const t = await targetRoom();
   if (!t.room) return { ok: false, error: t.error };
   let r;
@@ -159,7 +128,7 @@ function createWindow() {
   win.on('resized', keepBounds); win.on('moved', keepBounds);
   if (cfg.maximized) win.maximize();
   win.on('maximize', () => { cfg.maximized = true; saveCfg(); }); win.on('unmaximize', () => { cfg.maximized = false; saveCfg(); });
-  win.on('closed', () => { rooms.slice().forEach((r) => { if (!r.win.isDestroyed()) r.win.close(); }); win = null; });
+  win.on('closed', () => { win = null; });
   layout();
 
   win.webContents.on('did-finish-load', () => {
@@ -190,11 +159,12 @@ ipcMain.handle('kp-tabs', async () => {
 });
 let charCache = { at: 0, list: [] };
 ipcMain.handle('kp-chars', async () => {
-  if (Date.now() - charCache.at < 60000) return { ok: true, chars: charCache.list };
+  const manual = (cfg.manualChars || []).filter(Boolean);
+  if (Date.now() - charCache.at < 60000) return { ok: true, chars: manual.concat(charCache.list) };
   const t = await targetRoom();
-  if (!t.room) return { ok: false, chars: [], error: t.error };
-  try { const list = await evalIn(t.room, injected('readCharacters')); charCache = { at: Date.now(), list: Array.isArray(list) ? list : [] }; return { ok: true, chars: charCache.list }; }
-  catch (e) { return { ok: false, chars: [], error: e.message }; }
+  if (!t.room) return { ok: true, chars: manual, error: t.error };
+  try { const list = await evalIn(t.room, injected('readCharacters')); charCache = { at: Date.now(), list: Array.isArray(list) ? list : [] }; return { ok: true, chars: manual.concat(charCache.list) }; }
+  catch (e) { return { ok: true, chars: manual, error: e.message }; }
 });
 ipcMain.handle('kp-is-app', () => true);
 ipcMain.handle('shell-open-html', async () => {
@@ -202,13 +172,11 @@ ipcMain.handle('shell-open-html', async () => {
   if (!r.canceled && r.filePaths[0]) openHtml(r.filePaths[0]);
 });
 ipcMain.handle('shell-reload', () => { if (cfg.html) openHtml(cfg.html); });
-ipcMain.handle('shell-open-room', (_e, u) => openRoom(u));
 ipcMain.handle('shell-target', (_e, key) => { cfg.target = key ? String(key) : ''; saveCfg(); state(true); });
 ipcMain.handle('shell-focus-room', async () => {
   const t = await targetRoom();
   if (!t.room) { status(t.error, 'err'); return; }
-  if (t.room.kind === 'app') { if (t.room.win.isMinimized()) t.room.win.restore(); t.room.win.focus(); }
-  else { try { await br.activate(t.room.id); } catch (_) {} }
+  try { await br.activate(t.room.id); } catch (_) {}
 });
 // 連携ブラウザ（Chrome / Edge）で部屋を開く
 ipcMain.handle('shell-open-browser', async (_e, u) => {
@@ -230,7 +198,7 @@ ipcMain.handle('shell-diagnose', async () => {
   else {
     try {
       const d = await evalIn(t.room, injected('diagnose'));
-      text = '接続先：' + (t.room.kind === 'browser' ? '連携ブラウザ' : 'アプリのウィンドウ') +
+      text = '接続先：連携ブラウザ' +
         '\n部屋：' + (d.room ? 'OK' : '× 部屋が開かれていません') +
         '\nURL：' + d.url +
         '\nチャット入力欄：' + (d.textarea ? 'OK' : '× 見つかりません') +
@@ -249,14 +217,19 @@ ipcMain.handle('shell-check-update', () => checkUpdatesManually());
 let tabsWin = null;
 ipcMain.handle('shell-tabs', () => {
   if (tabsWin && !tabsWin.isDestroyed()) { tabsWin.focus(); return; }
-  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 460, height: 520, title: 'チャットタブ名の設定', resizable: true, minimizable: false,
+  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 480, height: 680, title: 'タブ・キャラクターの設定', resizable: true, minimizable: false,
     webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true } });
   tabsWin.setMenuBarVisibility(false);
   tabsWin.loadFile(path.join(__dirname, 'tabs.html'));
   tabsWin.on('closed', () => { tabsWin = null; });
 });
-ipcMain.handle('tabs-get', () => (cfg.manualTabs || []));
-ipcMain.handle('tabs-set', (_e, list) => { cfg.manualTabs = (Array.isArray(list) ? list : []).map((x) => String(x || '').trim()).filter(Boolean); saveCfg(); status('チャットタブ名を保存しました（' + cfg.manualTabs.length + '件）', 'ok'); if (tabsWin && !tabsWin.isDestroyed()) tabsWin.close(); });
+ipcMain.handle('tabs-get', () => ({ tabs: cfg.manualTabs || [], chars: cfg.manualChars || [] }));
+ipcMain.handle('tabs-set', (_e, v) => {
+  const clean = (l) => (Array.isArray(l) ? l : []).map((x) => String(x || '').trim()).filter(Boolean);
+  cfg.manualTabs = clean(v && v.tabs); cfg.manualChars = clean(v && v.chars); saveCfg();
+  status('タブ ' + cfg.manualTabs.length + '件・キャラクター ' + cfg.manualChars.length + '件を保存しました', 'ok');
+  if (tabsWin && !tabsWin.isDestroyed()) tabsWin.close();
+});
 ipcMain.handle('shell-devtools', () => { viewer.webContents.openDevTools({ mode: 'detach' }); });
 
 

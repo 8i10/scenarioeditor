@@ -29,13 +29,12 @@
   <span class="sep"></span>
   <input type="text" id="url" placeholder="ココフォリアの部屋URL（https://ccfolia.com/rooms/…）">
   <button id="gob" title="Chrome / Edge（連携用）で部屋を開く。開いている部屋へ送信できます">🌐 ブラウザ</button>
-  <button id="go" title="アプリのウィンドウで部屋を開く">🪟 アプリ</button>
   <span class="bconn" id="bconn" title="連携ブラウザの接続状態">●</span>
   <span class="sep"></span>
   <label title="送信先の部屋">送信先<select id="target"></select></label>
   <button id="front" title="送信先の部屋を前面に表示">⤴</button>
   <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">コピーも残す</label>
-  <button id="tabs" title="ココフォリアのチャットタブ名を手動で設定">⚙ タブ</button>
+  <button id="tabs" title="チャットタブ名・キャラクター名を手動で設定">⚙ タブ・キャラ</button>
   <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 確認</button>
   <span class="st" id="st">準備完了</span>
   <button id="ver" title="アップデートを確認">v-</button>
@@ -45,7 +44,6 @@
   let hideT = null;
   $('open').onclick = () => shellApi.openHtml();
   $('reload').onclick = () => shellApi.reload();
-  $('go').onclick = () => shellApi.openRoom($('url').value);
   $('gob').onclick = () => shellApi.openBrowser($('url').value);
   $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openBrowser($('url').value); });
   $('target').onchange = () => shellApi.target($('target').value);
@@ -59,7 +57,7 @@
     const sel = $('target'); const rooms = s.rooms || [];
     sel.innerHTML = '';
     const o0 = document.createElement('option'); o0.value = ''; o0.textContent = rooms.length ? '自動（開いている部屋が1つのとき）' : '（部屋が開かれていません）'; sel.appendChild(o0);
-    rooms.forEach((r) => { const o = document.createElement('option'); o.value = r.key; o.textContent = (r.kind === 'browser' ? '🌐 ' : '🪟 ') + (r.title || r.url); sel.appendChild(o); });
+    rooms.forEach((r) => { const o = document.createElement('option'); o.value = r.key; o.textContent = '🌐 ' + (r.title || r.url); sel.appendChild(o); });
     sel.value = rooms.some((r) => r.key === s.target) ? s.target : '';
     $('bconn').className = 'bconn' + (s.browserOn ? ' on' : '');
     $('bconn').title = s.browserOn ? '連携ブラウザ：接続中' : '連携ブラウザ：未接続（「🌐 ブラウザで開く」で起動）';
