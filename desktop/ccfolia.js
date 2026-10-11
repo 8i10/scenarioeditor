@@ -7,7 +7,7 @@
 
 // チャット欄の要素を探す
 function findChat() {
-  const vis = (el) => !!(el && el.offsetParent !== null);
+  const vis = (el) => !!(el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
   const areas = Array.from(document.querySelectorAll('textarea')).filter(vis);
   const textarea =
     areas.find((t) => t.name === 'text') ||
@@ -39,11 +39,42 @@ function findChat() {
     if (best) tabs = Array.from(best.querySelectorAll('[role="tab"]')).filter(vis);
   }
   tabs = tabs.filter((t) => (t.textContent || '').trim());
+  // 入力欄の上にあるタブ帯から、文字の付いたボタン類もタブ候補として集める（role="tab" で取れない場合の補助）
+  const stripTabs = [];
+  if (textarea) {
+    const tr = textarea.getBoundingClientRect();
+    const seenEl = new Set();
+    Array.from(document.querySelectorAll('[role="tab"],button,[role="button"],a,[tabindex],[role="tablist"] > *')).forEach((el) => {
+      if (!vis(el) || seenEl.has(el) || el === submit || (el.getAttribute('type') || '') === 'submit') return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom > tr.top + 4 || r.bottom < tr.top - 260) return;   // 入力欄の上 260px の帯
+      if (r.right < tr.left - 120) return;
+      const label = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!label || label.length > 30 || /^送信$/.test(label)) return;
+      if (stripTabs.some((x) => x.contains(el) || el.contains(x))) return;
+      seenEl.add(el); stripTabs.push(el);
+    });
+  }
+  // 文字だけのタブにも対応：帯の中で、指定の文字を持つ一番小さい要素を探す
+  const findTextInStrip = (match) => {
+    if (!textarea) return null;
+    const tr = textarea.getBoundingClientRect();
+    let best = null, bestArea = Infinity;
+    Array.from(document.querySelectorAll('body *')).forEach((el) => {
+      if (el.children.length > 3 || !vis(el)) return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom > tr.top + 4 || r.bottom < tr.top - 260 || r.right < tr.left - 120) return;
+      if (!match(el)) return;
+      const a = r.width * r.height;
+      if (a > 0 && a < bestArea) { best = el; bestArea = a; }
+    });
+    return best;
+  };
   // 送信先タブのプルダウン（チャット入力欄の近くにあるセレクト）
   const selScope = form || (textarea ? textarea.parentElement && textarea.parentElement.parentElement : null) || document;
   const selects = Array.from(selScope.querySelectorAll('select,[role="combobox"],[aria-haspopup="listbox"]'))
     .filter((el) => vis(el) && el !== nameInput && !(nameInput && el.contains(nameInput)));
-  return { textarea, form, nameInput, submit, tabs, selects };
+  return { textarea, form, nameInput, submit, tabs, stripTabs, selects, findTextInStrip };
 }
 
 // プルダウンの選択肢を読む（MUI のセレクトは一度開いて読み、閉じる）
@@ -101,7 +132,9 @@ async function prepareSend(p) {
   if (p.tab) {
     const norm = (s) => String(s || '').replace(/\s+/g, '').trim();
     const want = norm(p.tab);
-    let tab = c.tabs.find((t) => norm(t.textContent) === want) || c.tabs.find((t) => norm(t.textContent).indexOf(want) === 0);
+    // タブ名の後ろに未読数などが付く場合（例：メイン0）も一致とみなす
+    const match = (t) => { const x = norm(t.textContent).replace(/^[🔒🔓]/u, ''); return x === want || (x.indexOf(want) === 0 && /^[0-9０-９+]*$/.test(x.slice(want.length))); };
+    let tab = c.tabs.find(match) || c.stripTabs.find(match) || c.findTextInStrip(match);
     if (tab) {
       if (tab.getAttribute('aria-selected') !== 'true') { tab.click(); await wait(150); c = findChat(); }
     } else {
@@ -111,7 +144,7 @@ async function prepareSend(p) {
         // メインタブは表示名が異なる場合があるため、先頭のタブをメインとして扱う
         if (/^(メイン|main)$/i.test(want) && c.tabs.length) { if (c.tabs[0].getAttribute('aria-selected') !== 'true') { c.tabs[0].click(); await wait(150); } }
         else {
-          const names = c.tabs.map((t) => (t.textContent || '').trim()).concat(r.seen || []);
+          const names = c.tabs.concat(c.stripTabs).map((t) => (t.textContent || '').trim()).concat(r.seen || []).filter((x, i, a) => x && a.indexOf(x) === i);
           return { ok: false, error: 'タブ「' + p.tab + '」が見つかりません（ココフォリア側：' + (names.join('／') || 'なし') + '）' };
         }
       }
@@ -154,6 +187,7 @@ async function diagnose() {
     nameValue: c.nameInput ? c.nameInput.value : '',
     submit: !!c.submit,
     tabs: c.tabs.map((t) => (t.textContent || '').trim()),
+    stripTabs: c.stripTabs.map((t) => (t.textContent || '').trim()).filter((x, i, a) => a.indexOf(x) === i),
   };
 }
 

@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const cc = require('./ccfolia');
@@ -137,8 +137,11 @@ async function sendToRoom(p) {
 }
 
 function createWindow() {
+  const wa = screen.getPrimaryDisplay().workArea;
+  const def = { x: wa.x, y: wa.y, width: Math.round(wa.width * 0.735), height: wa.height };
+  const b = cfg.bounds && cfg.bounds.width ? cfg.bounds : def;
   win = new BrowserWindow({
-    width: 1100, height: 900, minWidth: 600, minHeight: 400,
+    x: b.x, y: b.y, width: b.width, height: b.height, minWidth: 600, minHeight: 400,
     title: 'シナリオ送信ビューア',
     webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true },
   });
@@ -152,6 +155,10 @@ function createWindow() {
   viewer.webContents.on('will-navigate', (e, url) => { if (/^https?:/i.test(url)) { e.preventDefault(); shell.openExternal(url); } });
 
   win.on('resize', layout);
+  const keepBounds = () => { if (win && !win.isDestroyed() && !win.isMaximized() && !win.isMinimized()) { cfg.bounds = win.getBounds(); saveCfg(); } };
+  win.on('resized', keepBounds); win.on('moved', keepBounds);
+  if (cfg.maximized) win.maximize();
+  win.on('maximize', () => { cfg.maximized = true; saveCfg(); }); win.on('unmaximize', () => { cfg.maximized = false; saveCfg(); });
   win.on('closed', () => { rooms.slice().forEach((r) => { if (!r.win.isDestroyed()) r.win.close(); }); win = null; });
   layout();
 
@@ -176,7 +183,8 @@ ipcMain.handle('kp-tabs', async () => {
   try {
     const d = await evalIn(t.room, injected('diagnose'));
     const fromSel = []; (d.selectOptions || []).forEach((s) => (s.options || []).forEach((o) => fromSel.push(o)));
-    return { ok: true, tabs: (d.tabs || []).concat(fromSel, manual) };
+    const clean = (x) => String(x || '').replace(/^[🔒🔓]\s*/u, '').replace(/[0-9０-９+]+$/, '').trim();
+    return { ok: true, tabs: (d.tabs || []).concat(d.stripTabs || [], fromSel).map(clean).filter((x) => x && !/^[<>＜＞‹›«»]+$/.test(x)).concat(manual) };
   }
   catch (e) { return { ok: true, tabs: manual, error: e.message }; }
 });
@@ -221,6 +229,7 @@ ipcMain.handle('shell-diagnose', async () => {
         '\n名前欄：' + (d.nameInput ? 'OK（現在：' + d.nameValue + '）' : '× 見つかりません') +
         '\n送信ボタン：' + (d.submit ? 'OK' : '見つからないため Enter キーで送信します') +
         '\nチャットタブ（タブバー）：' + (d.tabs.length ? d.tabs.join(' ／ ') : 'なし') +
+        '\nタブ帯の候補：' + ((d.stripTabs || []).join(' ／ ') || 'なし') +
         (d.selectOptions || []).map((x, i) => '\nプルダウン' + (i + 1) + (x.label ? '（' + x.label + '）' : '') + '：' + (x.options.length ? x.options.join(' ／ ') : '選択肢なし')).join('') +
         '\n手動設定のタブ：' + ((cfg.manualTabs || []).filter(Boolean).join(' ／ ') || 'なし') +
         '\n\nシナリオ側の送信先タブ名は、上のチャットタブ名と同じにしてください。';
