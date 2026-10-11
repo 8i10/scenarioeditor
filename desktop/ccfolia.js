@@ -38,7 +38,48 @@ function findChat() {
     });
     if (best) tabs = Array.from(best.querySelectorAll('[role="tab"]')).filter(vis);
   }
-  return { textarea, form, nameInput, submit, tabs };
+  tabs = tabs.filter((t) => (t.textContent || '').trim());
+  // 送信先タブのプルダウン（チャット入力欄の近くにあるセレクト）
+  const selScope = form || (textarea ? textarea.parentElement && textarea.parentElement.parentElement : null) || document;
+  const selects = Array.from(selScope.querySelectorAll('select,[role="combobox"],[aria-haspopup="listbox"]'))
+    .filter((el) => vis(el) && el !== nameInput && !(nameInput && el.contains(nameInput)));
+  return { textarea, form, nameInput, submit, tabs, selects };
+}
+
+// プルダウンの選択肢を読む（MUI のセレクトは一度開いて読み、閉じる）
+async function readSelectOptions(sel) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  if (sel.tagName === 'SELECT') return Array.from(sel.options).map((o) => ({ label: (o.textContent || '').trim(), el: o }));
+  sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+  await wait(180);
+  const opts = Array.from(document.querySelectorAll('[role="listbox"] [role="option"],[role="menu"] [role="menuitem"]'))
+    .map((o) => ({ label: (o.textContent || '').trim(), el: o })).filter((o) => o.label);
+  return opts;
+}
+function closeSelect() {
+  const lb = document.querySelector('[role="listbox"],[role="menu"]');
+  const target = lb || document.activeElement || document.body;
+  target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true }));
+  const bd = document.querySelector('.MuiBackdrop-root,.MuiBackdrop-invisible');
+  if (bd && document.querySelector('[role="listbox"],[role="menu"]')) bd.click();
+}
+// プルダウンで送信先タブを選ぶ
+async function selectTabViaDropdown(c, want, norm) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const seen = [];
+  for (const sel of c.selects) {
+    const opts = await readSelectOptions(sel);
+    opts.forEach((o) => seen.push(o.label));
+    let hit = opts.find((o) => norm(o.label) === want) || opts.find((o) => norm(o.label).indexOf(want) === 0);
+    if (!hit && /^(メイン|main)$/i.test(want)) hit = opts.find((o) => /メイン|main/i.test(o.label));
+    if (hit) {
+      if (sel.tagName === 'SELECT') { setNativeValue(sel, hit.el.value); }
+      else { hit.el.click(); await wait(120); }
+      return { ok: true };
+    }
+    if (sel.tagName !== 'SELECT') { closeSelect(); await wait(100); }
+  }
+  return { ok: false, seen };
 }
 
 function setNativeValue(el, value) {
@@ -61,12 +102,21 @@ async function prepareSend(p) {
     const norm = (s) => String(s || '').replace(/\s+/g, '').trim();
     const want = norm(p.tab);
     let tab = c.tabs.find((t) => norm(t.textContent) === want) || c.tabs.find((t) => norm(t.textContent).indexOf(want) === 0);
-    // メインタブは表示名が異なる場合があるため、見つからなければ先頭のタブをメインとして扱う
-    if (!tab && /^(メイン|main)$/i.test(want) && c.tabs.length) tab = c.tabs[0];
-    if (!tab) {
-      return { ok: false, error: 'タブ「' + p.tab + '」が見つかりません（ココフォリア側：' + c.tabs.map((t) => (t.textContent || '').trim()).join('／') + '）' };
+    if (tab) {
+      if (tab.getAttribute('aria-selected') !== 'true') { tab.click(); await wait(150); c = findChat(); }
+    } else {
+      // タブバーに無い場合は、入力欄近くのプルダウンから選ぶ
+      const r = await selectTabViaDropdown(c, want, norm);
+      if (!r.ok) {
+        // メインタブは表示名が異なる場合があるため、先頭のタブをメインとして扱う
+        if (/^(メイン|main)$/i.test(want) && c.tabs.length) { if (c.tabs[0].getAttribute('aria-selected') !== 'true') { c.tabs[0].click(); await wait(150); } }
+        else {
+          const names = c.tabs.map((t) => (t.textContent || '').trim()).concat(r.seen || []);
+          return { ok: false, error: 'タブ「' + p.tab + '」が見つかりません（ココフォリア側：' + (names.join('／') || 'なし') + '）' };
+        }
+      }
+      c = findChat();
     }
-    if (tab.getAttribute('aria-selected') !== 'true') { tab.click(); await wait(150); c = findChat(); }
   }
   if (p.name && c.nameInput && c.nameInput.value !== p.name) {
     setNativeValue(c.nameInput, p.name);
@@ -84,9 +134,18 @@ async function prepareSend(p) {
 }
 
 // 接続確認用：見つかった要素を報告
-function diagnose() {
+async function diagnose() {
   const c = findChat();
+  const selectOptions = [];
+  for (const sel of c.selects) {
+    try {
+      const opts = await readSelectOptions(sel);
+      selectOptions.push({ label: (sel.getAttribute('aria-label') || sel.textContent || sel.name || '').trim().slice(0, 30), options: opts.map((o) => o.label) });
+      if (sel.tagName !== 'SELECT') { closeSelect(); await new Promise((r) => setTimeout(r, 100)); }
+    } catch (_) {}
+  }
   return {
+    selectOptions,
     url: location.href,
     room: /ccfolia\.com$/.test(location.hostname) && /\/rooms\//.test(location.pathname),
     textarea: !!c.textarea,
@@ -98,4 +157,4 @@ function diagnose() {
   };
 }
 
-module.exports = { findChat, setNativeValue, prepareSend, diagnose };
+module.exports = { findChat, setNativeValue, readSelectOptions, closeSelect, selectTabViaDropdown, prepareSend, diagnose };

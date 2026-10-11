@@ -2793,7 +2793,7 @@
     var olHTML=outlineInnerHTML();
     var cdefs=[]; (state.counterGroups||[]).forEach(function(g){ (g&&g.items||[]).forEach(function(c){ cdefs.push({id:c.id,name:c.name,init:c.init,max:c.max,steps:c.steps,names:c.names,group:g.name||''}); }); });
     cdefs=cdefs.filter(function(c){ return c&&c.name&&String(c.name).trim(); }).map(function(c){ return {id:c.id,name:String(c.name).trim(),init:c.init,max:c.max,steps:c.steps,names:c.names,group:c.group}; });
-    var fsXs=(state.fs==='xs'?' class="on"':''), fsSm=(state.fs==='sm'?' class="on"':''), fsSm2=(state.fs==='sm2'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
+    var fsXs='', fsSm='', fsSm2=' class="on"', fsMd=''; /* 閲覧用HTMLの初期文字サイズは「やや小」 */
     var vhead='<div class="v-head">'
       +'<button class="hbtn" id="vOutline" title="しおりの開閉" style="margin-right:6px">☰</button>'
       +'<span class="v-title">'+esc(state.name)+'</span>'
@@ -2841,7 +2841,7 @@
       +'<div class="clip-add"><button class="clip-addbtn" id="clipAddSel">＋ 選択範囲を追加</button><button class="clip-addbtn clip-addf" id="clipAddFolder">＋ フォルダを作成</button><button class="clip-reset" id="clipResetCopied" title="コピー状況をリセット" aria-label="コピー状況をリセット"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg></button></div>'
       +'<div class="mat-pbody" id="clipBody"></div></aside>';
     var VFS={xs:0.58,sm:0.7,sm2:0.775,md:0.85};
-    var body='<div class="wrap" style="--fs:'+(VFS[state.fs]||VFS.sm)+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
+    var body='<div class="wrap" style="--fs:'+VFS.sm2+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
     var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
       +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
       +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'

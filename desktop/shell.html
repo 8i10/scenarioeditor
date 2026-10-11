@@ -35,6 +35,7 @@
   <label title="送信先の部屋">送信先<select id="target"></select></label>
   <button id="front" title="送信先の部屋を前面に表示">⤴</button>
   <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">コピーも残す</label>
+  <button id="tabs" title="ココフォリアのチャットタブ名を手動で設定">⚙ タブ</button>
   <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 確認</button>
   <span class="st" id="st">準備完了</span>
   <button id="ver" title="アップデートを確認">v-</button>
@@ -51,6 +52,7 @@
   $('ver').onclick = () => shellApi.checkUpdate();
   $('front').onclick = () => shellApi.focusRoom();
   $('keep').onchange = () => shellApi.keepClipboard($('keep').checked);
+  $('tabs').onclick = () => shellApi.openTabs();
   $('diag').onclick = () => shellApi.diagnose();
   shellApi.onState((s) => {
     if (s.version) $('ver').textContent = 'v' + s.version;

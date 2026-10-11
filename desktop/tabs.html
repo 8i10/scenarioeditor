@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>チャットタブ名の設定</title>
+<style>
+  body{margin:0;padding:16px 18px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;font-size:13px;color:#2b2622;background:#f5f3ef}
+  h1{font-size:15px;margin:0 0 8px}
+  p{color:#6b625a;line-height:1.6;margin:0 0 10px;font-size:12px}
+  .row{display:flex;gap:6px;margin:0 0 6px}
+  .row input{flex:1;height:30px;border:1px solid #cfc8bf;border-radius:7px;padding:0 9px;font:inherit;background:#fff}
+  button{font:inherit;border:1px solid #cfc8bf;background:#fff;border-radius:7px;padding:5px 12px;cursor:pointer}
+  .del{padding:0 9px;color:#8a8178}
+  .foot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .save{background:#2a9d74;border-color:#2a9d74;color:#fff;font-weight:700}
+</style>
+</head>
+<body>
+<h1>チャットタブ名の設定</h1>
+<p>ココフォリアのチャットタブ名を自動で読み込めない場合に、ここで同じタブ名を設定してください。
+閲覧用HTMLの送信バー「送信先」と本文コピーの送信先に表示されます。<br>タブ名はココフォリア側と<b>完全に同じ</b>にしてください。</p>
+<div id="list"></div>
+<button id="add">＋ タブを追加</button>
+<div class="foot"><button id="cancel">キャンセル</button><button class="save" id="save">保存</button></div>
+<script>
+  const list = document.getElementById('list');
+  function row(v) {
+    const d = document.createElement('div'); d.className = 'row';
+    const i = document.createElement('input'); i.value = v || ''; i.placeholder = 'タブ名（例：情報、雑談、PC1秘匿）';
+    const x = document.createElement('button'); x.className = 'del'; x.textContent = '🗑'; x.onclick = () => d.remove();
+    d.appendChild(i); d.appendChild(x); list.appendChild(d); return i;
+  }
+  shellApi.getTabs().then((l) => { (l && l.length ? l : ['']).forEach(row); });
+  document.getElementById('add').onclick = () => row('').focus();
+  document.getElementById('cancel').onclick = () => window.close();
+  document.getElementById('save').onclick = () => shellApi.setTabs(Array.from(list.querySelectorAll('input')).map((i) => i.value));
+</script>
+</body>
+</html>

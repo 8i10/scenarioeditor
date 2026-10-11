@@ -13,7 +13,7 @@ const BAR_H = 44;
 let win = null, viewer = null;
 const rooms = []; // { id, win }
 let roomSeq = 0;
-let cfg = { html: '', room: '', target: '', keepClipboard: false };
+let cfg = { html: '', room: '', target: '', keepClipboard: false, manualTabs: [] };
 
 const cfgPath = () => path.join(app.getPath('userData'), 'config.json');
 function loadCfg() { try { Object.assign(cfg, JSON.parse(fs.readFileSync(cfgPath(), 'utf8'))); } catch (_) {} }
@@ -114,7 +114,7 @@ async function enterIn(room) {
 }
 
 function injected(fnName, arg) {
-  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
+  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
     ' return await ' + fnName + '(' + (arg === undefined ? '' : JSON.stringify(arg)) + '); })()';
 }
 
@@ -171,9 +171,14 @@ ipcMain.handle('kp-send', async (_e, p) => {
 });
 ipcMain.handle('kp-tabs', async () => {
   const t = await targetRoom();
-  if (!t.room) return { ok: false, tabs: [], error: t.error };
-  try { const d = await evalIn(t.room, injected('diagnose')); return { ok: true, tabs: d.tabs || [] }; }
-  catch (e) { return { ok: false, tabs: [], error: e.message }; }
+  if (!t.room) return { ok: true, tabs: (cfg.manualTabs || []).filter(Boolean), error: t.error };
+  const manual = (cfg.manualTabs || []).filter(Boolean);
+  try {
+    const d = await evalIn(t.room, injected('diagnose'));
+    const fromSel = []; (d.selectOptions || []).forEach((s) => (s.options || []).forEach((o) => fromSel.push(o)));
+    return { ok: true, tabs: (d.tabs || []).concat(fromSel, manual) };
+  }
+  catch (e) { return { ok: true, tabs: manual, error: e.message }; }
 });
 ipcMain.handle('kp-is-app', () => true);
 ipcMain.handle('shell-open-html', async () => {
@@ -215,13 +220,26 @@ ipcMain.handle('shell-diagnose', async () => {
         '\nチャット入力欄：' + (d.textarea ? 'OK' : '× 見つかりません') +
         '\n名前欄：' + (d.nameInput ? 'OK（現在：' + d.nameValue + '）' : '× 見つかりません') +
         '\n送信ボタン：' + (d.submit ? 'OK' : '見つからないため Enter キーで送信します') +
-        '\nチャットタブ：' + (d.tabs.length ? d.tabs.join(' ／ ') : '× 見つかりません') +
+        '\nチャットタブ（タブバー）：' + (d.tabs.length ? d.tabs.join(' ／ ') : 'なし') +
+        (d.selectOptions || []).map((x, i) => '\nプルダウン' + (i + 1) + (x.label ? '（' + x.label + '）' : '') + '：' + (x.options.length ? x.options.join(' ／ ') : '選択肢なし')).join('') +
+        '\n手動設定のタブ：' + ((cfg.manualTabs || []).filter(Boolean).join(' ／ ') || 'なし') +
         '\n\nシナリオ側の送信先タブ名は、上のチャットタブ名と同じにしてください。';
     } catch (e) { text = '確認できませんでした：' + e.message; }
   }
   await dialog.showMessageBox(win, { type: 'info', title: '接続確認', message: 'ココフォリア接続確認', detail: text, buttons: ['OK'] });
 });
 ipcMain.handle('shell-check-update', () => checkUpdatesManually());
+let tabsWin = null;
+ipcMain.handle('shell-tabs', () => {
+  if (tabsWin && !tabsWin.isDestroyed()) { tabsWin.focus(); return; }
+  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 460, height: 520, title: 'チャットタブ名の設定', resizable: true, minimizable: false,
+    webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true } });
+  tabsWin.setMenuBarVisibility(false);
+  tabsWin.loadFile(path.join(__dirname, 'tabs.html'));
+  tabsWin.on('closed', () => { tabsWin = null; });
+});
+ipcMain.handle('tabs-get', () => (cfg.manualTabs || []));
+ipcMain.handle('tabs-set', (_e, list) => { cfg.manualTabs = (Array.isArray(list) ? list : []).map((x) => String(x || '').trim()).filter(Boolean); saveCfg(); status('チャットタブ名を保存しました（' + cfg.manualTabs.length + '件）', 'ok'); if (tabsWin && !tabsWin.isDestroyed()) tabsWin.close(); });
 ipcMain.handle('shell-devtools', () => { viewer.webContents.openDevTools({ mode: 'detach' }); });
 
 
