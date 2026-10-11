@@ -387,16 +387,26 @@
   .ruby-row .ruby-del{flex:none;border:0;background:transparent;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;color:var(--muted)}
   .ruby-row .ruby-del:hover{background:var(--hover)}
   .mat-sub-h{font-weight:700;letter-spacing:.04em;margin-top:22px;padding-bottom:4px;border-bottom:2px solid var(--text)}
-  .cnt-erow{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+  .cnt-folder{border:1px solid var(--line);border-radius:10px;background:var(--bg);overflow:hidden}
+  .cnt-fhead{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--hover);border-bottom:1px solid var(--line)}
+  .cnt-folder.closed .cnt-fhead{border-bottom:0}
+  .cnt-folder.closed .cnt-fbody{display:none}
+  .cnt-gtog{flex:none;border:0;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);padding:2px 4px}
+  .cnt-ficon{flex:none;font-size:14px}
+  .cnt-gname{flex:1;min-width:0;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 8px;font-family:inherit;font-size:13px;font-weight:700;box-sizing:border-box}
+  .cnt-fcount{flex:none;font-size:11px;color:var(--muted)}
+  .cnt-fbody{padding:8px 10px 10px 30px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .cnt-erow{align-self:stretch;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
   .cnt-erow input{height:30px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 8px;font-family:inherit;font-size:13px;box-sizing:border-box}
-  .cnt-erow .cnt-namel{flex:1 1 180px;min-width:0}
-  .cnt-erow .cnt-name{flex:1;min-width:0}
-  .cnt-erow .cnt-group{width:120px}
+  .cnt-erow .cnt-name{flex:1 1 140px;min-width:0;font-weight:700}
   .cnt-erow label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;white-space:nowrap}
-  .cnt-erow .cnt-num{width:64px}
-  .cnt-erow .cnt-steps{width:96px}
-  .cnt-erow .cnt-names{width:220px}
-  .cnt-erow .cnt-btn{flex:none;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:12px;padding:3px 7px;border-radius:6px;color:var(--text)}
+  .cnt-erow .cnt-num{width:56px}
+  .cnt-erow .cnt-steps{width:80px}
+  .cnt-erow .cnt-names{width:150px}
+  .cnt-erow .cnt-btns{display:flex;gap:4px;margin-left:auto}
+  @media (min-width:821px){ .cnt-erow{flex-wrap:nowrap} .cnt-erow .cnt-name{flex:1 1 90px} .cnt-erow .cnt-namesl{flex:1 1 120px;min-width:0} .cnt-erow .cnt-namesl .cnt-names{width:auto;flex:1;min-width:0} .cnt-erow .cnt-num{width:48px} .cnt-erow .cnt-steps{width:68px} }
+  .cnt-btn{flex:none;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:12px;padding:3px 7px;border-radius:6px;color:var(--text)}
+  #cntList{gap:10px}
   .fitem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .mat-tabs{display:flex;gap:6px;margin:0 0 10px;border-bottom:1px solid var(--line)}
   .mat-tabs-fp{flex:none;margin:0;padding:0 16px;background:var(--card);overflow-x:auto}
@@ -694,9 +704,9 @@
           <div id="flagList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
           <div class="frow"><button class="hb2" id="flagAdd">＋ フラグを追加</button></div>
           <div class="mat-sub-h">数値管理</div>
-          <div class="fhint">閲覧用HTMLの「データ」パネル内「📍 フラグ」タブで、参加PCごと（未登録なら共通）に数値を増減・記録できます。同じ「トグル」名の項目は1つの開閉グループにまとまり（空欄は「数値管理」）、項目ごとに「表示名」の数だけ数値を管理できます。段階・表示名はカンマ区切り（例: 3,6,9 / HO1,HO2）。表示名が空欄の場合は、参加PCの上から順に名前を表示します。増減した値は端末内にシナリオ名ごとに保存され、HTMLを更新しても引き継がれます。</div>
+          <div class="fhint">閲覧用HTMLの「データ」パネル内「📍 フラグ」タブで、参加PCごと（未登録なら共通）に数値を増減・記録できます。フォルダが閲覧側の開閉トグルになり（名前が空欄なら「数値管理」）、その中に項目を追加します。項目ごとに「表示名」の数だけ数値を管理できます。段階・表示名はカンマ区切り（例: 3,6,9 / HO1,HO2）。表示名が空欄の場合は、参加PCの上から順に名前を表示します。増減した値は端末内にシナリオ名ごとに保存され、HTMLを更新しても引き継がれます。</div>
           <div class="flist" id="cntList"></div>
-          <div class="frow"><button class="hb2" id="cntAdd">＋ 数値を追加</button></div>
+          <div class="frow"><button class="hb2" id="cntAdd">＋ フォルダを追加</button></div>
         </div>
         <div class="mat-pane" data-pane="ruby" style="display:none">
           <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
@@ -917,7 +927,7 @@
   var userInteracted=false;
   /* ---- Undo / Redo ---- */
   var undoStack=[], redoStack=[], lastSnap=null, undoTimer=null, applyingSnap=false;
-  function snapshot(){ try{ return JSON.stringify({pages:state.pages,curPage:state.curPage,name:state.name,materials:state.materials,npcs:state.npcs,pcs:state.pcs,letters:state.letters,events:state.events,ruby:state.ruby,counters:state.counters,bgColor:state.bgColor,headBg:state.headBg,theme:state.theme,fs:state.fs,font:state.font,pagelines:state.pagelines,colline:state.colline}); }catch(e){ return JSON.stringify({name:state.name}); } }
+  function snapshot(){ try{ return JSON.stringify({pages:state.pages,curPage:state.curPage,name:state.name,materials:state.materials,npcs:state.npcs,pcs:state.pcs,letters:state.letters,events:state.events,ruby:state.ruby,counterGroups:state.counterGroups,bgColor:state.bgColor,headBg:state.headBg,theme:state.theme,fs:state.fs,font:state.font,pagelines:state.pagelines,colline:state.colline}); }catch(e){ return JSON.stringify({name:state.name}); } }
   function commitUndo(){
     if(applyingSnap) return;
     var s=snapshot();
@@ -939,7 +949,7 @@
     if(Array.isArray(o.letters)) state.letters=o.letters;
     if(Array.isArray(o.events)) state.events=o.events;
     if(Array.isArray(o.ruby)) state.ruby=o.ruby;
-    if(Array.isArray(o.counters)) state.counters=o.counters;
+    if(Array.isArray(o.counterGroups)) state.counterGroups=o.counterGroups;
     ['bgColor','headBg','theme','fs','font','pagelines','colline'].forEach(function(k){ if(o[k]!==undefined) state[k]=o[k]; });
     if(editTarget && !editTargetObj()) editTarget=null;
     render(); applyOutline(); updateDocName(); renderOutline();
@@ -1009,7 +1019,7 @@
     idb.get(K_DOC(id)).then(function(json){ var o; try{o=JSON.parse(json);}catch(e){return;} if(o&&(o.pages||o.blocks)&&(o.updated||0)>(state.updated||0)){ applyingSnap=true; state=normalizeState(o); render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } }).catch(function(){});
   }
   function scheduleSave(){ saveInd.textContent='編集中…'; if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(persist,600); renderOutline(); }
-  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(!Array.isArray(o.letters))o.letters=[]; o.letters.forEach(function(l){ if(l&&!l.id) l.id=nid(); }); if(!Array.isArray(o.events))o.events=[]; if(!Array.isArray(o.counters))o.counters=[]; if(!Array.isArray(o.pcs))o.pcs=[]; o.pcs.forEach(function(p){ if(p&&!p.id) p.id=entryId('pc'); if(p&&!Array.isArray(p.skills)) p.skills=[]; }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
+  function normalizeState(o){ o.theme=o.theme||'light'; o.fs=o.fs||'sm'; if(o.outlineOpen===undefined)o.outlineOpen=true; if(o.rightMenu===undefined)o.rightMenu=false; o.headBg=o.headBg||'#000000'; o.name=o.name||'無題のシナリオ'; if(o.pagelines===undefined)o.pagelines=false; if(o.colline===undefined)o.colline=true; if(!Array.isArray(o.ruby))o.ruby=[]; if(!Array.isArray(o.materials))o.materials=[]; if(!Array.isArray(o.npcs))o.npcs=[]; o.npcs.forEach(function(n){ if(n&&!n.id) n.id=nid(); }); if(!Array.isArray(o.letters))o.letters=[]; o.letters.forEach(function(l){ if(l&&!l.id) l.id=nid(); }); if(!Array.isArray(o.events))o.events=[]; if((!Array.isArray(o.counterGroups)||!o.counterGroups.length) && Array.isArray(o.counters) && o.counters.length){ var cg=[], cgm={}; (Array.isArray(o.counters)?o.counters:[]).forEach(function(c){ if(!c) return; var g=String(c.group||'').trim(); if(!cgm.hasOwnProperty(g)){ cgm[g]=cg.length; cg.push({id:entryId('cg'),name:g,items:[]}); } var it={id:c.id||entryId('cn'),name:c.name||'',init:c.init||'',max:c.max||'',steps:c.steps||'',names:c.names||''}; cg[cgm[g]].items.push(it); }); o.counterGroups=cg; } if(!Array.isArray(o.counterGroups)) o.counterGroups=[]; delete o.counters; if(!Array.isArray(o.pcs))o.pcs=[]; o.pcs.forEach(function(p){ if(p&&!p.id) p.id=entryId('pc'); if(p&&!Array.isArray(p.skills)) p.skills=[]; }); if(typeof o.rev!=="number")o.rev=0; if(typeof o.folder!=="string")o.folder=""; if(typeof o.bgColor!=="string")o.bgColor="";
     o.materials.forEach(function(m){ if(!m) return; if(!m.id) m.id=entryId('mt'); if(!Array.isArray(m.blocks)){ var h=(m.body!=null?String(m.body):''); var html=/[<]/.test(h)?h:esc(h).replace(/\n/g,'<br>'); m.blocks=(html&&html.replace(/<br\s*\/?>/gi,'').trim())?[{id:nid(),type:'p',html:html,done:false,collapsed:false,bg:''}]:[]; } });
     o.events.forEach(function(ev){ if(!ev) return; if(!ev.id) ev.id=entryId('ev'); if(!Array.isArray(ev.blocks)){ var h=(ev.body!=null?String(ev.body):''); var html=esc(h).replace(/\n/g,'<br>'); ev.blocks=(html&&html.replace(/<br\s*\/?>/gi,'').trim())?[{id:nid(),type:'p',html:html,done:false,collapsed:false,bg:''}]:[]; } });
     if(!o.pages || !o.pages.length){ o.pages=[{ id:pageId(), name:'ページ1', blocks:(o.blocks&&o.blocks.length?o.blocks:[]) }]; }
@@ -2305,31 +2315,54 @@
       if(e.target.id==='pcAddFile'){ if(!pcFileInput){ pcFileInput=document.createElement('input'); pcFileInput.type='file'; pcFileInput.accept='.json,.txt,application/json,text/plain'; pcFileInput.style.display='none'; document.body.appendChild(pcFileInput); } pcFileInput.onchange=function(){ var f=pcFileInput.files&&pcFileInput.files[0]; pcFileInput.value=''; if(!f) return; var rd=new FileReader(); rd.onload=function(){ pcAddFromText(String(rd.result||'')); }; rd.readAsText(f); }; pcFileInput.click(); return; }
     });
   }
+  var cntClosed={};
+  function newCntItem(){ return {id:entryId('cn'),name:'',init:'',max:'',steps:'',names:''}; }
   function renderCntList(){
     var el=document.getElementById('cntList'); if(!el) return;
-    var rows=state.counters||[];
-    el.innerHTML = rows.length ? rows.map(function(c,i){
-      return '<div class="cnt-erow"><label>トグル<input type="text" class="cnt-f cnt-group" data-i="'+i+'" data-f="group" placeholder="例: 好感度" value="'+esc(c.group||'')+'"></label>'
-        +'<label class="cnt-namel">項目<input type="text" class="cnt-f cnt-name" data-i="'+i+'" data-f="name" placeholder="例: NPC名、侵蝕度" value="'+esc(c.name||'')+'"></label>'
-        +'<label>初期<input type="text" inputmode="decimal" class="cnt-f cnt-num" data-i="'+i+'" data-f="init" placeholder="0" value="'+esc(c.init==null?'':String(c.init))+'"></label>'
-        +'<label>最大<input type="text" inputmode="decimal" class="cnt-f cnt-num" data-i="'+i+'" data-f="max" placeholder="なし" value="'+esc(c.max==null?'':String(c.max))+'"></label>'
-        +'<label>段階<input type="text" class="cnt-f cnt-steps" data-i="'+i+'" data-f="steps" placeholder="3,6,9" value="'+esc(c.steps||'')+'"></label>'
-        +'<label>表示名<input type="text" class="cnt-f cnt-names" data-i="'+i+'" data-f="names" placeholder="空欄＝参加PC名（例: 扉A,扉B）" value="'+esc(c.names||'')+'"></label>'
-        +'<button class="cnt-btn cnt-up" data-i="'+i+'" title="上へ">▲</button><button class="cnt-btn cnt-dn" data-i="'+i+'" title="下へ">▼</button><button class="cnt-btn cnt-del" data-i="'+i+'" title="削除">🗑</button></div>';
-    }).join('') : '<div class="fhint">まだ登録がありません。「＋ 数値を追加」で追加してください。</div>';
+    var gs=state.counterGroups||[];
+    el.innerHTML = gs.length ? gs.map(function(g,gi){
+      var cl=!!cntClosed[g.id];
+      var items=(g.items||[]).map(function(c,i){
+        var at=' data-g="'+gi+'" data-i="'+i+'"';
+        return '<div class="cnt-erow">'
+          +'<input type="text" class="cnt-f cnt-name"'+at+' data-f="name" placeholder="項目（例: NPC名）" value="'+esc(c.name||'')+'">'
+          +'<label>初期<input type="text" inputmode="decimal" class="cnt-f cnt-num"'+at+' data-f="init" placeholder="0" value="'+esc(c.init==null?'':String(c.init))+'"></label>'
+          +'<label>最大<input type="text" inputmode="decimal" class="cnt-f cnt-num"'+at+' data-f="max" placeholder="なし" value="'+esc(c.max==null?'':String(c.max))+'"></label>'
+          +'<label>段階<input type="text" class="cnt-f cnt-steps"'+at+' data-f="steps" placeholder="3,6,9" value="'+esc(c.steps||'')+'"></label>'
+          +'<label class="cnt-namesl">表示名<input type="text" class="cnt-f cnt-names"'+at+' data-f="names" placeholder="空欄＝参加PC名" value="'+esc(c.names||'')+'"></label>'
+          +'<span class="cnt-btns"><button class="cnt-btn cnt-up"'+at+' title="上へ">▲</button><button class="cnt-btn cnt-dn"'+at+' title="下へ">▼</button><button class="cnt-btn cnt-del"'+at+' title="削除">🗑</button></span></div>';
+      }).join('');
+      return '<div class="cnt-folder'+(cl?' closed':'')+'"><div class="cnt-fhead">'
+        +'<button class="cnt-gtog" data-g="'+gi+'" title="開閉">'+(cl?'▸':'▾')+'</button><span class="cnt-ficon">📁</span>'
+        +'<input type="text" class="cnt-gname" data-g="'+gi+'" placeholder="フォルダ名（閲覧側のトグル名。例: 好感度）" value="'+esc(g.name||'')+'">'
+        +'<span class="cnt-fcount">'+(g.items||[]).length+'項目</span>'
+        +'<button class="cnt-btn cnt-gup" data-g="'+gi+'" title="上へ">▲</button><button class="cnt-btn cnt-gdn" data-g="'+gi+'" title="下へ">▼</button><button class="cnt-btn cnt-gdel" data-g="'+gi+'" title="フォルダを削除">🗑</button></div>'
+        +'<div class="cnt-fbody">'+(items||'<div class="fhint">項目がありません。</div>')
+        +'<button class="hb2 cnt-iadd" data-g="'+gi+'">＋ 項目を追加</button></div></div>';
+    }).join('') : '<div class="fhint">まだ登録がありません。「＋ フォルダを追加」で追加してください。</div>';
   }
   if(matOvl){
     matOvl.addEventListener('input',function(e){
-      var t=e.target; if(!t.classList.contains('cnt-f')) return;
-      var c=(state.counters||[])[+t.getAttribute('data-i')]; if(!c) return;
+      var t=e.target, gs=state.counterGroups||[];
+      if(t.classList.contains('cnt-gname')){ var g=gs[+t.getAttribute('data-g')]; if(g){ g.name=t.value; persist(); } return; }
+      if(!t.classList.contains('cnt-f')) return;
+      var g2=gs[+t.getAttribute('data-g')]; var c=g2&&(g2.items||[])[+t.getAttribute('data-i')]; if(!c) return;
       c[t.getAttribute('data-f')]=t.value; persist();
     });
     matOvl.addEventListener('click',function(e){
-      var a=state.counters||(state.counters=[]);
-      var d=e.target.closest('.cnt-del'); if(d){ a.splice(+d.getAttribute('data-i'),1); renderCntList(); persist(); return; }
-      var u=e.target.closest('.cnt-up'); if(u){ var i=+u.getAttribute('data-i'); if(i>0){ var t=a[i-1]; a[i-1]=a[i]; a[i]=t; renderCntList(); persist(); } return; }
-      var w=e.target.closest('.cnt-dn'); if(w){ var j=+w.getAttribute('data-i'); if(j<a.length-1){ var t2=a[j+1]; a[j+1]=a[j]; a[j]=t2; renderCntList(); persist(); } return; }
-      if(e.target.id==='cntAdd'){ a.push({id:entryId('cn'),name:'',init:'',max:'',steps:''}); renderCntList(); persist(); var ins=matOvl.querySelectorAll('.cnt-name'); if(ins.length) ins[ins.length-1].focus(); return; }
+      var gs=state.counterGroups||(state.counterGroups=[]);
+      function sw(a,i,j){ if(j<0||j>=a.length) return false; var t=a[i]; a[i]=a[j]; a[j]=t; return true; }
+      function focusLast(sel){ var ins=matOvl.querySelectorAll(sel); if(ins.length) ins[ins.length-1].focus(); }
+      var tg=e.target.closest('.cnt-gtog'); if(tg){ var g0=gs[+tg.getAttribute('data-g')]; if(g0){ cntClosed[g0.id]=!cntClosed[g0.id]; renderCntList(); } return; }
+      var gu=e.target.closest('.cnt-gup'); if(gu){ var gi=+gu.getAttribute('data-g'); if(sw(gs,gi,gi-1)){ renderCntList(); persist(); } return; }
+      var gd=e.target.closest('.cnt-gdn'); if(gd){ var gj=+gd.getAttribute('data-g'); if(sw(gs,gj,gj+1)){ renderCntList(); persist(); } return; }
+      var gx=e.target.closest('.cnt-gdel'); if(gx){ var gk=+gx.getAttribute('data-g'); var gg=gs[gk]; if(!gg) return; if((gg.items||[]).length && !confirm('フォルダ「'+(gg.name||'数値管理')+'」と中の項目を削除しますか？')) return; gs.splice(gk,1); renderCntList(); persist(); return; }
+      var ia=e.target.closest('.cnt-iadd'); if(ia){ var ga=gs[+ia.getAttribute('data-g')]; if(!ga) return; (ga.items=ga.items||[]).push(newCntItem()); cntClosed[ga.id]=false; renderCntList(); persist(); var row=matOvl.querySelectorAll('.cnt-name[data-g="'+ia.getAttribute('data-g')+'"]'); if(row.length) row[row.length-1].focus(); return; }
+      function itm(btn){ var g=gs[+btn.getAttribute('data-g')]; return g?{a:(g.items=g.items||[]),i:+btn.getAttribute('data-i')}:null; }
+      var d=e.target.closest('.cnt-del'); if(d){ var x=itm(d); if(x){ x.a.splice(x.i,1); renderCntList(); persist(); } return; }
+      var u=e.target.closest('.cnt-up'); if(u){ var x2=itm(u); if(x2&&sw(x2.a,x2.i,x2.i-1)){ renderCntList(); persist(); } return; }
+      var w=e.target.closest('.cnt-dn'); if(w){ var x3=itm(w); if(x3&&sw(x3.a,x3.i,x3.i+1)){ renderCntList(); persist(); } return; }
+      if(e.target.id==='cntAdd'){ gs.push({id:entryId('cg'),name:'',items:[newCntItem()]}); renderCntList(); persist(); focusLast('.cnt-gname'); return; }
     });
   }
   function renderRubyList(){
@@ -2692,7 +2725,8 @@
     (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
     var css=document.querySelector('style').textContent;
     var olHTML=outlineInnerHTML();
-    var cdefs=(state.counters||[]).filter(function(c){ return c&&c.name&&String(c.name).trim(); }).map(function(c){ return {id:c.id,name:String(c.name).trim(),init:c.init,max:c.max,steps:c.steps,names:c.names,group:c.group}; });
+    var cdefs=[]; (state.counterGroups||[]).forEach(function(g){ (g&&g.items||[]).forEach(function(c){ cdefs.push({id:c.id,name:c.name,init:c.init,max:c.max,steps:c.steps,names:c.names,group:g.name||''}); }); });
+    cdefs=cdefs.filter(function(c){ return c&&c.name&&String(c.name).trim(); }).map(function(c){ return {id:c.id,name:String(c.name).trim(),init:c.init,max:c.max,steps:c.steps,names:c.names,group:c.group}; });
     var fsXs=(state.fs==='xs'?' class="on"':''), fsSm=(state.fs==='sm'?' class="on"':''), fsMd=(state.fs==='md'?' class="on"':'');
     var vhead='<div class="v-head">'
       +'<button class="hbtn" id="vOutline" title="しおりの開閉" style="margin-right:6px">☰</button>'
