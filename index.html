@@ -396,7 +396,6 @@
   @media (min-width:821px){ body.rb-open #matOvl{right:212px} }
   /* データ／イベント項目：折り畳み＋その場編集 */
   .entry-row{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg)}
-  .mat-flag-h{font-weight:700;letter-spacing:.04em;margin-top:14px;padding-bottom:4px;border-bottom:2px solid var(--text)}
   .entry-row.open{border-color:var(--accent2);box-shadow:0 1px 6px rgba(0,0,0,.06)}
   .entry-rhead{display:flex;gap:8px;align-items:center;padding:10px}
   .entry-tog{flex:0 0 auto;width:26px;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--muted);cursor:pointer;font-size:12px}
@@ -661,7 +660,7 @@
 <div class="ovl fpage" id="matOvl">
   <div class="dlg fdlg">
     <div class="fpg-head"><span class="fpg-ttl">データ（この作品）</span><span style="margin-left:auto;display:flex;gap:8px"><button class="hb2" id="matClose2">✕ 閉じる</button></span></div>
-    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="evt">イベント・質問</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
+    <div class="mat-tabs mat-tabs-fp"><button class="mat-tab on" data-tab="npc">NPC・エネミー</button><button class="mat-tab" data-tab="mat">データ</button><button class="mat-tab" data-tab="evt">イベント・質問</button><button class="mat-tab" data-tab="flag">フラグ管理</button><button class="mat-tab" data-tab="ruby">ルビ</button></div>
     <div class="mat-scroll">
       <div class="mat-inner">
         <div class="mat-pane" data-pane="npc">
@@ -678,6 +677,11 @@
           <div class="fhint">イベントや質問（Q&amp;A）を登録できます。閲覧用HTMLの「💡 イベント・質問」パネルに表示されます。</div>
           <div id="evtList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
           <div class="frow"><button class="hb2" id="evtAdd">＋ イベント・質問を追加</button></div>
+        </div>
+        <div class="mat-pane" data-pane="flag" style="display:none">
+          <div class="fhint">閲覧用HTMLの「データ」パネル内「📍 フラグ」タブに表示されます。</div>
+          <div id="flagList" style="display:flex;flex-direction:column;gap:12px;margin:8px 0"></div>
+          <div class="frow"><button class="hb2" id="flagAdd">＋ フラグを追加</button></div>
         </div>
         <div class="mat-pane" data-pane="ruby" style="display:none">
           <div class="fhint">本文中のこの語句を、閲覧用HTMLでマウスオーバーすると読み（ルビ）が表示されます。</div>
@@ -1081,7 +1085,7 @@
   function movePage(id,dir){ var i=-1; (state.pages||[]).forEach(function(x,ix){if(x.id===id)i=ix;}); if(i<0) return; var j=i+dir; if(j<0||j>=state.pages.length) return; var t=state.pages[i]; state.pages[i]=state.pages[j]; state.pages[j]=t; renderOutline(); persist(); }
   function updateEditBar(){ var bar=document.getElementById('editTargetBar'); if(bar){ bar.style.display='none'; bar.innerHTML=''; } }
   function scenarioWrapEl(){ var pt=document.getElementById('printToc'); return pt?pt.parentNode:document.querySelector('.wrap'); }
-  function showMatTab(which){ if(!matOvl) return; [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===which); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc')renderNpcList(); if(which==='mat')renderMatList(); if(which==='evt')renderEvtList(); if(which==='pc')renderPcList(); if(which==='ruby')renderRubyList(); }
+  function showMatTab(which){ if(!matOvl) return; [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===which); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc')renderNpcList(); if(which==='mat'||which==='flag')renderMatList(); if(which==='evt')renderEvtList(); if(which==='pc')renderPcList(); if(which==='ruby')renderRubyList(); }
   function detachEntryEdit(){ if(!editTarget) return; var sw=scenarioWrapEl(); if(sw&&doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing','show'); editTarget=null; }
   /* データ／イベント項目をその場（一覧内）で本文と同じエディタで開閉 */
   function openEntryInline(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); stashInlineDoc(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); persist(); }
@@ -2001,7 +2005,8 @@
   function mountInlineDoc(el){ var mount=el.querySelector('#entryInlineMount'); if(!mount) return; mount.appendChild(doc); render(); applyFs(); applyFont(); var be=doc.querySelector('.be'); if(be&&typeof setCaretStart==='function') setCaretStart(be); }
   function renderMatList(){
     var el=document.getElementById('matList'); if(!el) return; var rows=state.materials||[];
-    if(el.contains(doc)) stashInlineDoc();
+    var fl=document.getElementById('flagList');
+    if(el.contains(doc)||(fl&&fl.contains(doc))) stashInlineDoc();
     var ovlShown=matOvl&&matOvl.classList.contains('show');
     var openId=(ovlShown&&editTarget&&editTarget.kind==='data')?editTarget.id:null;
     function rowHTML(m,i){
@@ -2020,12 +2025,9 @@
     var dataH='', flagH='';
     rows.forEach(function(m,i){ if(m&&m.flag) flagH+=rowHTML(m,i); else dataH+=rowHTML(m,i); });
     el.innerHTML = (dataH || '<div class="fhint">まだ資料がありません。「＋ 資料を追加」で追加してください。</div>')
-      +'<div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>'
-      +'<div class="mat-flag-h">📍 フラグ管理</div>'
-      +'<div class="fhint">閲覧用HTMLの「データ」パネル内「📍 フラグ」タブに表示されます。</div>'
-      +(flagH || '<div class="fhint">まだフラグがありません。「＋ フラグを追加」で追加してください。</div>')
-      +'<div class="frow"><button class="hb2" id="flagAdd">＋ フラグを追加</button></div>';
-    if(openId) mountInlineDoc(el);
+      +'<div class="frow"><button class="hb2" id="matAdd">＋ データを追加</button></div>';
+    if(fl) fl.innerHTML = flagH || '<div class="fhint">まだフラグがありません。「＋ フラグを追加」で追加してください。</div>';
+    if(openId) mountInlineDoc((fl&&fl.querySelector('#entryInlineMount'))?fl:el);
   }
   var matImgInput=null;
   function matPickImage(i){
@@ -2101,7 +2103,7 @@
       if(e.target.id==='evtAdd'){ state.events.push({id:entryId('ev'),title:'',blocks:[]}); renderEvtList(); persist(); var eins=matOvl.querySelectorAll('.evt-t-in'); if(eins.length) eins[eins.length-1].focus(); return; }
       if(e.target.id==='matClose2'){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } matOvl.classList.remove('show'); return; }
       if(e.target===matOvl){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } matOvl.classList.remove('show'); return; }
-      var tab=e.target.closest('.mat-tab'); if(tab){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); if(which==='mat') renderMatList(); if(which==='pc') renderPcList(); return; }
+      var tab=e.target.closest('.mat-tab'); if(tab){ if(editTarget){ stashInlineDoc(); editTarget=null; render(); } var which=tab.getAttribute('data-tab'); [].forEach.call(matOvl.querySelectorAll('.mat-tab'),function(b){ b.classList.toggle('on', b===tab); }); [].forEach.call(matOvl.querySelectorAll('.mat-pane'),function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; }); if(which==='npc') renderNpcList(); if(which==='ruby') renderRubyList(); if(which==='evt') renderEvtList(); if(which==='mat'||which==='flag') renderMatList(); if(which==='pc') renderPcList(); return; }
       var nvo=e.target.closest('.npc-vopen'); if(nvo){ var nvm=state.npcs[+nvo.getAttribute('data-i')]; if(nvm){ nvm.vopen=(nvm.vopen===false); renderNpcList(); persist(); } return; }
       var nup=e.target.closest('.npc-up'); if(nup){ var ni=+nup.getAttribute('data-i'); if(ni>0){ var a=state.npcs; var t=a[ni-1]; a[ni-1]=a[ni]; a[ni]=t; renderNpcList(); persist(); } return; }
       var ndn=e.target.closest('.npc-dn'); if(ndn){ var nj=+ndn.getAttribute('data-i'); var a2=state.npcs; if(nj<a2.length-1){ var t2=a2[nj+1]; a2[nj+1]=a2[nj]; a2[nj]=t2; renderNpcList(); persist(); } return; }
