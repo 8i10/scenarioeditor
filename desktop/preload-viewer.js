@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('kpBridge', {
   isApp: true,
   send: (payload) => ipcRenderer.invoke('kp-send', payload),
   tabs: () => ipcRenderer.invoke('kp-tabs'),
+  chars: () => ipcRenderer.invoke('kp-chars'),
 });

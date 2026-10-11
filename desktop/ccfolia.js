@@ -166,6 +166,31 @@ async function prepareSend(p) {
   return { ok: true, method: 'enter' };
 }
 
+// 自分のキャラクター一覧（チャット欄のアイコンを押して出る一覧）を読む。読めなければ空配列
+async function readCharacters() {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const vis = (el) => !!(el && el.getClientRects().length);
+  const c = findChat();
+  if (!c.textarea) return [];
+  const scope = c.form || document;
+  const cands = Array.from(scope.querySelectorAll('button,[role="button"]')).filter((b) => vis(b) && b.querySelector('img,[class*="Avatar"]'));
+  const listSel = '[role="menu"] [role="menuitem"],[role="listbox"] [role="option"],[role="presentation"] li,[role="dialog"] li';
+  for (const b of cands.slice(0, 2)) {
+    const before = document.querySelectorAll(listSel).length;
+    b.click();
+    await wait(250);
+    const items = Array.from(document.querySelectorAll(listSel)).slice(before);
+    const names = items.map((li) => {
+      const t = li.querySelector('[class*="primary"],[class*="Primary"],p,span');
+      return ((t && t.textContent) || li.textContent || '').replace(/\s+/g, ' ').trim();
+    }).filter((x) => x && x.length <= 40);
+    closeSelect(); await wait(120);
+    if (document.querySelector('[role="dialog"]')) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await wait(80); }
+    if (names.length) return names.filter((x, i, a) => a.indexOf(x) === i);
+  }
+  return [];
+}
+
 // 接続確認用：見つかった要素を報告
 async function diagnose() {
   const c = findChat();
@@ -191,4 +216,4 @@ async function diagnose() {
   };
 }
 
-module.exports = { findChat, setNativeValue, readSelectOptions, closeSelect, selectTabViaDropdown, prepareSend, diagnose };
+module.exports = { findChat, setNativeValue, readSelectOptions, closeSelect, selectTabViaDropdown, readCharacters, prepareSend, diagnose };

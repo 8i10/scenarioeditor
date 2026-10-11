@@ -114,7 +114,7 @@ async function enterIn(room) {
 }
 
 function injected(fnName, arg) {
-  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
+  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.readCharacters.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
     ' return await ' + fnName + '(' + (arg === undefined ? '' : JSON.stringify(arg)) + '); })()';
 }
 
@@ -187,6 +187,14 @@ ipcMain.handle('kp-tabs', async () => {
     return { ok: true, tabs: (d.tabs || []).concat(d.stripTabs || [], fromSel).map(clean).filter((x) => x && !/^[<>＜＞‹›«»]+$/.test(x)).concat(manual) };
   }
   catch (e) { return { ok: true, tabs: manual, error: e.message }; }
+});
+let charCache = { at: 0, list: [] };
+ipcMain.handle('kp-chars', async () => {
+  if (Date.now() - charCache.at < 60000) return { ok: true, chars: charCache.list };
+  const t = await targetRoom();
+  if (!t.room) return { ok: false, chars: [], error: t.error };
+  try { const list = await evalIn(t.room, injected('readCharacters')); charCache = { at: Date.now(), list: Array.isArray(list) ? list : [] }; return { ok: true, chars: charCache.list }; }
+  catch (e) { return { ok: false, chars: [], error: e.message }; }
 });
 ipcMain.handle('kp-is-app', () => true);
 ipcMain.handle('shell-open-html', async () => {
