@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
-<title>タブ・キャラクターの設定</title>
+<title>タブ・キャラクター・シーンの設定</title>
 <style>
   body{margin:0;padding:16px 18px;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;font-size:13px;color:#2b2622;background:#f5f3ef}
   h1{font-size:15px;margin:0 0 6px}
@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-<h1>タブ・キャラクターの設定</h1>
+<h1>タブ・キャラクター・シーンの設定</h1>
 <p>ココフォリアから自動で読み込めない場合に、ここで手動設定してください。閲覧用HTMLの送信バーと本文コピーの選択肢に表示されます。</p>
 <h2>チャットタブ</h2>
 <p>ココフォリア側のタブ名と<b>完全に同じ</b>名前にしてください。</p>
@@ -28,9 +28,13 @@
 <p>送信者として使うキャラクター名です。送信時、ココフォリアの名前欄にこの名前が入ります。</p>
 <div id="chars"></div>
 <button data-add="chars">＋ キャラクターを追加</button>
+<h2 id="sceneHead">シーン</h2>
+<p>本文コピーの「🎬 シーン」で「/scene シーン名」を送信します。ココフォリア側のシーン名と<b>完全に同じ</b>名前にしてください。</p>
+<div id="scenes"></div>
+<button data-add="scenes">＋ シーンを追加</button>
 <div class="foot"><button id="cancel">キャンセル</button><button class="save" id="save">保存</button></div>
 <script>
-  const PH = { tabs: 'タブ名（例：情報、雑談、KPC）', chars: 'キャラクター名（例：煙々羅、NPC花子）' };
+  const PH = { tabs: 'タブ名（例：情報、雑談、KPC）', chars: 'キャラクター名（例：煙々羅、NPC花子）', scenes: 'シーン名（例：導入、書斎、戦闘）' };
   function row(kind, v) {
     const box = document.getElementById(kind);
     const d = document.createElement('div'); d.className = 'row';
@@ -42,11 +46,13 @@
     v = v || {};
     ((v.tabs && v.tabs.length) ? v.tabs : ['']).forEach((t) => row('tabs', t));
     ((v.chars && v.chars.length) ? v.chars : ['']).forEach((t) => row('chars', t));
+    ((v.scenes && v.scenes.length) ? v.scenes : ['']).forEach((t) => row('scenes', t));
+    if (location.hash === '#scenes') { const h = document.getElementById('sceneHead'); if (h) h.scrollIntoView(); const f = document.querySelector('#scenes input'); if (f) f.focus(); }
   });
   document.querySelectorAll('[data-add]').forEach((b) => { b.onclick = () => row(b.getAttribute('data-add'), '').focus(); });
   document.getElementById('cancel').onclick = () => window.close();
   const vals = (id) => Array.from(document.querySelectorAll('#' + id + ' input')).map((i) => i.value);
-  document.getElementById('save').onclick = () => shellApi.setTabs({ tabs: vals('tabs'), chars: vals('chars') });
+  document.getElementById('save').onclick = () => shellApi.setTabs({ tabs: vals('tabs'), chars: vals('chars'), scenes: vals('scenes') });
 </script>
 </body>
 </html>

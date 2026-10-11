@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('shellApi', {
   keepClipboard: (v) => ipcRenderer.invoke('shell-keep-clipboard', v),
   diagnose: () => ipcRenderer.invoke('shell-diagnose'),
   checkUpdate: () => ipcRenderer.invoke('shell-check-update'),
-  openTabs: () => ipcRenderer.invoke('shell-tabs'),
+  openTabs: (sec) => ipcRenderer.invoke('shell-tabs', sec),
   getTabs: () => ipcRenderer.invoke('tabs-get'),
   setTabs: (l) => ipcRenderer.invoke('tabs-set', l),
   devtools: (w) => ipcRenderer.invoke('shell-devtools', w),

@@ -191,6 +191,24 @@ async function readCharacters() {
   return [];
 }
 
+// シーン一覧を読む（ココフォリアでシーン一覧の画面が表示されているときのみ）。読めなければ空配列
+function readScenes() {
+  const vis = (el) => !!(el && el.getClientRects().length);
+  const boxes = Array.from(document.querySelectorAll('[role="dialog"],[class*="Drawer"],[class*="Paper"]')).filter(vis);
+  const names = [];
+  boxes.forEach((box) => {
+    const head = Array.from(box.querySelectorAll('h1,h2,h3,h4,h5,h6,[class*="Title"],[class*="title"],header')).find((h) => /シーン/.test(h.textContent || ''));
+    if (!head) return;
+    Array.from(box.querySelectorAll('li,[role="listitem"],[role="button"]')).forEach((li) => {
+      if (!vis(li) || li.contains(head)) return;
+      const t = li.querySelector('[class*="primary"],[class*="Primary"],p,span');
+      const name = ((t && t.textContent) || li.textContent || '').replace(/\s+/g, ' ').trim();
+      if (name && name.length <= 40 && !/^(シーン|追加|新規|閉じる|保存|削除|編集)/.test(name)) names.push(name);
+    });
+  });
+  return names.filter((x, i, a) => a.indexOf(x) === i);
+}
+
 // 接続確認用：見つかった要素を報告
 async function diagnose() {
   const c = findChat();
@@ -216,4 +234,4 @@ async function diagnose() {
   };
 }
 
-module.exports = { findChat, setNativeValue, readSelectOptions, closeSelect, selectTabViaDropdown, readCharacters, prepareSend, diagnose };
+module.exports = { findChat, setNativeValue, readSelectOptions, closeSelect, selectTabViaDropdown, readCharacters, readScenes, prepareSend, diagnose };

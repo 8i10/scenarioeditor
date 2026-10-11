@@ -11,7 +11,7 @@ app.setPath('userData', path.join(app.getPath('appData'), 'scenario-sender'));
 
 const BAR_H = 44;
 let win = null, viewer = null;
-let cfg = { html: '', room: '', target: '', keepClipboard: false, manualTabs: [], manualChars: [] };
+let cfg = { html: '', room: '', target: '', keepClipboard: false, manualTabs: [], manualChars: [], manualScenes: [] };
 
 const cfgPath = () => path.join(app.getPath('userData'), 'config.json');
 function loadCfg() { try { Object.assign(cfg, JSON.parse(fs.readFileSync(cfgPath(), 'utf8'))); } catch (_) {} }
@@ -83,7 +83,7 @@ function evalIn(room, expr) { return br.evaluate(room.ws, expr); }
 async function enterIn(room) { return br.pressEnter(room.ws); }
 
 function injected(fnName, arg) {
-  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.readCharacters.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
+  return '(async () => {' + cc.findChat.toString() + cc.setNativeValue.toString() + cc.readSelectOptions.toString() + cc.closeSelect.toString() + cc.selectTabViaDropdown.toString() + cc.readCharacters.toString() + cc.readScenes.toString() + cc.prepareSend.toString() + cc.diagnose.toString() +
     ' return await ' + fnName + '(' + (arg === undefined ? '' : JSON.stringify(arg)) + '); })()';
 }
 
@@ -166,6 +166,13 @@ ipcMain.handle('kp-chars', async () => {
   try { const list = await evalIn(t.room, injected('readCharacters')); charCache = { at: Date.now(), list: Array.isArray(list) ? list : [] }; return { ok: true, chars: manual.concat(charCache.list) }; }
   catch (e) { return { ok: true, chars: manual, error: e.message }; }
 });
+ipcMain.handle('kp-scenes', async () => {
+  const manual = (cfg.manualScenes || []).filter(Boolean);
+  const t = await targetRoom();
+  if (!t.room) return { ok: true, scenes: manual };
+  try { const list = await evalIn(t.room, injected('readScenes')); return { ok: true, scenes: manual.concat(Array.isArray(list) ? list : []) }; }
+  catch (e) { return { ok: true, scenes: manual, error: e.message }; }
+});
 ipcMain.handle('kp-is-app', () => true);
 ipcMain.handle('shell-open-html', async () => {
   const r = await dialog.showOpenDialog(win, { title: '閲覧用HTMLを開く', properties: ['openFile'], filters: [{ name: 'HTML', extensions: ['html', 'htm'] }] });
@@ -215,19 +222,19 @@ ipcMain.handle('shell-diagnose', async () => {
 });
 ipcMain.handle('shell-check-update', () => checkUpdatesManually());
 let tabsWin = null;
-ipcMain.handle('shell-tabs', () => {
+ipcMain.handle('shell-tabs', (_e, section) => {
   if (tabsWin && !tabsWin.isDestroyed()) { tabsWin.focus(); return; }
-  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 480, height: 680, title: 'タブ・キャラクターの設定', resizable: true, minimizable: false,
+  tabsWin = new BrowserWindow({ parent: win, modal: true, width: 480, height: 760, title: 'タブ・キャラクター・シーンの設定', resizable: true, minimizable: false,
     webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true } });
   tabsWin.setMenuBarVisibility(false);
-  tabsWin.loadFile(path.join(__dirname, 'tabs.html'));
+  tabsWin.loadFile(path.join(__dirname, 'tabs.html'), section ? { hash: String(section) } : undefined);
   tabsWin.on('closed', () => { tabsWin = null; });
 });
-ipcMain.handle('tabs-get', () => ({ tabs: cfg.manualTabs || [], chars: cfg.manualChars || [] }));
+ipcMain.handle('tabs-get', () => ({ tabs: cfg.manualTabs || [], chars: cfg.manualChars || [], scenes: cfg.manualScenes || [] }));
 ipcMain.handle('tabs-set', (_e, v) => {
   const clean = (l) => (Array.isArray(l) ? l : []).map((x) => String(x || '').trim()).filter(Boolean);
-  cfg.manualTabs = clean(v && v.tabs); cfg.manualChars = clean(v && v.chars); saveCfg();
-  status('タブ ' + cfg.manualTabs.length + '件・キャラクター ' + cfg.manualChars.length + '件を保存しました', 'ok');
+  cfg.manualTabs = clean(v && v.tabs); cfg.manualChars = clean(v && v.chars); cfg.manualScenes = clean(v && v.scenes); saveCfg();
+  status('タブ ' + cfg.manualTabs.length + '件・キャラクター ' + cfg.manualChars.length + '件・シーン ' + cfg.manualScenes.length + '件を保存しました', 'ok');
   if (tabsWin && !tabsWin.isDestroyed()) tabsWin.close();
 });
 ipcMain.handle('shell-devtools', () => { viewer.webContents.openDevTools({ mode: 'detach' }); });
