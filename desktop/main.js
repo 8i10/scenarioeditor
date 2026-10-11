@@ -8,25 +8,28 @@ const cc = require('./ccfolia');
 app.setPath('userData', path.join(app.getPath('appData'), 'scenario-sender'));
 
 const BAR_H = 44;
-let win = null, viewer = null, room = null;
-let cfg = { html: '', room: '', ratio: 0.55, keepClipboard: false };
+let win = null, viewer = null;
+const rooms = []; // { id, win }
+let roomSeq = 0;
+let cfg = { html: '', room: '', target: '', keepClipboard: false };
 
 const cfgPath = () => path.join(app.getPath('userData'), 'config.json');
 function loadCfg() { try { Object.assign(cfg, JSON.parse(fs.readFileSync(cfgPath(), 'utf8'))); } catch (_) {} }
 function saveCfg() { try { fs.writeFileSync(cfgPath(), JSON.stringify(cfg, null, 2)); } catch (_) {} }
 
 function status(msg, level) { if (win && !win.isDestroyed()) win.webContents.send('status', { msg, level: level || 'info' }); }
+function roomList() {
+  return rooms.filter((r) => !r.win.isDestroyed()).map((r) => ({ id: r.id, title: r.win.getTitle() || ('部屋' + r.id), url: r.win.webContents.getURL() }));
+}
 function state() {
   if (!win || win.isDestroyed()) return;
-  win.webContents.send('state', { html: cfg.html, room: cfg.room, ratio: cfg.ratio, keepClipboard: cfg.keepClipboard });
+  win.webContents.send('state', { html: cfg.html, room: cfg.room, target: cfg.target, keepClipboard: cfg.keepClipboard, rooms: roomList() });
 }
 
 function layout() {
-  if (!win) return;
+  if (!win || !viewer) return;
   const [w, h] = win.getContentSize();
-  const lw = Math.round(w * cfg.ratio);
-  viewer.setBounds({ x: 0, y: BAR_H, width: lw, height: Math.max(0, h - BAR_H) });
-  room.setBounds({ x: lw + 1, y: BAR_H, width: Math.max(0, w - lw - 1), height: Math.max(0, h - BAR_H) });
+  viewer.setBounds({ x: 0, y: BAR_H, width: w, height: Math.max(0, h - BAR_H) });
 }
 
 function externalOnly(wc, allow) {
@@ -49,10 +52,39 @@ function normRoomUrl(u) {
   if (!/^https?:\/\//i.test(u)) u = 'https://ccfolia.com/rooms/' + u.replace(/^\/+/, '');
   return u;
 }
+
+// ココフォリアの部屋は別ウィンドウで開く（複数可）
 function openRoom(u) {
   u = normRoomUrl(u) || 'https://ccfolia.com/';
-  cfg.room = u; saveCfg(); state();
-  room.webContents.loadURL(u).catch((e) => status('ココフォリアを開けませんでした：' + e.message, 'err'));
+  cfg.room = u; saveCfg();
+  const id = ++roomSeq;
+  const rw = new BrowserWindow({
+    width: 1280, height: 860, title: 'ココフォリア',
+    webPreferences: { partition: 'persist:ccfolia', contextIsolation: true, sandbox: true, backgroundThrottling: false },
+  });
+  rooms.push({ id, win: rw });
+  externalOnly(rw.webContents, (url) => /^https:\/\/([a-z0-9-]+\.)*ccfolia\.com\//i.test(url) || /accounts\.google\.com|twitter\.com|x\.com|discord\.com/i.test(url));
+  const touch = () => { const url = rw.webContents.getURL(); if (/ccfolia\.com\/rooms\//.test(url)) { cfg.room = url; saveCfg(); } state(); };
+  rw.webContents.on('did-navigate', touch);
+  rw.webContents.on('did-navigate-in-page', touch);
+  rw.on('page-title-updated', () => setTimeout(state, 0));
+  rw.on('closed', () => { const i = rooms.findIndex((r) => r.id === id); if (i >= 0) rooms.splice(i, 1); if (String(cfg.target) === String(id)) { cfg.target = ''; } state(); });
+  rw.loadURL(u).catch((e) => status('ココフォリアを開けませんでした：' + e.message, 'err'));
+  state();
+}
+
+// 送信先の部屋を決める（自動＝開いている部屋が1つのとき）
+function targetRoom() {
+  const list = rooms.filter((r) => !r.win.isDestroyed());
+  if (cfg.target) {
+    const r = list.find((x) => String(x.id) === String(cfg.target));
+    if (r) return { room: r };
+  }
+  if (!list.length) return { error: 'ココフォリアの部屋が開かれていません（「部屋を開く」で開いてください）' };
+  const inRoom = list.filter((r) => /ccfolia\.com\/rooms\//.test(r.win.webContents.getURL()));
+  if (inRoom.length === 1) return { room: inRoom[0] };
+  if (list.length === 1) return { room: list[0] };
+  return { error: '部屋が複数開いています。上の「送信先の部屋」で選んでください' };
 }
 
 function injected(fnName, arg) {
@@ -64,15 +96,15 @@ let busy = Promise.resolve();
 async function sendToRoom(p) {
   const payload = { text: String((p && p.text) || ''), tab: String((p && p.tab) || ''), name: String((p && p.name) || '') };
   if (!payload.text.trim()) return { ok: false, error: '送信する文章がありません' };
-  if (!room) return { ok: false, error: 'ココフォリアが開かれていません' };
-  const wc = room.webContents;
+  const t = targetRoom();
+  if (!t.room) return { ok: false, error: t.error };
+  const wc = t.room.win.webContents;
   let r;
   try { r = await wc.executeJavaScript(injected('prepareSend', payload), true); }
   catch (e) { return { ok: false, error: '送信処理でエラー：' + e.message }; }
   if (!r || !r.ok) return r || { ok: false, error: '不明なエラー' };
   if (r.method === 'enter') {
     // 送信ボタンが見つからない場合は、実際の Enter キー入力で送信
-    wc.focus();
     wc.sendInputEvent({ type: 'keyDown', keyCode: 'Enter' });
     wc.sendInputEvent({ type: 'char', keyCode: '\r' });
     wc.sendInputEvent({ type: 'keyUp', keyCode: 'Enter' });
@@ -83,7 +115,7 @@ async function sendToRoom(p) {
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1440, height: 900, minWidth: 800, minHeight: 500,
+    width: 1100, height: 900, minWidth: 600, minHeight: 400,
     title: 'シナリオ送信ビューア',
     webPreferences: { preload: path.join(__dirname, 'preload-shell.js'), contextIsolation: true, sandbox: true },
   });
@@ -92,25 +124,18 @@ function createWindow() {
   viewer = new WebContentsView({
     webPreferences: { preload: path.join(__dirname, 'preload-viewer.js'), contextIsolation: true, sandbox: true },
   });
-  room = new WebContentsView({
-    webPreferences: { partition: 'persist:ccfolia', contextIsolation: true, sandbox: true },
-  });
   win.contentView.addChildView(viewer);
-  win.contentView.addChildView(room);
   externalOnly(viewer.webContents);
-  externalOnly(room.webContents, (u) => /^https:\/\/([a-z0-9-]+\.)*ccfolia\.com\//i.test(u) || /accounts\.google\.com|twitter\.com|x\.com|discord\.com/i.test(u));
   viewer.webContents.on('will-navigate', (e, url) => { if (/^https?:/i.test(url)) { e.preventDefault(); shell.openExternal(url); } });
-  room.webContents.on('did-navigate', (_e, url) => { if (/ccfolia\.com\/rooms\//.test(url)) { cfg.room = url; saveCfg(); state(); } });
-  room.webContents.on('did-navigate-in-page', (_e, url) => { if (/ccfolia\.com\/rooms\//.test(url)) { cfg.room = url; saveCfg(); state(); } });
 
   win.on('resize', layout);
+  win.on('closed', () => { rooms.slice().forEach((r) => { if (!r.win.isDestroyed()) r.win.close(); }); win = null; });
   layout();
 
   win.webContents.on('did-finish-load', () => {
     state();
     if (cfg.html && fs.existsSync(cfg.html)) openHtml(cfg.html);
     else viewer.webContents.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent('<body style="font-family:sans-serif;color:#666;display:flex;align-items:center;justify-content:center;height:90vh;margin:0">上の「📂 HTMLを開く」から閲覧用HTMLを選んでください</body>'));
-    openRoom(cfg.room || 'https://ccfolia.com/');
   });
 }
 
@@ -121,6 +146,12 @@ ipcMain.handle('kp-send', async (_e, p) => {
   status(r.ok ? ('送信しました → ' + (p && p.tab ? p.tab : '（現在のタブ）')) : ('送信できませんでした：' + r.error), r.ok ? 'ok' : 'err');
   return r;
 });
+ipcMain.handle('kp-tabs', async () => {
+  const t = targetRoom();
+  if (!t.room) return { ok: false, tabs: [], error: t.error };
+  try { const d = await t.room.win.webContents.executeJavaScript(injected('diagnose'), true); return { ok: true, tabs: d.tabs || [] }; }
+  catch (e) { return { ok: false, tabs: [], error: e.message }; }
+});
 ipcMain.handle('kp-is-app', () => true);
 ipcMain.handle('shell-open-html', async () => {
   const r = await dialog.showOpenDialog(win, { title: '閲覧用HTMLを開く', properties: ['openFile'], filters: [{ name: 'HTML', extensions: ['html', 'htm'] }] });
@@ -128,23 +159,28 @@ ipcMain.handle('shell-open-html', async () => {
 });
 ipcMain.handle('shell-reload', () => { if (cfg.html) openHtml(cfg.html); });
 ipcMain.handle('shell-open-room', (_e, u) => openRoom(u));
-ipcMain.handle('shell-ratio', (_e, r) => { cfg.ratio = Math.min(0.8, Math.max(0.2, Number(r) || 0.55)); saveCfg(); layout(); state(); });
+ipcMain.handle('shell-target', (_e, id) => { cfg.target = id ? String(id) : ''; saveCfg(); state(); });
+ipcMain.handle('shell-focus-room', () => { const t = targetRoom(); if (t.room) { if (t.room.win.isMinimized()) t.room.win.restore(); t.room.win.focus(); } else status(t.error, 'err'); });
 ipcMain.handle('shell-keep-clipboard', (_e, v) => { cfg.keepClipboard = !!v; saveCfg(); state(); });
 ipcMain.handle('shell-diagnose', async () => {
   let text;
-  try {
-    const d = await room.webContents.executeJavaScript(injected('diagnose'), true);
-    text = '部屋：' + (d.room ? 'OK' : '× 部屋が開かれていません') +
-      '\nURL：' + d.url +
-      '\nチャット入力欄：' + (d.textarea ? 'OK' : '× 見つかりません') +
-      '\n名前欄：' + (d.nameInput ? 'OK（現在：' + d.nameValue + '）' : '× 見つかりません') +
-      '\n送信ボタン：' + (d.submit ? 'OK' : '見つからないため Enter キーで送信します') +
-      '\nチャットタブ：' + (d.tabs.length ? d.tabs.join(' ／ ') : '× 見つかりません') +
-      '\n\nシナリオ側の送信先タブ名は、上のチャットタブ名と同じにしてください。';
-  } catch (e) { text = '確認できませんでした：' + e.message; }
+  const t = targetRoom();
+  if (!t.room) text = t.error;
+  else {
+    try {
+      const d = await t.room.win.webContents.executeJavaScript(injected('diagnose'), true);
+      text = '部屋：' + (d.room ? 'OK' : '× 部屋が開かれていません') +
+        '\nURL：' + d.url +
+        '\nチャット入力欄：' + (d.textarea ? 'OK' : '× 見つかりません') +
+        '\n名前欄：' + (d.nameInput ? 'OK（現在：' + d.nameValue + '）' : '× 見つかりません') +
+        '\n送信ボタン：' + (d.submit ? 'OK' : '見つからないため Enter キーで送信します') +
+        '\nチャットタブ：' + (d.tabs.length ? d.tabs.join(' ／ ') : '× 見つかりません') +
+        '\n\nシナリオ側の送信先タブ名は、上のチャットタブ名と同じにしてください。';
+    } catch (e) { text = '確認できませんでした：' + e.message; }
+  }
   await dialog.showMessageBox(win, { type: 'info', title: '接続確認', message: 'ココフォリア接続確認', detail: text, buttons: ['OK'] });
 });
-ipcMain.handle('shell-devtools', (_e, which) => { (which === 'room' ? room : viewer).webContents.openDevTools({ mode: 'detach' }); });
+ipcMain.handle('shell-devtools', () => { viewer.webContents.openDevTools({ mode: 'detach' }); });
 
 app.whenReady().then(() => {
   loadCfg();
@@ -152,7 +188,7 @@ app.whenReady().then(() => {
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
     { label: 'ファイル', submenu: [{ label: '閲覧用HTMLを開く…', accelerator: 'CmdOrCtrl+O', click: () => win && win.webContents.send('menu', 'open') }, { type: 'separator' }, { role: 'quit', label: '終了' }] },
     { role: 'editMenu', label: '編集' },
-    { label: '表示', submenu: [{ label: 'HTMLを再読み込み', accelerator: 'CmdOrCtrl+R', click: () => cfg.html && openHtml(cfg.html) }, { label: 'ココフォリアを再読み込み', accelerator: 'CmdOrCtrl+Shift+R', click: () => room && room.webContents.reload() }, { type: 'separator' }, { role: 'togglefullscreen', label: '全画面' }] },
+    { label: '表示', submenu: [{ label: 'HTMLを再読み込み', accelerator: 'CmdOrCtrl+R', click: () => cfg.html && openHtml(cfg.html) }, { type: 'separator' }, { role: 'togglefullscreen', label: '全画面' }] },
   ]));
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
