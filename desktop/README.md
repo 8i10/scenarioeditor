@@ -30,10 +30,19 @@
   その場合は「🩺 接続確認」の結果を添えてご連絡ください（`ccfolia.js` を調整します）。
 - 自動送信ツールの利用は、ココフォリアの利用規約の範囲内でお使いください。
 
+## インストールとアップデート
+
+- 配布ページ：https://github.com/8i10/scenarioeditor/releases/latest
+  - Windows：`scenario-sender-<バージョン>-win-x64.exe`
+  - Mac：`scenario-sender-<バージョン>-mac-*.dmg`
+- **Windows**：起動時に新しいバージョンを自動で確認・ダウンロードし、「再起動して更新」で更新されます（削除・再インストールは不要）。
+  上部の「v0.x.x」ボタン、またはメニュー「ヘルプ」→「アップデートを確認」で手動確認もできます。
+- **Mac**：署名なしアプリのため自動置き換えはできません。新しいバージョンがあると通知が出るので、ダウンロードしたアプリで上書きしてください（設定・ログイン状態は残ります）。
+
 ## インストーラーの作り方
 
-GitHub Actions（`.github/workflows/desktop-build.yml`）で自動ビルドされます。
-Actions の実行結果ページの「Artifacts」から Windows 版（.exe）/ Mac 版（.dmg）をダウンロードできます。
+`desktop/package.json` の `version` を上げてプッシュすると、GitHub Actions（`.github/workflows/desktop-build.yml`）が
+Windows 版（.exe）/ Mac 版（.dmg）をビルドし、`v<バージョン>` のリリースとして公開します（アプリはこのリリースからアップデートします）。
 
 - 署名していないため、初回起動時に警告が出ます。
   - Windows：「WindowsによってPCが保護されました」→「詳細情報」→「実行」

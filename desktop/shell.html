@@ -35,6 +35,7 @@
   <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 接続確認</button>
   <span class="grow"></span>
   <span class="st" id="st">準備完了</span>
+  <button id="ver" title="アップデートを確認">v-</button>
 </div>
 <script>
   const $ = (id) => document.getElementById(id);
@@ -44,10 +45,12 @@
   $('go').onclick = () => shellApi.openRoom($('url').value);
   $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openRoom($('url').value); });
   $('target').onchange = () => shellApi.target($('target').value);
+  $('ver').onclick = () => shellApi.checkUpdate();
   $('front').onclick = () => shellApi.focusRoom();
   $('keep').onchange = () => shellApi.keepClipboard($('keep').checked);
   $('diag').onclick = () => shellApi.diagnose();
   shellApi.onState((s) => {
+    if (s.version) $('ver').textContent = 'v' + s.version;
     const sel = $('target'); const rooms = s.rooms || [];
     sel.innerHTML = '';
     const o0 = document.createElement('option'); o0.value = ''; o0.textContent = rooms.length ? '自動（開いている部屋が1つのとき）' : '（部屋が開かれていません）'; sel.appendChild(o0);

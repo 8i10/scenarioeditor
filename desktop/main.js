@@ -3,6 +3,7 @@ const { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu } = re
 const path = require('path');
 const fs = require('fs');
 const cc = require('./ccfolia');
+const { autoUpdater } = require('electron-updater');
 
 // 設定・ログイン情報の保存先を固定（環境によって userData が親フォルダになるのを防ぐ）
 app.setPath('userData', path.join(app.getPath('appData'), 'scenario-sender'));
@@ -23,7 +24,7 @@ function roomList() {
 }
 function state() {
   if (!win || win.isDestroyed()) return;
-  win.webContents.send('state', { html: cfg.html, room: cfg.room, target: cfg.target, keepClipboard: cfg.keepClipboard, rooms: roomList() });
+  win.webContents.send('state', { version: app.getVersion(), html: cfg.html, room: cfg.room, target: cfg.target, keepClipboard: cfg.keepClipboard, rooms: roomList() });
 }
 
 function layout() {
@@ -180,7 +181,46 @@ ipcMain.handle('shell-diagnose', async () => {
   }
   await dialog.showMessageBox(win, { type: 'info', title: '接続確認', message: 'ココフォリア接続確認', detail: text, buttons: ['OK'] });
 });
+ipcMain.handle('shell-check-update', () => checkUpdatesManually());
 ipcMain.handle('shell-devtools', () => { viewer.webContents.openDevTools({ mode: 'detach' }); });
+
+
+// ---- アップデート（GitHub Releases から確認） ----
+const RELEASES_URL = 'https://github.com/8i10/scenarioeditor/releases/latest';
+let manualCheck = false;
+function setupUpdater() {
+  if (!app.isPackaged) return;
+  // Mac は署名なしでは自動置き換えができないため、通知してダウンロードページを開く
+  autoUpdater.autoDownload = process.platform !== 'darwin';
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('update-available', async (info) => {
+    status('新しいバージョン ' + info.version + ' があります' + (autoUpdater.autoDownload ? '（ダウンロード中…）' : ''), 'ok');
+    if (!autoUpdater.autoDownload) {
+      const r = await dialog.showMessageBox(win, { type: 'info', title: 'アップデート', message: '新しいバージョン ' + info.version + ' があります', detail: 'ダウンロードページを開きますか？（ダウンロードしたアプリで上書きしてください）', buttons: ['ダウンロードページを開く', 'あとで'], defaultId: 0, cancelId: 1 });
+      if (r.response === 0) shell.openExternal(RELEASES_URL);
+    }
+  });
+  autoUpdater.on('update-not-available', () => {
+    if (manualCheck) dialog.showMessageBox(win, { type: 'info', title: 'アップデート', message: '最新版です（' + app.getVersion() + '）', buttons: ['OK'] });
+    manualCheck = false;
+  });
+  autoUpdater.on('download-progress', (p) => status('アップデートをダウンロード中… ' + Math.round(p.percent || 0) + '%'));
+  autoUpdater.on('update-downloaded', async (info) => {
+    manualCheck = false;
+    const r = await dialog.showMessageBox(win, { type: 'info', title: 'アップデート', message: 'バージョン ' + info.version + ' の準備ができました', detail: '再起動して更新しますか？（「あとで」を選ぶと、アプリ終了時に更新されます）', buttons: ['再起動して更新', 'あとで'], defaultId: 0, cancelId: 1 });
+    if (r.response === 0) setImmediate(() => autoUpdater.quitAndInstall());
+  });
+  autoUpdater.on('error', (e) => {
+    if (manualCheck) dialog.showMessageBox(win, { type: 'warning', title: 'アップデート', message: 'アップデートを確認できませんでした', detail: String((e && e.message) || e), buttons: ['OK'] });
+    manualCheck = false;
+  });
+  autoUpdater.checkForUpdates().catch(() => {});
+}
+function checkUpdatesManually() {
+  if (!app.isPackaged) { dialog.showMessageBox(win, { type: 'info', message: '開発版ではアップデート確認は使えません', buttons: ['OK'] }); return; }
+  manualCheck = true;
+  autoUpdater.checkForUpdates().catch(() => {});
+}
 
 app.whenReady().then(() => {
   loadCfg();
@@ -188,9 +228,11 @@ app.whenReady().then(() => {
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
     { label: 'ファイル', submenu: [{ label: '閲覧用HTMLを開く…', accelerator: 'CmdOrCtrl+O', click: () => win && win.webContents.send('menu', 'open') }, { type: 'separator' }, { role: 'quit', label: '終了' }] },
     { role: 'editMenu', label: '編集' },
+    { label: 'ヘルプ', submenu: [{ label: 'アップデートを確認…', click: checkUpdatesManually }, { label: 'バージョン ' + app.getVersion(), enabled: false }] },
     { label: '表示', submenu: [{ label: 'HTMLを再読み込み', accelerator: 'CmdOrCtrl+R', click: () => cfg.html && openHtml(cfg.html) }, { type: 'separator' }, { role: 'togglefullscreen', label: '全画面' }] },
   ]));
   createWindow();
+  setupUpdater();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

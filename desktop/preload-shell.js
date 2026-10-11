@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('shellApi', {
   focusRoom: () => ipcRenderer.invoke('shell-focus-room'),
   keepClipboard: (v) => ipcRenderer.invoke('shell-keep-clipboard', v),
   diagnose: () => ipcRenderer.invoke('shell-diagnose'),
+  checkUpdate: () => ipcRenderer.invoke('shell-check-update'),
   devtools: (w) => ipcRenderer.invoke('shell-devtools', w),
   onStatus: (cb) => ipcRenderer.on('status', (_e, s) => cb(s)),
   onState: (cb) => ipcRenderer.on('state', (_e, s) => cb(s)),
