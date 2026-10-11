@@ -60,7 +60,9 @@ async function prepareSend(p) {
   if (p.tab) {
     const norm = (s) => String(s || '').replace(/\s+/g, '').trim();
     const want = norm(p.tab);
-    const tab = c.tabs.find((t) => norm(t.textContent) === want) || c.tabs.find((t) => norm(t.textContent).indexOf(want) === 0);
+    let tab = c.tabs.find((t) => norm(t.textContent) === want) || c.tabs.find((t) => norm(t.textContent).indexOf(want) === 0);
+    // メインタブは表示名が異なる場合があるため、見つからなければ先頭のタブをメインとして扱う
+    if (!tab && /^(メイン|main)$/i.test(want) && c.tabs.length) tab = c.tabs[0];
     if (!tab) {
       return { ok: false, error: 'タブ「' + p.tab + '」が見つかりません（ココフォリア側：' + c.tabs.map((t) => (t.textContent || '').trim()).join('／') + '）' };
     }

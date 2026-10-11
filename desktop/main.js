@@ -3,6 +3,7 @@ const { app, BrowserWindow, WebContentsView, ipcMain, dialog, shell, Menu } = re
 const path = require('path');
 const fs = require('fs');
 const cc = require('./ccfolia');
+const br = require('./browser');
 const { autoUpdater } = require('electron-updater');
 
 // 設定・ログイン情報の保存先を固定（環境によって userData が親フォルダになるのを防ぐ）
@@ -19,12 +20,25 @@ function loadCfg() { try { Object.assign(cfg, JSON.parse(fs.readFileSync(cfgPath
 function saveCfg() { try { fs.writeFileSync(cfgPath(), JSON.stringify(cfg, null, 2)); } catch (_) {} }
 
 function status(msg, level) { if (win && !win.isDestroyed()) win.webContents.send('status', { msg, level: level || 'info' }); }
-function roomList() {
-  return rooms.filter((r) => !r.win.isDestroyed()).map((r) => ({ id: r.id, title: r.win.getTitle() || ('部屋' + r.id), url: r.win.webContents.getURL() }));
+// 送信できる部屋の一覧（アプリのウィンドウ＋連携ブラウザのタブ）
+let browserOn = false;
+async function allRooms() {
+  const list = rooms.filter((r) => !r.win.isDestroyed()).map((r) => ({ key: 'w' + r.id, kind: 'app', title: r.win.getTitle() || ('部屋' + r.id), url: r.win.webContents.getURL(), win: r.win }));
+  const b = await br.listRooms();
+  browserOn = !!b;
+  (b || []).forEach((t) => list.push({ key: 'b' + t.id, kind: 'browser', id: t.id, title: t.title, url: t.url, ws: t.ws }));
+  return list;
 }
-function state() {
+let lastState = '';
+async function state(force) {
   if (!win || win.isDestroyed()) return;
-  win.webContents.send('state', { version: app.getVersion(), html: cfg.html, room: cfg.room, target: cfg.target, keepClipboard: cfg.keepClipboard, rooms: roomList() });
+  const list = await allRooms();
+  const st = { version: app.getVersion(), html: cfg.html, room: cfg.room, target: cfg.target, keepClipboard: cfg.keepClipboard, browserOn,
+    rooms: list.map((r) => ({ key: r.key, kind: r.kind, title: r.title, url: r.url })) };
+  const js = JSON.stringify(st);
+  if (!force && js === lastState) return;
+  lastState = js;
+  if (win && !win.isDestroyed()) win.webContents.send('state', st);
 }
 
 function layout() {
@@ -69,23 +83,34 @@ function openRoom(u) {
   rw.webContents.on('did-navigate', touch);
   rw.webContents.on('did-navigate-in-page', touch);
   rw.on('page-title-updated', () => setTimeout(state, 0));
-  rw.on('closed', () => { const i = rooms.findIndex((r) => r.id === id); if (i >= 0) rooms.splice(i, 1); if (String(cfg.target) === String(id)) { cfg.target = ''; } state(); });
+  rw.on('closed', () => { const i = rooms.findIndex((r) => r.id === id); if (i >= 0) rooms.splice(i, 1); if (cfg.target === 'w' + id) { cfg.target = ''; saveCfg(); } state(); });
   rw.loadURL(u).catch((e) => status('ココフォリアを開けませんでした：' + e.message, 'err'));
   state();
 }
 
 // 送信先の部屋を決める（自動＝開いている部屋が1つのとき）
-function targetRoom() {
-  const list = rooms.filter((r) => !r.win.isDestroyed());
+async function targetRoom() {
+  const list = await allRooms();
   if (cfg.target) {
-    const r = list.find((x) => String(x.id) === String(cfg.target));
+    const r = list.find((x) => x.key === cfg.target);
     if (r) return { room: r };
   }
-  if (!list.length) return { error: 'ココフォリアの部屋が開かれていません（「部屋を開く」で開いてください）' };
-  const inRoom = list.filter((r) => /ccfolia\.com\/rooms\//.test(r.win.webContents.getURL()));
+  if (!list.length) return { error: 'ココフォリアの部屋が見つかりません（「🌐 ブラウザで開く」で部屋を開いてください）' };
+  const inRoom = list.filter((r) => /ccfolia\.com\/rooms\//.test(r.url));
   if (inRoom.length === 1) return { room: inRoom[0] };
   if (list.length === 1) return { room: list[0] };
   return { error: '部屋が複数開いています。上の「送信先の部屋」で選んでください' };
+}
+function evalIn(room, expr) {
+  if (room.kind === 'app') return room.win.webContents.executeJavaScript(expr, true);
+  return br.evaluate(room.ws, expr);
+}
+async function enterIn(room) {
+  if (room.kind === 'browser') return br.pressEnter(room.ws);
+  const wc = room.win.webContents;
+  wc.sendInputEvent({ type: 'keyDown', keyCode: 'Enter' });
+  wc.sendInputEvent({ type: 'char', keyCode: '\r' });
+  wc.sendInputEvent({ type: 'keyUp', keyCode: 'Enter' });
 }
 
 function injected(fnName, arg) {
@@ -97,18 +122,15 @@ let busy = Promise.resolve();
 async function sendToRoom(p) {
   const payload = { text: String((p && p.text) || ''), tab: String((p && p.tab) || ''), name: String((p && p.name) || '') };
   if (!payload.text.trim()) return { ok: false, error: '送信する文章がありません' };
-  const t = targetRoom();
+  const t = await targetRoom();
   if (!t.room) return { ok: false, error: t.error };
-  const wc = t.room.win.webContents;
   let r;
-  try { r = await wc.executeJavaScript(injected('prepareSend', payload), true); }
+  try { r = await evalIn(t.room, injected('prepareSend', payload)); }
   catch (e) { return { ok: false, error: '送信処理でエラー：' + e.message }; }
   if (!r || !r.ok) return r || { ok: false, error: '不明なエラー' };
   if (r.method === 'enter') {
     // 送信ボタンが見つからない場合は、実際の Enter キー入力で送信
-    wc.sendInputEvent({ type: 'keyDown', keyCode: 'Enter' });
-    wc.sendInputEvent({ type: 'char', keyCode: '\r' });
-    wc.sendInputEvent({ type: 'keyUp', keyCode: 'Enter' });
+    try { await enterIn(t.room); } catch (e) { return { ok: false, error: 'Enter キーを送れませんでした：' + e.message }; }
   }
   if (cfg.keepClipboard) { try { require('electron').clipboard.writeText(payload.text); } catch (_) {} }
   return { ok: true };
@@ -134,7 +156,7 @@ function createWindow() {
   layout();
 
   win.webContents.on('did-finish-load', () => {
-    state();
+    state(true);
     if (cfg.html && fs.existsSync(cfg.html)) openHtml(cfg.html);
     else viewer.webContents.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent('<body style="font-family:sans-serif;color:#666;display:flex;align-items:center;justify-content:center;height:90vh;margin:0">上の「📂 HTMLを開く」から閲覧用HTMLを選んでください</body>'));
   });
@@ -148,9 +170,9 @@ ipcMain.handle('kp-send', async (_e, p) => {
   return r;
 });
 ipcMain.handle('kp-tabs', async () => {
-  const t = targetRoom();
+  const t = await targetRoom();
   if (!t.room) return { ok: false, tabs: [], error: t.error };
-  try { const d = await t.room.win.webContents.executeJavaScript(injected('diagnose'), true); return { ok: true, tabs: d.tabs || [] }; }
+  try { const d = await evalIn(t.room, injected('diagnose')); return { ok: true, tabs: d.tabs || [] }; }
   catch (e) { return { ok: false, tabs: [], error: e.message }; }
 });
 ipcMain.handle('kp-is-app', () => true);
@@ -160,17 +182,35 @@ ipcMain.handle('shell-open-html', async () => {
 });
 ipcMain.handle('shell-reload', () => { if (cfg.html) openHtml(cfg.html); });
 ipcMain.handle('shell-open-room', (_e, u) => openRoom(u));
-ipcMain.handle('shell-target', (_e, id) => { cfg.target = id ? String(id) : ''; saveCfg(); state(); });
-ipcMain.handle('shell-focus-room', () => { const t = targetRoom(); if (t.room) { if (t.room.win.isMinimized()) t.room.win.restore(); t.room.win.focus(); } else status(t.error, 'err'); });
+ipcMain.handle('shell-target', (_e, key) => { cfg.target = key ? String(key) : ''; saveCfg(); state(true); });
+ipcMain.handle('shell-focus-room', async () => {
+  const t = await targetRoom();
+  if (!t.room) { status(t.error, 'err'); return; }
+  if (t.room.kind === 'app') { if (t.room.win.isMinimized()) t.room.win.restore(); t.room.win.focus(); }
+  else { try { await br.activate(t.room.id); } catch (_) {} }
+});
+// 連携ブラウザ（Chrome / Edge）で部屋を開く
+ipcMain.handle('shell-open-browser', async (_e, u) => {
+  const url = normRoomUrl(u) || cfg.room || 'https://ccfolia.com/';
+  if (normRoomUrl(u)) { cfg.room = url; saveCfg(); }
+  if (await br.isConnected()) {
+    try { await br.openUrl(url); status('連携ブラウザで部屋を開きました', 'ok'); } catch (e) { status('部屋を開けませんでした：' + e.message, 'err'); }
+  } else {
+    const r = br.launch(path.join(app.getPath('userData'), 'browser-profile'), url);
+    status(r.ok ? '連携ブラウザを起動しました（初回はココフォリアにログインしてください）' : r.error, r.ok ? 'ok' : 'err');
+  }
+  setTimeout(() => state(), 2500);
+});
 ipcMain.handle('shell-keep-clipboard', (_e, v) => { cfg.keepClipboard = !!v; saveCfg(); state(); });
 ipcMain.handle('shell-diagnose', async () => {
   let text;
-  const t = targetRoom();
+  const t = await targetRoom();
   if (!t.room) text = t.error;
   else {
     try {
-      const d = await t.room.win.webContents.executeJavaScript(injected('diagnose'), true);
-      text = '部屋：' + (d.room ? 'OK' : '× 部屋が開かれていません') +
+      const d = await evalIn(t.room, injected('diagnose'));
+      text = '接続先：' + (t.room.kind === 'browser' ? '連携ブラウザ' : 'アプリのウィンドウ') +
+        '\n部屋：' + (d.room ? 'OK' : '× 部屋が開かれていません') +
         '\nURL：' + d.url +
         '\nチャット入力欄：' + (d.textarea ? 'OK' : '× 見つかりません') +
         '\n名前欄：' + (d.nameInput ? 'OK（現在：' + d.nameValue + '）' : '× 見つかりません') +
@@ -233,6 +273,7 @@ app.whenReady().then(() => {
   ]));
   createWindow();
   setupUpdater();
+  setInterval(() => { state().catch(() => {}); }, 3000);
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

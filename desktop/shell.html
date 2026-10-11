@@ -10,12 +10,13 @@
   .bar{height:44px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--bg);color:var(--fg);font-size:12px;white-space:nowrap;overflow:hidden}
   button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
   button:hover{background:rgba(255,255,255,.1)}
-  select{font:inherit;font-size:12px;height:26px;border:1px solid var(--line);border-radius:7px;background:#3a332e;color:var(--fg);max-width:220px}
-  input[type=text]{font:inherit;font-size:12px;height:26px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.08);color:var(--fg);padding:0 8px;width:240px;min-width:120px}
+  select{font:inherit;font-size:12px;height:26px;border:1px solid var(--line);border-radius:7px;background:#3a332e;color:var(--fg);max-width:190px}
+  input[type=text]{font:inherit;font-size:12px;height:26px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.08);color:var(--fg);padding:0 8px;width:200px;min-width:100px;flex:0 1 200px}
+  .bconn{color:#8a8178;font-size:11px}.bconn.on{color:#7fe0b8}
   .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
   .file{color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis}
   .grow{flex:1}
-  .st{max-width:40vw;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+  .st{flex:1 1 auto;min-width:0;max-width:40vw;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
   .st.ok{color:#7fe0b8}.st.err{color:#ffb0a8}
   label{display:flex;align-items:center;gap:4px;color:var(--muted)}
 </style>
@@ -24,16 +25,17 @@
 <div class="bar">
   <button id="open" title="閲覧用HTMLを開く（Ctrl+O）">📂 HTMLを開く</button>
   <button id="reload" title="HTMLを再読み込み">↻</button>
-  <span class="file" id="file">（未選択）</span>
+  <span class="file" id="file" style="max-width:140px">（未選択）</span>
   <span class="sep"></span>
   <input type="text" id="url" placeholder="ココフォリアの部屋URL（https://ccfolia.com/rooms/…）">
-  <button id="go" title="ココフォリアを別ウィンドウで開く">部屋を開く</button>
+  <button id="gob" title="Chrome / Edge（連携用）で部屋を開く。開いている部屋へ送信できます">🌐 ブラウザ</button>
+  <button id="go" title="アプリのウィンドウで部屋を開く">🪟 アプリ</button>
+  <span class="bconn" id="bconn" title="連携ブラウザの接続状態">●</span>
   <span class="sep"></span>
-  <label>送信先の部屋<select id="target"></select></label>
-  <button id="front" title="送信先の部屋のウィンドウを前面に">🪟</button>
-  <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">クリップボードにも残す</label>
-  <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 接続確認</button>
-  <span class="grow"></span>
+  <label title="送信先の部屋">送信先<select id="target"></select></label>
+  <button id="front" title="送信先の部屋を前面に表示">⤴</button>
+  <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">コピーも残す</label>
+  <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 確認</button>
   <span class="st" id="st">準備完了</span>
   <button id="ver" title="アップデートを確認">v-</button>
 </div>
@@ -43,7 +45,8 @@
   $('open').onclick = () => shellApi.openHtml();
   $('reload').onclick = () => shellApi.reload();
   $('go').onclick = () => shellApi.openRoom($('url').value);
-  $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openRoom($('url').value); });
+  $('gob').onclick = () => shellApi.openBrowser($('url').value);
+  $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openBrowser($('url').value); });
   $('target').onchange = () => shellApi.target($('target').value);
   $('ver').onclick = () => shellApi.checkUpdate();
   $('front').onclick = () => shellApi.focusRoom();
@@ -54,8 +57,10 @@
     const sel = $('target'); const rooms = s.rooms || [];
     sel.innerHTML = '';
     const o0 = document.createElement('option'); o0.value = ''; o0.textContent = rooms.length ? '自動（開いている部屋が1つのとき）' : '（部屋が開かれていません）'; sel.appendChild(o0);
-    rooms.forEach((r) => { const o = document.createElement('option'); o.value = String(r.id); o.textContent = r.id + '：' + (r.title || r.url); sel.appendChild(o); });
-    sel.value = rooms.some((r) => String(r.id) === String(s.target)) ? String(s.target) : '';
+    rooms.forEach((r) => { const o = document.createElement('option'); o.value = r.key; o.textContent = (r.kind === 'browser' ? '🌐 ' : '🪟 ') + (r.title || r.url); sel.appendChild(o); });
+    sel.value = rooms.some((r) => r.key === s.target) ? s.target : '';
+    $('bconn').className = 'bconn' + (s.browserOn ? ' on' : '');
+    $('bconn').title = s.browserOn ? '連携ブラウザ：接続中' : '連携ブラウザ：未接続（「🌐 ブラウザで開く」で起動）';
     $('file').textContent = s.html ? s.html.split(/[\\/]/).pop() : '（未選択）';
     $('file').title = s.html || '';
     if (document.activeElement !== $('url')) $('url').value = s.room || '';

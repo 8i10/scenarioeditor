@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('shellApi', {
   openHtml: () => ipcRenderer.invoke('shell-open-html'),
   reload: () => ipcRenderer.invoke('shell-reload'),
   openRoom: (u) => ipcRenderer.invoke('shell-open-room', u),
+  openBrowser: (u) => ipcRenderer.invoke('shell-open-browser', u),
   target: (id) => ipcRenderer.invoke('shell-target', id),
   focusRoom: () => ipcRenderer.invoke('shell-focus-room'),
   keepClipboard: (v) => ipcRenderer.invoke('shell-keep-clipboard', v),
