@@ -1,0 +1,52 @@
+{
+  "name": "scenario-sender",
+  "productName": "シナリオ送信ビューア",
+  "version": "0.1.0",
+  "description": "閲覧用HTMLを開き、本文クリックでココフォリアのチャットへ送信するデスクトップアプリ",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/8i10/scenarioeditor.git"
+  },
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "io.github.8i10.scenario-sender",
+    "productName": "シナリオ送信ビューア",
+    "artifactName": "scenario-sender-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "main.js",
+      "preload-viewer.js",
+      "preload-shell.js",
+      "ccfolia.js",
+      "shell.html",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.games",
+      "identity": null
+    }
+  }
+}

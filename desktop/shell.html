@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>シナリオ送信ビューア</title>
+<style>
+  :root{--bg:#2b2622;--fg:#f3efe9;--muted:#b9b0a5;--line:rgba(255,255,255,.18);--ok:#2a9d74;--err:#e05a4f}
+  html,body{margin:0;height:100%;background:#f5f3ef;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif}
+  .bar{height:44px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--bg);color:var(--fg);font-size:12px;white-space:nowrap;overflow:hidden}
+  button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  button:hover{background:rgba(255,255,255,.1)}
+  input[type=text]{font:inherit;font-size:12px;height:26px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.08);color:var(--fg);padding:0 8px;width:280px;min-width:120px}
+  .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+  .file{color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  .grow{flex:1}
+  .st{max-width:40vw;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+  .st.ok{color:#7fe0b8}.st.err{color:#ffb0a8}
+  label{display:flex;align-items:center;gap:4px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <button id="open" title="閲覧用HTMLを開く（Ctrl+O）">📂 HTMLを開く</button>
+  <button id="reload" title="HTMLを再読み込み">↻</button>
+  <span class="file" id="file">（未選択）</span>
+  <span class="sep"></span>
+  <input type="text" id="url" placeholder="ココフォリアの部屋URL（https://ccfolia.com/rooms/…）">
+  <button id="go">部屋を開く</button>
+  <span class="sep"></span>
+  <button id="r1" title="左を狭く">◀</button><button id="r2" title="左を広く">▶</button>
+  <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">クリップボードにも残す</label>
+  <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 接続確認</button>
+  <span class="grow"></span>
+  <span class="st" id="st">準備完了</span>
+</div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let ratio = 0.55, hideT = null;
+  $('open').onclick = () => shellApi.openHtml();
+  $('reload').onclick = () => shellApi.reload();
+  $('go').onclick = () => shellApi.openRoom($('url').value);
+  $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openRoom($('url').value); });
+  $('r1').onclick = () => shellApi.ratio(ratio - 0.05);
+  $('r2').onclick = () => shellApi.ratio(ratio + 0.05);
+  $('keep').onchange = () => shellApi.keepClipboard($('keep').checked);
+  $('diag').onclick = () => shellApi.diagnose();
+  shellApi.onState((s) => {
+    ratio = s.ratio || 0.55;
+    $('file').textContent = s.html ? s.html.split(/[\\/]/).pop() : '（未選択）';
+    $('file').title = s.html || '';
+    if (document.activeElement !== $('url')) $('url').value = s.room || '';
+    $('keep').checked = !!s.keepClipboard;
+  });
+  shellApi.onStatus((s) => {
+    const el = $('st'); el.textContent = s.msg; el.className = 'st ' + (s.level || '');
+    clearTimeout(hideT); hideT = setTimeout(() => { el.className = 'st'; }, 4000);
+  });
+  shellApi.onMenu((m) => { if (m === 'open') shellApi.openHtml(); });
+</script>
+</body>
+</html>
