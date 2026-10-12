@@ -331,6 +331,10 @@
   .outline .ol-pgroup.open>.ol-heads{display:block}
   .outline .ol-hrow{display:flex;align-items:center;gap:3px;cursor:pointer;font-size:12.5px;line-height:1.5;color:var(--accent);padding:2px 8px}
   .outline .ol-hrow:hover{background:var(--hover);color:var(--text)}
+  .outline .ol-hrow{position:relative}
+  .outline .ol-hrow.cur{background:linear-gradient(90deg,color-mix(in srgb,var(--red) 14%,transparent),color-mix(in srgb,var(--red) 3%,transparent) 60%,transparent 90%);color:var(--red);font-weight:700}
+  .outline .ol-hrow.cur::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:3px;border-radius:0 3px 3px 0;background:color-mix(in srgb,var(--red) 70%,transparent)}
+  .outline .ol-hrow.cur .ol-tw{color:var(--red)}
   .outline .ol-hrow.lv2{padding-left:22px;font-size:12px}
   .outline .ol-hrow.lv3{padding-left:34px;font-size:12px;color:var(--accent)}
   .outline .ol-hrow.lv4{padding-left:46px;font-size:11.5px;color:var(--accent2)}
@@ -2039,8 +2043,22 @@
     h+='<div class="ol-count">シナリオ文字数：'+Number(totalCharsAll()).toLocaleString()+' 字</div>';
     return h;
   }
+  /* しおり：表示位置の見出しをハイライト */
+  function spyOutline(){
+    if(!outlineEl) return;
+    var rows=[].slice.call(outlineEl.querySelectorAll('.ol-hrow[data-gpage="'+state.curPage+'"]'));
+    var thr=(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'),10)||92)+40, hit=null;
+    var atEnd=(window.innerHeight+window.scrollY)>=(document.documentElement.scrollHeight-4);
+    rows.forEach(function(r){ var el=doc.querySelector('.block[data-id="'+r.getAttribute('data-goto')+'"]'); if(!el) return; var t=el.getBoundingClientRect().top; if(t<=thr || (atEnd && t<window.innerHeight-40)) hit=r; });
+    if(!hit && rows[0]){ var e0=doc.querySelector('.block[data-id="'+rows[0].getAttribute('data-goto')+'"]'); if(e0 && e0.getBoundingClientRect().top<window.innerHeight*0.4) hit=rows[0]; }
+    if(hit && !hit.offsetParent){ var g=hit.parentNode; while(g && g!==outlineEl){ if(g.classList&&g.classList.contains('ol-hgroup')){ var hr=g.querySelector(':scope>.ol-hrow'); if(hr&&hr.offsetParent){ hit=hr; break; } } g=g.parentNode; } }
+    [].forEach.call(outlineEl.querySelectorAll('.ol-hrow.cur'),function(r){ if(r!==hit) r.classList.remove('cur'); });
+    if(hit) hit.classList.add('cur');
+  }
+  var spyRaf=0; window.addEventListener('scroll',function(){ if(spyRaf) return; spyRaf=requestAnimationFrame(function(){ spyRaf=0; spyOutline(); }); },{passive:true,capture:true});
   function renderOutline(){
     outlineEl.innerHTML=outlineInnerHTML();
+    spyOutline();
     var pt=document.getElementById('printToc');
     if(pt){ var p=''; (state.pages||[]).forEach(function(pg){ var its=headingsOf(pg.blocks); p+='<div class="pt-p">'+esc(pg.name||'ページ')+'</div>'; its.forEach(function(it){ p+='<a href="#b_'+it.id+'" class="pt-i lv'+it.lv+'">'+esc(it.t||'(無題)')+'</a>'; }); }); pt.innerHTML=p; }
   }
@@ -3138,7 +3156,7 @@
       +'function setOpen(o){nav.classList.toggle("open",o);document.body.classList.toggle("ol-open",o);}'
       +'var vo=document.getElementById("vOutline");if(vo)vo.onclick=function(){setOpen(!nav.classList.contains("open"));};'
       +'nav.addEventListener("click",function(e){if(e.target.id==="olX"){setOpen(false);return;}var htw=e.target.closest("[data-htw]");if(htw){var g=htw.closest(".ol-hgroup");if(g)g.classList.toggle("open");return;}var ptw=e.target.closest("[data-ptw]");if(ptw){var pg=ptw.closest(".ol-pgroup");if(pg)pg.classList.toggle("open");return;}var hrow=e.target.closest(".ol-hrow");if(hrow){var el=document.querySelector(\'.block[data-id="\'+hrow.getAttribute("data-goto")+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}return;}var prow=e.target.closest(".ol-page");if(prow){var grp=prow.closest(".ol-pgroup");if(grp)grp.classList.toggle("open");showPage(prow.getAttribute("data-page"));}});'
-      +'var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));'
+      +'function spyOL(){var sec=document.querySelector(".scn-page.scn-cur");if(!sec||!nav)return;var hit=null,atEnd=(window.innerHeight+window.scrollY)>=(document.documentElement.scrollHeight-4);[].forEach.call(nav.querySelectorAll(".ol-hrow[data-goto]"),function(r){var el=sec.querySelector(\'.block[data-id="\'+r.getAttribute("data-goto")+\'"]\');if(!el)return;var t=el.getBoundingClientRect().top;if(t<=120||(atEnd&&t<window.innerHeight-40))hit=r;});if(!hit){var r0=nav.querySelector(".ol-hrow[data-goto]");var e0=r0&&sec.querySelector(\'.block[data-id="\'+r0.getAttribute("data-goto")+\'"]\');if(e0&&e0.getBoundingClientRect().top<window.innerHeight*0.4)hit=r0;}if(hit&&!hit.offsetParent){var g=hit.parentNode;while(g&&g!==nav){if(g.classList&&g.classList.contains("ol-hgroup")){var hr=g.querySelector(":scope>.ol-hrow");if(hr&&hr.offsetParent){hit=hr;break;}}g=g.parentNode;}}[].forEach.call(nav.querySelectorAll(".ol-hrow.cur"),function(r){if(r!==hit)r.classList.remove("cur");});if(hit)hit.classList.add("cur");}var spyR=0;window.addEventListener("scroll",function(){if(spyR)return;spyR=requestAnimationFrame(function(){spyR=0;spyOL();});},{passive:true,capture:true});nav.addEventListener("click",function(){setTimeout(spyOL,400);});var first=document.querySelector(".scn-page");if(first)showPage(first.id.replace(/^pg_/,""));setTimeout(spyOL,0);'
       +'var FS='+JSON.stringify(VFS)+';document.querySelectorAll("#vFs button").forEach(function(b){b.onclick=function(){wrap.style.setProperty("--fs",FS[b.dataset.fs]);document.querySelectorAll("#vFs button").forEach(function(x){x.classList.toggle("on",x===b);});};});'
       +'document.addEventListener("click",function(e){var tri=e.target.closest(".tri");if(tri){var blk=tri.closest(".block");if(blk)blk.classList.toggle("collapsed");}var hl=e.target.closest(".hlink");if(hl){e.preventDefault();var id=hl.getAttribute("data-h");var el=id&&document.querySelector(\'.block[data-id="\'+id+\'"]\');if(el){var sec=el.closest(".scn-page");if(sec)showPage(sec.id.replace(/^pg_/,""));el.scrollIntoView({behavior:"smooth",block:"start"});}}});'
       +'function syncRP(){var ids=["matPanel","flagPanel","clipPanel","evtPanel","pcPanel"],any=false;ids.forEach(function(id){var el=document.getElementById(id);if(el&&el.classList.contains("open"))any=true;});document.body.classList.toggle("rpanel-open",any);}'
