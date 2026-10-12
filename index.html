@@ -3924,9 +3924,15 @@
     if(type==='todo'&&el.classList&&el.classList.contains('done')) b2.done=true;
     return b2;
   }
-  function fragmentToBlocks(frag){
+  function fragmentToBlocks(frag,range){
     var blocks=[];
     [].forEach.call(frag.childNodes,function(n){ if(n.nodeType===1&&n.classList&&n.classList.contains('block')) blocks.push(domToBlock(n)); });
+    /* 情報枠などの見出し〜中身にまたがる選択は、その枠ごと登録する */
+    if(!blocks.length && range && frag.querySelector && frag.querySelector('.block,.lbl,.chead')){
+      var ca=range.commonAncestorContainer; var el=ca&&(ca.nodeType===1?ca:ca.parentNode); var box=el&&el.closest?el.closest('.block'):null;
+      if(box && doc.contains(box)) blocks.push(domToBlock(box.cloneNode(true)));
+      if(blocks.length) return blocks;
+    }
     if(!blocks.length){ var div=document.createElement('div'); div.appendChild(frag.cloneNode(true)); var html=sanitize(div.innerHTML); if(plainText(html)) blocks.push(newBlock('p', html)); }
     return blocks;
   }
@@ -3934,7 +3940,7 @@
     var s=window.getSelection(); if(!s||!s.rangeCount||s.isCollapsed){ if(btn) alert('本文を選択してから押してください。'); return false; }
     var r=s.getRangeAt(0); if(!doc.contains(r.commonAncestorContainer)){ if(btn) alert('本文を選択してから押してください。'); return false; }
     if((s.toString()||'').replace(/\s+/g,'')===''){ if(btn) alert('本文を選択してから押してください。'); return false; }
-    var blocks=fragmentToBlocks(r.cloneContents());
+    var blocks=fragmentToBlocks(r.cloneContents(),r);
     if(!blocks.length) return false;
     var title=(plainText(blocks[0].html)||s.toString()||'').replace(/\s+/g,' ').trim().slice(0,18);
     var entry={ id:entryId(kind==='data'?'mt':'ev'), title:title, blocks:blocks, vopen:true };
