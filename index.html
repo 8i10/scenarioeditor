@@ -247,11 +247,16 @@
   .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
   /* カード：左端に設定色・そこから薄いグラデーション */
-  .block[data-type="ccard"]{--cc:#d94a8c;position:relative;background:linear-gradient(90deg,color-mix(in srgb,var(--cc) 4%,var(--card)) 0%,var(--card) 45%);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
-  .block[data-type="ccard"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
-  .block[data-type="ccard"]>.children{margin:0;border-left:0;padding-left:0}
-  .npc-card.ncard{--cc:#d94a8c;background:linear-gradient(90deg,color-mix(in srgb,var(--cc) 4%,var(--card)) 0%,var(--card) 45%);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;box-shadow:0 4px 14px rgba(40,30,80,.06)}
-  .npc-card.ncard .npc-card-name{color:var(--cc)}
+  .block[data-type="ccard"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#d94a8c;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#2f6fd6}
+  .block[data-type="ccard"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
+  .block[data-type="ccard"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
+  .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
+  .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
+  .block[data-type="skcard2"] .lbl .sk-note::before{content:"　※"}
+  .block[data-type="skcard2"] .lbl .sknm,.block[data-type="skcard2"] .lbl .sk-note{white-space:pre}
+  .npc-card.ncard{--cc:#d94a8c;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .npc-card.ncard .npc-card-name{color:var(--text)}
   .npc-card.ncard .npc-rule{border-color:color-mix(in srgb,var(--cc) 30%,var(--line))}
   /* 色変えボックス③と同じデザイン（左だけ太線・右は太くしない）を 技能/情報(囲い)/色変え①② に適用 */
   .block[data-type="skill"],.block[data-type="info"],.block[data-type="cbox"],.block[data-type="cbox2"]{position:relative;border-radius:0!important;border-left-width:5px!important;border-right-width:1px!important;border-top-width:1px!important;border-bottom-width:1px!important;padding:13px 7px 4px!important;margin:18px 0 10px!important}
@@ -843,6 +848,8 @@
     {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
     {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1, dl:'カード'},
+    {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
+    {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
     {t:'explore', ic:'■', nm:'■探索箇所＜＞',           ph:'場所', cat:'イベント・リスト'},
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
@@ -862,9 +869,10 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='skcard'||t==='skcard2'; }
+  function isCard(t){ return t==='ccard'||t==='skcard'||t==='skcard2'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
-  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : t==='ccard' ? '#d94a8c' : BOX_DEFAULT; }
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : t==='ccard' ? '#d94a8c' : (t==='skcard'||t==='skcard2') ? '#2f6fd6' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
@@ -1331,7 +1339,7 @@
       if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; var _co=opaqueColor(_c); wrap.style.background=_c; wrap.style.borderColor=_co; lbl.style.background=_co; lbl.style.color='#fff'; lbl.style.borderColor=_co; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var _o=opaqueColor(b.boxc||boxDefault(b.type)); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
       else if(b.type==='npc'){ if(b.boxc){ var _n=opaqueColor(b.boxc); wrap.style.borderColor=_n; lbl.style.background=_n; lbl.style.color='#fff'; } }
-      else if(b.type==='ccard'){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); }
+      else if(isCard(b.type)){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); }
       wrap.appendChild(lbl);
       wrap.appendChild(childrenRegion(b));
     }else if(isCtn(b.type)){
@@ -1387,7 +1395,7 @@
   function mkBe(b){
     var be=document.createElement('div');
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
-    be.innerHTML=(b.type==='skill2')?skill2Label(b.html):((b.type==='skill')?skillLabel(b.html):(b.html||''));
+    be.innerHTML=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):((b.type==='skill'||b.type==='skcard')?skillLabel(b.html):(b.html||''));
     if(b.ul) be.style.borderBottom=ulBorder(b);
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
@@ -1863,13 +1871,13 @@
     persist();
   }
   function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
-  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc'||c.b.type==='ccard') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc'||p.type==='ccard') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
+  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc'||isCard(c.b.type)) return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc'||isCard(p.type)) return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
     box.boxc=c||boxDefault(box.type);
     var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(!w){ persist(); return; }
     var lbl=w.querySelector('.lbl'); var oc=opaqueColor(box.boxc);
-    if(box.type==='ccard'){ w.style.setProperty('--cc',oc); persist(); return; }
+    if(isCard(box.type)){ w.style.setProperty('--cc',oc); persist(); return; }
     if(box.type==='cbox'){ w.style.background=box.boxc; w.style.borderColor=''; if(lbl){ lbl.style.background=oc; lbl.style.color='#fff'; lbl.style.borderColor='transparent'; } }
     else { w.style.background=''; w.style.borderColor=oc; if(lbl){ lbl.style.background=oc; lbl.style.color='#fff'; lbl.style.borderColor=oc; } }
     persist();
@@ -2866,7 +2874,7 @@
   /* ---- 書き出し（HTML / PDF） ---- */
   function skillNameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞]/g,'').trim(); }
   function skill2NameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var st=t.indexOf('※'); if(st>=0) t=t.slice(0,st); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞※]/g,'').trim(); }
-  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
+  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var style=(b.bg||b.indent)?(' style="'+(b.bg?('background:'+esc(b.bg)+';'):'')+(b.indent?('margin-left:'+(b.indent*24)+'px'):'')+'"'):'';
@@ -2881,10 +2889,10 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      else if(b.type==='ccard'){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+'"'; }
+      else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+'"'; }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
       var lblInner;
-      if(b.type==='skill2'||b.type==='skill'){ lblInner=(b.type==='skill2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
+      if(b.type==='skill2'||b.type==='skill'||b.type==='skcard'||b.type==='skcard2'){ lblInner=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
       else if(b.type==='lbox'){ lblInner='<span class="lbox-h"><span class="asym asym-lbox">▼</span>'+(b.html||'')+'</span>'; }
       else { lblInner=(b.html||''); }
       return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'>'+boxCopy+'<div class="be lbl"'+lblStyle+'>'+lblInner+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
@@ -2965,11 +2973,11 @@
       +' .asym-q{font-weight:700;margin-right:3px}'
       +' .asym-lbox{margin-right:2px}'
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
-      +' .block[data-type="skill"] .lbl>.sk-wrap,.block[data-type="skill2"] .lbl>.sk-wrap{display:inline}'
+      +' .block[data-type="skill"] .lbl>.sk-wrap,.block[data-type="skill2"] .lbl>.sk-wrap,.block[data-type="skcard"] .lbl>.sk-wrap,.block[data-type="skcard2"] .lbl>.sk-wrap{display:inline}'
       +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
       +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
-      +' .block[data-type="skill"] .lbl .sknm::before,.block[data-type="skill"] .lbl .sknm::after,.block[data-type="skill2"] .lbl .sknm::before,.block[data-type="skill2"] .lbl .sknm::after{content:""!important}'
+      +' .block[data-type="skill"] .lbl .sknm::before,.block[data-type="skill"] .lbl .sknm::after,.block[data-type="skill2"] .lbl .sknm::before,.block[data-type="skill2"] .lbl .sknm::after,.block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::after{content:""!important}'
       +' .block .box-copy{position:absolute;top:-11px;right:3px;z-index:4;opacity:0;transition:opacity .12s;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 5px}'
       +' .block[data-type="npc"]{padding-top:11px}'
       +' .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="skill2"],.block[data-type="secret"],.block[data-type="cbox"],.block[data-type="cbox2"],.block[data-type="cbox3"],.block[data-type="lbox"]{padding-top:11px}'
