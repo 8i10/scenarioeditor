@@ -248,7 +248,7 @@
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
   /* カード：左端に設定色・そこから薄いグラデーション */
   .block[data-type="ccard"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#d94a8c;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
-  .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#2f6fd6}
+  .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#0000ff}
   .block[data-type="ccard"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
   .block[data-type="ccard"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
   .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
@@ -286,7 +286,7 @@
   .block[data-type="lbox"]>.lbl::before{content:"▼";display:inline-block;margin-right:2px}
   .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 1px 12px;margin:0}
   /* 技能枠：見出しと左線のみ（上・右・下線なし、下マージンなし） */
-  .block[data-type="skill"],.block[data-type="skill2"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:5px!important;padding-bottom:0!important}
+  .block[data-type="skill"],.block[data-type="skill2"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:1px!important;border-left-style:dotted!important;padding-bottom:0!important}
   /* ■探索箇所＜＞ */
   .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
   .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
@@ -612,7 +612,7 @@
     .block[data-type="info"]{background:var(--card)!important;border:1px solid var(--pl-edge)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="npc"]{background:var(--card)!important;border:1.5px solid var(--pl-edge)!important;border-radius:7px!important}
     .block[data-type="npc"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
-    .block[data-type="skill"],.block[data-type="skill2"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
+    .block[data-type="skill"],.block[data-type="skill2"]{background:var(--card)!important;border:1px solid var(--blue)!important;border-left-width:1px!important;border-left-style:dotted!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="secret"]{background:var(--card)!important;border:1px solid var(--secret)!important;border-left-width:4px!important}
     .block[data-type="kp"] .lbl{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid rgba(255,255,255,.4)!important}
     .block[data-type="info"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
@@ -872,7 +872,7 @@
   function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='skcard'||t==='skcard2'; }
   function isCard(t){ return t==='ccard'||t==='skcard'||t==='skcard2'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
-  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : t==='ccard' ? '#d94a8c' : (t==='skcard'||t==='skcard2') ? '#2f6fd6' : BOX_DEFAULT; }
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : t==='ccard' ? '#d94a8c' : (t==='skcard'||t==='skcard2') ? '#0000ff' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
