@@ -25,6 +25,7 @@
 <div class="bar">
   <button id="open" title="閲覧用HTMLを開く（Ctrl+O）">📂 HTMLを開く</button>
   <button id="reload" title="HTMLを再読み込み">↻</button>
+  <button id="pdf" title="開いているHTMLをPDFに書き出す（しおり付き・文字選択可／Ctrl+P）">📄 PDF</button>
   <span class="file" id="file" style="max-width:140px">（未選択）</span>
   <span class="sep"></span>
   <input type="text" id="url" placeholder="ココフォリアの部屋URL（https://ccfolia.com/rooms/…）">
@@ -45,6 +46,7 @@
   let hideT = null;
   $('open').onclick = () => shellApi.openHtml();
   $('reload').onclick = () => shellApi.reload();
+  $('pdf').onclick = () => shellApi.exportPdf();
   $('gob').onclick = () => shellApi.openBrowser($('url').value);
   $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openBrowser($('url').value); });
   $('target').onchange = () => shellApi.target($('target').value);

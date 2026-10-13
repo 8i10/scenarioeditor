@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const cc = require('./ccfolia');
 const br = require('./browser');
+const pdfPrep = require('./pdf-prep');
 const { autoUpdater } = require('electron-updater');
 
 // 設定・ログイン情報の保存先を固定（環境によって userData が親フォルダになるのを防ぐ）
@@ -179,6 +180,41 @@ ipcMain.handle('shell-open-html', async () => {
   if (!r.canceled && r.filePaths[0]) openHtml(r.filePaths[0]);
 });
 ipcMain.handle('shell-reload', () => { if (cfg.html) openHtml(cfg.html); });
+ipcMain.handle('shell-export-pdf', () => exportPdf());
+
+// ---- 閲覧用HTML → PDF（しおり付き・文字選択可） ----
+let pdfBusy = false;
+async function exportPdf() {
+  if (pdfBusy) return;
+  let file = cfg.html && fs.existsSync(cfg.html) ? cfg.html : '';
+  if (!file) {
+    const r = await dialog.showOpenDialog(win, { title: 'PDFにする閲覧用HTMLを選ぶ', properties: ['openFile'], filters: [{ name: 'HTML', extensions: ['html', 'htm'] }] });
+    if (r.canceled || !r.filePaths[0]) return;
+    file = r.filePaths[0];
+  }
+  const sv = await dialog.showSaveDialog(win, { title: 'PDFを保存', defaultPath: file.replace(/\.html?$/i, '') + '.pdf', filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+  if (sv.canceled || !sv.filePath) return;
+  pdfBusy = true;
+  status('PDFを作成中…');
+  const pw = new BrowserWindow({ show: false, width: 1100, height: 1400, webPreferences: { contextIsolation: true, sandbox: true } });
+  try {
+    await pw.loadFile(file);
+    await pw.webContents.executeJavaScript('(' + pdfPrep.toString() + ')()');
+    await pw.webContents.executeJavaScript('(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){ return new Promise(function(r){ setTimeout(r, 300); }); })');
+    const data = await pw.webContents.printToPDF({ pageSize: 'A4', printBackground: true, preferCSSPageSize: true, generateDocumentOutline: true, generateTaggedPDF: true });
+    fs.writeFileSync(sv.filePath, data);
+    status('PDFを保存しました：' + path.basename(sv.filePath), 'ok');
+    const r = await dialog.showMessageBox(win, { type: 'info', title: 'PDF', message: 'PDFを保存しました', detail: sv.filePath, buttons: ['開く', 'フォルダを表示', '閉じる'], defaultId: 0, cancelId: 2 });
+    if (r.response === 0) shell.openPath(sv.filePath);
+    else if (r.response === 1) shell.showItemInFolder(sv.filePath);
+  } catch (e) {
+    status('PDFを作成できませんでした：' + e.message, 'err');
+    dialog.showMessageBox(win, { type: 'warning', title: 'PDF', message: 'PDFを作成できませんでした', detail: String((e && e.message) || e), buttons: ['OK'] });
+  } finally {
+    pdfBusy = false;
+    if (!pw.isDestroyed()) pw.destroy();
+  }
+}
 ipcMain.handle('shell-target', (_e, key) => { cfg.target = key ? String(key) : ''; saveCfg(); state(true); });
 ipcMain.handle('shell-focus-room', async () => {
   const t = await targetRoom();
@@ -281,7 +317,7 @@ app.whenReady().then(() => {
   loadCfg();
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
-    { label: 'ファイル', submenu: [{ label: '閲覧用HTMLを開く…', accelerator: 'CmdOrCtrl+O', click: () => win && win.webContents.send('menu', 'open') }, { type: 'separator' }, { role: 'quit', label: '終了' }] },
+    { label: 'ファイル', submenu: [{ label: '閲覧用HTMLを開く…', accelerator: 'CmdOrCtrl+O', click: () => win && win.webContents.send('menu', 'open') }, { label: 'PDFに書き出す（しおり付き・文字選択可）…', accelerator: 'CmdOrCtrl+P', click: () => exportPdf() }, { type: 'separator' }, { role: 'quit', label: '終了' }] },
     { role: 'editMenu', label: '編集' },
     { label: 'ヘルプ', submenu: [{ label: 'アップデートを確認…', click: checkUpdatesManually }, { label: 'バージョン ' + app.getVersion(), enabled: false }] },
     { label: '表示', submenu: [{ label: 'HTMLを再読み込み', accelerator: 'CmdOrCtrl+R', click: () => cfg.html && openHtml(cfg.html) }, { type: 'separator' }, { role: 'togglefullscreen', label: '全画面' }] },

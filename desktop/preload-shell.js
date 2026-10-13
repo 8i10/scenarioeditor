@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('shellApi', {
   openHtml: () => ipcRenderer.invoke('shell-open-html'),
   reload: () => ipcRenderer.invoke('shell-reload'),
+  exportPdf: () => ipcRenderer.invoke('shell-export-pdf'),
   openBrowser: (u) => ipcRenderer.invoke('shell-open-browser', u),
   target: (id) => ipcRenderer.invoke('shell-target', id),
   focusRoom: () => ipcRenderer.invoke('shell-focus-room'),
