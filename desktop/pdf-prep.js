@@ -15,7 +15,7 @@ module.exports = function pdfPrep() {
   });
   var st = document.createElement('style');
   st.textContent = '.pdf-ph{position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#fff;margin:0;padding:0;pointer-events:none}'
-    + '.scn-page{position:relative}'
+    + '.scn-page{position:relative;display:block!important}'
     + '.pdf-keep{break-inside:avoid;page-break-inside:avoid}'
     + '@media print{'
     + '.print-toc{display:none!important}'
@@ -45,6 +45,14 @@ module.exports = function pdfPrep() {
   });
   [].forEach.call(document.querySelectorAll('details'), function (d) { d.open = true; });
   [].forEach.call(document.querySelectorAll('.block.collapsed'), function (b) { b.classList.remove('collapsed'); });
+  /* 区切り線の手前の空行は詰める（空白ページを作らない） */
+  [].forEach.call(document.querySelectorAll('.block[data-type="divider"]'), function (dv) {
+    var p = dv.previousElementSibling;
+    while (p && p.classList.contains('block') && p.getAttribute('data-type') === 'p' && !p.textContent.replace(/[\s\u200B]/g, '') && !p.querySelector('img')) {
+      p.style.setProperty('display', 'none', 'important');
+      p = p.previousElementSibling;
+    }
+  });
   /* 見出しが枠の上にはみ出す枠：外側に余白付きの箱を作り、枠と見出しをまとめて次のページへ送る */
   [].forEach.call(document.querySelectorAll('.block[data-type]'), function (b) {
     var lbl = null;
