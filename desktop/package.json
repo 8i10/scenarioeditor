@@ -1,7 +1,7 @@
 {
   "name": "scenario-sender",
   "productName": "シナリオ送信ビューア",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "閲覧用HTMLを開き、本文クリックでココフォリアのチャットへ送信するデスクトップアプリ",
   "repository": {
     "type": "git",

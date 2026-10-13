@@ -199,7 +199,18 @@ async function exportPdf() {
   const pw = new BrowserWindow({ show: false, width: 1100, height: 1400, webPreferences: { contextIsolation: true, sandbox: true } });
   try {
     await pw.loadFile(file);
+    // 印刷時と同じ見た目・幅（A4・余白12mm）で配置を測るため、印刷表示を再現してから整える
+    try {
+      pw.webContents.debugger.attach('1.3');
+      await pw.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { media: 'print' });
+      await pw.webContents.debugger.sendCommand('Emulation.setDeviceMetricsOverride', { width: 703, height: 1000, deviceScaleFactor: 1, mobile: false });
+    } catch (_) {}
     await pw.webContents.executeJavaScript('(' + pdfPrep.toString() + ')()');
+    try {
+      await pw.webContents.debugger.sendCommand('Emulation.clearDeviceMetricsOverride');
+      await pw.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { media: '' });
+      pw.webContents.debugger.detach();
+    } catch (_) {}
     await pw.webContents.executeJavaScript('(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){ return new Promise(function(r){ setTimeout(r, 300); }); })');
     const data = await pw.webContents.printToPDF({ pageSize: 'A4', printBackground: true, preferCSSPageSize: true, generateDocumentOutline: true, generateTaggedPDF: true });
     fs.writeFileSync(sv.filePath, data);

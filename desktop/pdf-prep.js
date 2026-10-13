@@ -14,17 +14,17 @@ module.exports = function pdfPrep() {
     w.style.setProperty('--fs', String(next));
   });
   var st = document.createElement('style');
-  st.textContent = '.pdf-ph{position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#fff;margin:0;padding:0;pointer-events:none}'
-    + '.scn-page{position:relative;display:block!important}'
+  st.textContent = '.pdf-ph{display:block;font-size:1px;line-height:1px;height:1px;margin:0 0 -1px;padding:0;color:#fff;pointer-events:none}'
+    + '.scn-page{display:block!important}'
     + '.pdf-keep{break-inside:avoid;page-break-inside:avoid}'
     + '@media print{'
     + '.print-toc{display:none!important}'
     + '.mat-panel,.rpanel,.v-panel,#matPanel,#flagPanel,#evtPanel,#pcPanel,#clipPanel,.box-copy,.npc-copy{display:none!important}'
     + '.block[data-type="divider"]{break-after:page;page-break-after:always;height:0!important;padding:0!important;margin:0!important;border:0!important}'
     + '.block[data-type="divider"] hr{display:none!important}'
+    + '}'
     + '.block[data-type="skill"],.block[data-type="skill2"]{background:transparent!important;border:0!important;border-left:1px dotted var(--blue)!important;border-radius:0!important;padding-bottom:0!important}'
-    + '.block[data-type="skill"] .lbl,.block[data-type="skill2"] .lbl{left:-1px!important;background:var(--blue)!important;color:#fff!important}'
-    + '}';
+    + '.block[data-type="skill"] .lbl,.block[data-type="skill2"] .lbl{left:-1px!important;background:var(--blue)!important;color:#fff!important}';
   document.head.appendChild(st);
   pages.forEach(function (sec) {
     if (multi) {
@@ -68,6 +68,28 @@ module.exports = function pdfPrep() {
     b.parentNode.insertBefore(w, b);
     w.appendChild(b);
     b.style.setProperty('margin-top', '0', 'important');
+  });
+  /* 枠の見出しを「位置指定」から通常の配置（負の余白）に置き換える。
+     位置指定のままだと PDF 内の文字の並び順が崩れ、ドラッグ選択・コピーの順番がおかしくなるため */
+  [].forEach.call(document.querySelectorAll('.block[data-type]'), function (b) {
+    var lbl = null;
+    for (var i = 0; i < b.children.length; i++) { if (b.children[i].classList.contains('lbl')) { lbl = b.children[i]; break; } }
+    if (!lbl || getComputedStyle(lbl).position !== 'absolute') return;
+    var bs = getComputedStyle(b), br = b.getBoundingClientRect(), lr = lbl.getBoundingClientRect();
+    var cx = br.left + (parseFloat(bs.borderLeftWidth) || 0) + (parseFloat(bs.paddingLeft) || 0);
+    var cy = br.top + (parseFloat(bs.borderTopWidth) || 0) + (parseFloat(bs.paddingTop) || 0);
+    var mt = lr.top - cy, ml = lr.left - cx, h = lr.height, w = lr.width;
+    var set = function (k, v) { lbl.style.setProperty(k, v, 'important'); };
+    set('position', 'static'); set('display', 'flex'); set('align-items', 'center');
+    set('width', Math.ceil(w + 1) + 'px'); set('max-width', 'none'); set('height', h + 'px'); set('box-sizing', 'border-box');
+    set('margin', mt + 'px 0 ' + (-(mt + h)) + 'px ' + ml + 'px');
+    set('top', 'auto'); set('left', 'auto');
+  });
+  /* 残りの位置指定・重なり順も解除（ルビ語句などの文字順の崩れを防ぐ） */
+  [].forEach.call(document.querySelectorAll('body *'), function (el) {
+    var cs = getComputedStyle(el);
+    if (cs.position === 'relative' || cs.position === 'sticky') el.style.setProperty('position', 'static', 'important');
+    if (cs.zIndex !== 'auto') el.style.setProperty('z-index', 'auto', 'important');
   });
   return { pages: pages.length, multi: multi };
 };
