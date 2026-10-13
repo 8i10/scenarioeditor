@@ -651,6 +651,7 @@
       <button class="hm-item" id="btnPdfBk">PDFで保存（しおり付き・文字選択可）</button>
       <button class="hm-item" id="btnPdf">PDFで保存（印刷・軽量／文字のみ）</button>
       <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
+      <button class="hm-item" id="btnImportDoc">テキスト／Word／PDFを読み込む（新しいページに追加）</button>
       <div class="hm-sec">編集</div>
       <button class="hm-item" id="btnRightMenu">右サイドにメニューを表示する</button>
       <button class="hm-item" id="btnPageLines">ページ区切りを表示</button>
@@ -3387,6 +3388,130 @@
   };
 
   /* ---- しおり付きPDF出力（jsPDF outline + html2canvas） ---- */
+  /* ---- txt / docx / PDF の読み込み（現在のシナリオに新しいページとして追加） ---- */
+  function importOverlay(msg){ var o=document.createElement('div'); o.className='pdf-ov'; o.innerHTML='<div class="pdf-ov-box">'+msg+'</div>'; document.body.appendChild(o); return { set:function(m){ var b=o.querySelector('.pdf-ov-box'); if(b) b.innerHTML=m; }, close:function(){ if(o.parentNode) o.parentNode.removeChild(o); } }; }
+  function decodeText(buf){
+    var u8=new Uint8Array(buf);
+    if(u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF) return new TextDecoder('utf-8').decode(u8.subarray(3));
+    if(u8[0]===0xFF&&u8[1]===0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));
+    if(u8[0]===0xFE&&u8[1]===0xFF) return new TextDecoder('utf-16be').decode(u8.subarray(2));
+    try{ return new TextDecoder('utf-8',{fatal:true}).decode(u8); }catch(_){}
+    try{ return new TextDecoder('shift_jis').decode(u8); }catch(_){ return new TextDecoder('utf-8').decode(u8); }
+  }
+  function linesToBlocks(text){
+    var out=[], blank=0;
+    String(text||'').replace(/\r\n?/g,'\n').split('\n').forEach(function(ln){
+      ln=ln.replace(/\s+$/,'');
+      if(!ln.trim()){ blank++; if(blank===1&&out.length) out.push(newBlock('p','')); return; }
+      blank=0; out.push(newBlock('p',esc(ln)));
+    });
+    while(out.length&&!plainText(out[out.length-1].html)) out.pop();
+    return out;
+  }
+  /* zip（docx）から1ファイルを取り出す（DecompressionStream を使用） */
+  function unzipEntry(buf,name){
+    var u8=new Uint8Array(buf), dv=new DataView(buf);
+    var eocd=-1; for(var i=u8.length-22;i>=Math.max(0,u8.length-66000);i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+    if(eocd<0) return Promise.reject(new Error('zip形式ではありません'));
+    var cnt=dv.getUint16(eocd+10,true), off=dv.getUint32(eocd+16,true), td=new TextDecoder();
+    for(var k=0;k<cnt;k++){
+      if(dv.getUint32(off,true)!==0x02014b50) break;
+      var method=dv.getUint16(off+10,true), csize=dv.getUint32(off+20,true), nlen=dv.getUint16(off+28,true), xlen=dv.getUint16(off+30,true), clen=dv.getUint16(off+32,true), lho=dv.getUint32(off+42,true);
+      var fname=td.decode(u8.subarray(off+46,off+46+nlen));
+      if(fname===name){
+        var lnl=dv.getUint16(lho+26,true), lxl=dv.getUint16(lho+28,true), start=lho+30+lnl+lxl, data=u8.subarray(start,start+csize);
+        if(method===0) return Promise.resolve(td.decode(data));
+        if(method===8){ if(typeof DecompressionStream==='undefined') return Promise.reject(new Error('このブラウザは docx の展開に対応していません')); var ds=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return new Response(ds).text(); }
+        return Promise.reject(new Error('未対応の圧縮形式です'));
+      }
+      off+=46+nlen+xlen+clen;
+    }
+    return Promise.reject(new Error(name+' が見つかりません'));
+  }
+  function docxToBlocks(buf){
+    return Promise.all([unzipEntry(buf,'word/document.xml'), unzipEntry(buf,'word/styles.xml').catch(function(){ return ''; })]).then(function(r){
+      var xml=new DOMParser().parseFromString(r[0],'application/xml'), W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+      var headStyles={};
+      if(r[1]){ var sx=new DOMParser().parseFromString(r[1],'application/xml'); [].forEach.call(sx.getElementsByTagNameNS(W,'style'),function(st){ var id=st.getAttributeNS(W,'styleId')||st.getAttribute('w:styleId'); var nm=st.getElementsByTagNameNS(W,'name')[0]; var nv=nm?(nm.getAttributeNS(W,'val')||nm.getAttribute('w:val')||''):''; var m=/heading\s*([1-6])/i.exec(nv)||/見出し\s*([1-6])/.exec(nv); if(id&&m) headStyles[id]=+m[1]; }); }
+      var out=[];
+      function runHTML(p){ var h=''; [].forEach.call(p.getElementsByTagNameNS(W,'r'),function(rn){ var t=''; [].forEach.call(rn.childNodes,function(c){ if(c.localName==='t') t+=c.textContent; else if(c.localName==='tab') t+='\t'; else if(c.localName==='br') t+='\n'; }); if(!t) return; var rp=rn.getElementsByTagNameNS(W,'rPr')[0]; var bold=rp&&rp.getElementsByTagNameNS(W,'b').length; var tx=esc(t).replace(/\n/g,'<br>'); h+=bold?('<b>'+tx+'</b>'):tx; }); return h; }
+      var body=xml.getElementsByTagNameNS(W,'body')[0]; if(!body) return out;
+      [].forEach.call(body.childNodes,function(n){
+        if(n.localName==='p'){
+          var ps=n.getElementsByTagNameNS(W,'pStyle')[0], sid=ps?(ps.getAttributeNS(W,'val')||ps.getAttribute('w:val')):''; var lv=headStyles[sid]||(/^(Heading|見出し)\s*([1-6])$/i.test(sid||'')?+RegExp.$2:0);
+          var html=runHTML(n);
+          if(!plainText(html)){ if(out.length&&plainText(out[out.length-1].html)) out.push(newBlock('p','')); return; }
+          out.push(newBlock(lv?('h'+Math.min(lv,5)):'p', html));
+        } else if(n.localName==='tbl'){
+          [].forEach.call(n.getElementsByTagNameNS(W,'tr'),function(tr){ var cells=[].map.call(tr.getElementsByTagNameNS(W,'tc'),function(tc){ return [].map.call(tc.getElementsByTagNameNS(W,'p'),runHTML).join(' '); }); out.push(newBlock('p',cells.join('　｜　'))); });
+        }
+      });
+      while(out.length&&!plainText(out[out.length-1].html)) out.pop();
+      return out;
+    });
+  }
+  var PDFJS_BASE='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', pdfjsP=null, tessP=null;
+  function injectScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=function(){ rej(new Error('読み込めませんでした：'+src)); }; document.head.appendChild(s); }); }
+  function loadPdfjs(){ if(!pdfjsP) pdfjsP=injectScript(PDFJS_BASE+'pdf.min.js').then(function(){ window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_BASE+'pdf.worker.min.js'; return window.pdfjsLib; }); return pdfjsP; }
+  function loadTesseract(){ if(!tessP) tessP=injectScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js').then(function(){ return window.Tesseract; }); return tessP; }
+  /* PDFのテキスト（文字データ）を行ごとに取り出す */
+  function pdfPageText(page){
+    return page.getTextContent().then(function(tc){
+      var rows=[];
+      tc.items.forEach(function(it){ if(!it.str&&!it.hasEOL) return; var y=Math.round(it.transform[5]), x=it.transform[4]; var row=rows.filter(function(r){ return Math.abs(r.y-y)<=Math.max(2,(it.height||10)*0.4); })[0]; if(!row){ row={y:y,items:[]}; rows.push(row); } row.items.push({x:x,s:it.str||''}); });
+      rows.sort(function(a,b){ return b.y-a.y; });
+      return rows.map(function(r){ r.items.sort(function(a,b){ return a.x-b.x; }); return r.items.map(function(i){ return i.s; }).join(''); }).join('\n');
+    });
+  }
+  function pdfToText(buf,ov){
+    return loadPdfjs().then(function(lib){
+      return lib.getDocument({ data:new Uint8Array(buf), cMapUrl:PDFJS_BASE+'cmaps/', cMapPacked:true, standardFontDataUrl:PDFJS_BASE+'standard_fonts/' }).promise;
+    }).then(function(pdf){
+      var texts=[], chain=Promise.resolve();
+      for(var i=1;i<=pdf.numPages;i++){ (function(n){ chain=chain.then(function(){ ov.set('PDFを読み込み中… '+n+' / '+pdf.numPages+' ページ'); return pdf.getPage(n); }).then(pdfPageText).then(function(t){ texts.push(t); }); })(i); }
+      return chain.then(function(){ return { pdf:pdf, texts:texts }; });
+    });
+  }
+  function pdfOcr(pdf,ov){
+    return loadTesseract().then(function(T){ return T.createWorker('jpn'); }).then(function(worker){
+      var texts=[], chain=Promise.resolve();
+      for(var i=1;i<=pdf.numPages;i++){ (function(n){ chain=chain.then(function(){ ov.set('画像から文字を読み取り中… '+n+' / '+pdf.numPages+' ページ<br><small>初回は読み取り用データのダウンロードに時間がかかります</small>'); return pdf.getPage(n); }).then(function(page){ var vp=page.getViewport({scale:2}); var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height; return page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){ return worker.recognize(cv); }); }).then(function(r){ texts.push(((r&&r.data&&r.data.text)||'').replace(/(\S) (?=\S)/g,function(m,a){ return /[\u3000-\u9fff\uff00-\uffef]/.test(a)?a:m; })); }); })(i); }
+      return chain.then(function(){ return worker.terminate(); }).then(function(){ return texts; });
+    });
+  }
+  function addImportedPage(name,blocks){
+    if(!blocks.length){ alert('読み込める文字がありませんでした。'); return; }
+    var np={ id:pageId(), name:name||'読み込み', blocks:blocks };
+    beforePageChange(); detachEntryEdit();
+    state.pages.splice(curPageIdx()+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
+    render(); renderOutline(); afterPageChange(); persist(); window.scrollTo(0,0);
+    alert('「'+np.name+'」を新しいページとして追加しました（'+blocks.length+'行）。');
+  }
+  function importDocFile(f){
+    var base=String(f.name||'読み込み').replace(/\.[^.]+$/,''), ext=(String(f.name||'').match(/\.([^.]+)$/)||['',''])[1].toLowerCase();
+    var ov=importOverlay('読み込み中…');
+    f.arrayBuffer().then(function(buf){
+      if(ext==='txt'||ext==='text'||ext==='md'||/^text\//.test(f.type||'')){ ov.close(); addImportedPage(base,linesToBlocks(decodeText(buf))); return; }
+      if(ext==='docx'){ return docxToBlocks(buf).then(function(bl){ ov.close(); addImportedPage(base,bl); }); }
+      if(ext==='pdf'){
+        return pdfToText(buf,ov).then(function(r){
+          var all=r.texts.join('\n\n');
+          if(all.replace(/\s/g,'').length>=Math.max(10,r.texts.length*5)){ ov.close(); addImportedPage(base,linesToBlocks(all)); return; }
+          ov.close();
+          if(!confirm('このPDFには文字データがほとんどありません（画像のPDFの可能性があります）。\n画像から文字を読み取りますか？（時間がかかり、誤字が出ることがあります）')) return;
+          var ov2=importOverlay('準備中…');
+          return pdfOcr(r.pdf,ov2).then(function(ts){ ov2.close(); addImportedPage(base,linesToBlocks(ts.join('\n\n'))); },function(e){ ov2.close(); throw e; });
+        });
+      }
+      ov.close(); alert('対応していない形式です（txt / docx / pdf に対応）。');
+    }).catch(function(e){ ov.close(); alert('読み込めませんでした：'+((e&&e.message)||e)+'\n（PDFの読み込みにはインターネット接続が必要です）'); });
+  }
+  (function(){
+    var b=document.getElementById('btnImportDoc'); if(!b) return;
+    var inp=document.createElement('input'); inp.type='file'; inp.accept='.txt,.text,.md,.docx,.pdf,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'; inp.style.display='none'; document.body.appendChild(inp);
+    b.onclick=function(){ hmenu.classList.remove('show'); inp.value=''; inp.click(); };
+    inp.onchange=function(){ var f=inp.files&&inp.files[0]; if(f) importDocFile(f); };
+  })();
   var pdfLibsP=null;
   function loadPdfLibs(){
     if(pdfLibsP) return pdfLibsP;
