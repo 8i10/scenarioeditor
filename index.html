@@ -246,6 +246,13 @@
   .block[data-type="cbox3"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:5px;border-right-width:5px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
   .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
+  /* カード：左端に設定色・そこから薄いグラデーション */
+  .block[data-type="ccard"]{--cc:#d94a8c;position:relative;background:linear-gradient(90deg,color-mix(in srgb,var(--cc) 9%,var(--card)) 0%,var(--card) 55%);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .block[data-type="ccard"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
+  .block[data-type="ccard"]>.children{margin:0;border-left:0;padding-left:0}
+  .npc-card.ncard{--cc:#d94a8c;background:linear-gradient(90deg,color-mix(in srgb,var(--cc) 9%,var(--card)) 0%,var(--card) 55%);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .npc-card.ncard .npc-card-name{color:var(--cc)}
+  .npc-card.ncard .npc-rule{border-color:color-mix(in srgb,var(--cc) 30%,var(--line))}
   /* 色変えボックス③と同じデザイン（左だけ太線・右は太くしない）を 技能/情報(囲い)/色変え①② に適用 */
   .block[data-type="skill"],.block[data-type="info"],.block[data-type="cbox"],.block[data-type="cbox2"]{position:relative;border-radius:0!important;border-left-width:5px!important;border-right-width:1px!important;border-top-width:1px!important;border-bottom-width:1px!important;padding:13px 7px 4px!important;margin:18px 0 10px!important}
   .block[data-type="skill"] .lbl,.block[data-type="info"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{left:-5px!important;top:-13px!important;border-radius:0!important;padding-left:12px!important;padding-right:12px!important}
@@ -835,6 +842,7 @@
     {t:'cbox',    ic:'▣', nm:'色変えボックス①',         ph:'情報ボックス', ctn:1},
     {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
+    {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1, dl:'カード'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
     {t:'explore', ic:'■', nm:'■探索箇所＜＞',           ph:'場所', cat:'イベント・リスト'},
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
@@ -854,9 +862,9 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'; }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
-  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : BOX_DEFAULT; }
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : t==='ccard' ? '#d94a8c' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
@@ -1302,7 +1310,7 @@
       wrap.appendChild(tk);
     }
     if(b.type==='divider'){ var hr=document.createElement('hr'); hr.setAttribute('contenteditable','false'); wrap.appendChild(hr); return wrap; }
-    if(b.type==='npcref'){ var nc=document.createElement('div'); nc.setAttribute('contenteditable','false'); nc.innerHTML=npcCardHTML(b.npc,b.color); nc.addEventListener('mousedown',function(){ focusedId=b.id; }); wrap.appendChild(nc); return wrap; }
+    if(b.type==='npcref'){ var nc=document.createElement('div'); nc.setAttribute('contenteditable','false'); nc.innerHTML=npcCardHTML(b.npc,b.color,b.card); nc.addEventListener('mousedown',function(){ focusedId=b.id; }); wrap.appendChild(nc); return wrap; }
 
     if(b.type==='columns'){
       var row=document.createElement('div'); row.className='cols-row edit';
@@ -1323,6 +1331,7 @@
       if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; var _co=opaqueColor(_c); wrap.style.background=_c; wrap.style.borderColor=_co; lbl.style.background=_co; lbl.style.color='#fff'; lbl.style.borderColor=_co; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var _o=opaqueColor(b.boxc||boxDefault(b.type)); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
       else if(b.type==='npc'){ if(b.boxc){ var _n=opaqueColor(b.boxc); wrap.style.borderColor=_n; lbl.style.background=_n; lbl.style.color='#fff'; } }
+      else if(b.type==='ccard'){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); }
       wrap.appendChild(lbl);
       wrap.appendChild(childrenRegion(b));
     }else if(isCtn(b.type)){
@@ -1854,12 +1863,13 @@
     persist();
   }
   function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
-  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
+  function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc'||c.b.type==='ccard') return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc'||p.type==='ccard') return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
     box.boxc=c||boxDefault(box.type);
     var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(!w){ persist(); return; }
     var lbl=w.querySelector('.lbl'); var oc=opaqueColor(box.boxc);
+    if(box.type==='ccard'){ w.style.setProperty('--cc',oc); persist(); return; }
     if(box.type==='cbox'){ w.style.background=box.boxc; w.style.borderColor=''; if(lbl){ lbl.style.background=oc; lbl.style.color='#fff'; lbl.style.borderColor='transparent'; } }
     else { w.style.background=''; w.style.borderColor=oc; if(lbl){ lbl.style.background=oc; lbl.style.color='#fff'; lbl.style.borderColor=oc; } }
     persist();
@@ -2121,7 +2131,8 @@
       +'<button class="rb-item" data-rimg="1"><span class="ic">🖼</span><span class="nm">画像を挿入</span></button>'
       +'<button class="rb-item" data-rcol2="1"><span class="ic">▥</span><span class="nm">2段組にする</span></button>'
       +'<button class="rb-item" data-rdup="1"><span class="ic">⧉</span><span class="nm">選択行を複製</span></button>'
-      +'<button class="rb-item" data-rnpc="1"><span class="ic">👤</span><span class="nm">NPCデータ</span></button>'
+      +'<button class="rb-item" data-rnpc="1"><span class="ic">👤</span><span class="nm">NPC/エネミーデータ</span></button>'
+      +'<button class="rb-item" data-rnpc="card"><span class="ic">🪪</span><span class="nm">NPC/エネミーデータ（カード）</span></button>'
       +'</div></div>';
     h+='<div class="rb-cat">選択範囲を登録</div>'
       +'<button class="rb-item rb-reg" data-reg="data"><span class="ic">📚</span><span class="nm">データに登録</span></button>'
@@ -2143,7 +2154,7 @@
     var be=doc.querySelector('.block[data-id="'+b.id+'"] .be'); if(be) setCaretEnd(be);
     persist();
   }
-  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
+  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(it.getAttribute('data-rnpc')==='card'); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   /* ---- ルビ設定（作品ごと） ---- */
   var matOvl=document.getElementById('matOvl');
@@ -2294,7 +2305,7 @@
     var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
     return r1+r2+cols+pol;
   }
-  function npcCardHTML(id, color){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var col=color||n.color; var tri='<span class="npc-tri"'+(col?' style="color:'+esc(col)+'"':'')+'>▶</span>'; var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
+  function npcCardHTML(id, color, card){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var col=color||n.color; var tri='<span class="npc-tri"'+(col?' style="color:'+esc(col)+'"':'')+'>▶</span>'; var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>'; if(card) return '<div class="npc-card ncard" style="--cc:'+esc(col||'#d94a8c')+'"><div class="npc-card-name">'+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
   function npcPanelHTML(n){
     function sp(s){ return '<span class="npc-stat"><b class="npc-k">＜'+s[0]+'＞</b>'+esc(String(s[1]))+'</span>'; }
     var chars=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san]].filter(function(s){return s[1]!=null&&s[1]!=='';});
@@ -2319,7 +2330,7 @@
     var ho=n.ho?('<span class="pc-ho">'+esc(n.ho)+'</span>'):'';
     return '<details class="mat-item npc-item pc-item"'+(n.vopen===false?'':' open')+'><summary class="mat-isum"'+(n.color?' style="--mk:'+esc(n.color)+'"':'')+'>'+esc(n.name||'PC')+ho+'<span class="npc-sp"></span></summary><div class="npc-item-body">'+rows+skHTML+fields+'</div></details>';
   }
-  function insertNpcRef(){
+  function insertNpcRef(card){
     var list=(state.npcs||[]).filter(function(n){ return (n.name||n.str||n.con||n.chat); });
     if(!list.length){ alert('先に ☰ ではなく、しおりの「資料」→「NPC・エネミー」タブでデータを登録してください。'); return; }
     (state.npcs||[]).forEach(function(n){ if(!n.id) n.id=nid(); });
@@ -2328,7 +2339,7 @@
     ov.innerHTML='<div class="dlg" style="max-width:380px"><div class="dlg-h">NPC/エネミーを本文に挿入</div><div class="dlg-b"><div class="fhint">挿入するデータを選んでください。本文にデータブロックが入ります（内容は登録データと連動します）。</div><div style="display:flex;flex-direction:column;gap:5px;max-height:52vh;overflow:auto;margin-top:6px">'+items+'</div></div><div class="dlg-f"><button class="hb2" id="npcpCancel">キャンセル</button></div></div>';
     document.body.appendChild(ov);
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
-    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='npcpCancel'){ close(); return; } var b=e.target.closest('.npcpick'); if(b){ var id=b.getAttribute('data-id'); close(); var nb={id:nid(),type:'npcref',npc:id}; var c=focusedId?ctx(focusedId):null; if(c){ c.arr.splice(c.i+1,0,nb); } else { (state.blocks).push(nb); } render(); persist(); } });
+    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='npcpCancel'){ close(); return; } var b=e.target.closest('.npcpick'); if(b){ var id=b.getAttribute('data-id'); close(); var nb={id:nid(),type:'npcref',npc:id}; if(card) nb.card=true; var c=focusedId?ctx(focusedId):null; if(c){ c.arr.splice(c.i+1,0,nb); } else { (state.blocks).push(nb); } render(); persist(); } });
   }
   var npcExpanded={};
   function renderNpcList(){
@@ -2862,7 +2873,7 @@
     var us=(b.ul||b.align)?(' style="'+(b.ul?('border-bottom:1px '+(b.uls||'solid')+' '+esc(b.ul)+';'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
     var did=' id="b_'+b.id+'" data-id="'+b.id+'"'+(b.send?' data-send="'+esc(b.send)+'"':'');
     if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
-    if(b.type==='npcref') return '<div class="block" data-type="npcref"'+did+'>'+npcCardHTML(b.npc,b.color)+'</div>';
+    if(b.type==='npcref') return '<div class="block" data-type="npcref"'+did+'>'+npcCardHTML(b.npc,b.color,b.card)+'</div>';
     if(b.type==='col') return '<div class="colcell" data-type="col"'+did+' style="flex-grow:'+(+b.w||1)+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div>';
     if(b.type==='columns') return '<div class="block" data-type="columns"'+did+'><div class="cols-row'+(state.colline!==false?' colline':'')+'">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     if(isCallout(b.type)){
@@ -2870,6 +2881,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
+      else if(b.type==='ccard'){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+'"'; }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
       var lblInner;
       if(b.type==='skill2'||b.type==='skill'){ lblInner=(b.type==='skill2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
