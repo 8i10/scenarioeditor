@@ -1487,7 +1487,11 @@
   }
   function doBackspaceStart(be,b){
     var c2=ctx(b.id); if(!c2) return false;
-    if(isCtn(b.type)) return true; /* 枠・トグルの見出しの先頭：前の行とつなぐと枠ごと消えるので何もしない */
+    if(isCtn(b.type)){ /* 枠・トグルの見出しの先頭：中身が空の枠だけ削除。中身があれば何もしない */
+      var w0=doc.querySelector('.block[data-id="'+b.id+'"]');
+      if(w0 && !(w0.textContent||'').replace(/[\s\u200B⋮]/g,'') && !w0.querySelector('img')){ deleteBlocks([b.id],true); }
+      return true;
+    }
     if(c2.i>0){
       var prev=c2.arr[c2.i-1];
       if(prev.type==='divider'){ c2.arr.splice(c2.i-1,1); var pd=doc.querySelector('.block[data-id="'+prev.id+'"]'); if(pd) pd.remove(); persist(); return true; }
@@ -1512,6 +1516,28 @@
     var changed=[];
     (function walk(arr){ (arr||[]).forEach(function(x){ if(x.type==='col'&&(!x.children||!x.children.length)){ var nb=newBlock('p',''); x.children=[nb]; changed.push([x,nb]); } if(x.children) walk(x.children); }); })(state.blocks);
     changed.forEach(function(p){ var cel=doc.querySelector('.colcell[data-id="'+p[0].id+'"]'); if(cel) cel.appendChild(blockEl(p[1])); });
+  }
+  /* 行・枠の削除（指定した行／枠をまとめて消し、近くの行へカーソルを移す） */
+  function deleteBlocks(ids,toPrev){
+    ids=(ids||[]).filter(function(id){ return !!ctx(id); });
+    ids=ids.filter(function(id){ return !ids.some(function(o){ return o!==id && isWithin(o,id); }); });
+    if(!ids.length) return false;
+    var first=ctx(ids[0]), focusArr=first.arr, focusIdx=first.i, parent=first.parent;
+    ids.forEach(function(id){ var c=ctx(id); if(c) c.arr.splice(c.i,1); });
+    (function walk(arr){ (arr||[]).forEach(function(x){ if(isCallout(x.type)&&(!x.children||!x.children.length)) x.children=[newBlock('p','')]; if(x.children) walk(x.children); }); })(state.blocks);
+    fixEmptyCols();
+    if(!state.blocks.length) state.blocks.push(newBlock('p',''));
+    render();
+    var tgt=toPrev?(focusArr[focusIdx-1]||focusArr[focusIdx]||parent):(focusArr[Math.min(focusIdx,focusArr.length-1)]||focusArr[focusIdx-1]||parent);
+    tgt=tgt||state.blocks[0];
+    var tw=tgt?doc.querySelector('.block[data-id="'+tgt.id+'"]'):null; var tbs=tw?tw.querySelectorAll('.be'):[]; var tb=tbs.length?(toPrev?tbs[tbs.length-1]:tbs[0]):null;
+    if(tb){ focusedId=tb.dataset.id||tgt.id; if(toPrev) setCaretEnd(tb); else setCaretStart(tb); } else focusedId=null;
+    persist(); return true;
+  }
+  function deleteSelection(){
+    var ids=selectedBlockIds();
+    if(!ids.length){ alert('削除する行（枠を消すときは枠の見出し）をクリックしてから選んでください。'); return; }
+    deleteBlocks(ids);
   }
   function beEmpty(be){ return !(be.textContent||'').replace(/[\s\u200B]/g,'') && !be.querySelector('img'); }
   function doDeleteEnd(be,b){
@@ -2177,6 +2203,7 @@
       +'<button class="rb-item" data-rimg="1"><span class="ic">🖼</span><span class="nm">画像を挿入</span></button>'
       +'<button class="rb-item" data-rcol2="1"><span class="ic">▥</span><span class="nm">2段組にする</span></button>'
       +'<button class="rb-item" data-rdup="1"><span class="ic">⧉</span><span class="nm">選択行を複製</span></button>'
+      +'<button class="rb-item" data-rdel="1" title="カーソルのある行・選択した行を削除します。枠ごと消すときは枠の見出しをクリックしてから押してください"><span class="ic">🗑</span><span class="nm">選択行・枠を削除</span></button>'
       +'<button class="rb-item" data-rnpc="1"><span class="ic">👤</span><span class="nm">NPC/エネミーデータ</span></button>'
       +'<button class="rb-item" data-rnpc="card"><span class="ic">🪪</span><span class="nm">NPC/エネミーデータ（カード）</span></button>'
       +'</div></div>';
@@ -2210,7 +2237,7 @@
     if(!afterDivider(b)){ var be=doc.querySelector('.block[data-id="'+b.id+'"] .be'); if(be) setCaretEnd(be); }
     persist();
   }
-  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(it.getAttribute('data-rnpc')==='card'); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
+  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rdel')){ deleteSelection(); return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(it.getAttribute('data-rnpc')==='card'); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   /* ---- ルビ設定（作品ごと） ---- */
   var matOvl=document.getElementById('matOvl');
