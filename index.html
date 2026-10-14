@@ -1627,6 +1627,8 @@
     if(it.indexOf('delete')===0){
       if(multi){ e.preventDefault(); safeMulti('', false); return; }
       var cc2=curCtx(); if(!cc2) return;
+      /* 文字を範囲選択しているときは、その文字だけを消す（行の結合はしない） */
+      var selD=window.getSelection(); if(selD.rangeCount && !selD.isCollapsed) return;
       if(/Forward/i.test(it)){
         if(atEnd(cc2.be) && !isCtn(cc2.b.type)){ if(doDeleteEnd(cc2.be,cc2.b)) e.preventDefault(); }
         return;
@@ -1861,6 +1863,22 @@
     while(c.parent && guard++<50){ var pc=ctx(c.parent.id); if(!pc) break; c=pc; }
     return c.b;
   }
+  /* 選択部分を、文字色・太字などの書式（親要素）ごと複製する */
+  function wrapInlineAncestors(r,be){
+    var frag=r.cloneContents(), n=r.commonAncestorContainer; if(n.nodeType===3) n=n.parentNode;
+    while(n && n!==be && be.contains(n)){ var w=n.cloneNode(false); w.removeAttribute&&w.removeAttribute('id'); w.appendChild(frag); frag=document.createDocumentFragment(); frag.appendChild(w); n=n.parentNode; }
+    return frag;
+  }
+  /* 複数行にまたがる選択：最初と最後の行は選んだ部分だけにする */
+  function trimPartialBlocks(payload,r){
+    if(!payload.length) return payload;
+    var f=payload[0], l=payload[payload.length-1];
+    function part(b,fromStart){ if(isCtn(b.type)) return; var be=doc.querySelector('.block[data-id="'+b.id+'"] .be'); if(!be) return; var rr=document.createRange(); rr.selectNodeContents(be); try{ if(fromStart) rr.setStart(r.startContainer,r.startOffset); else rr.setEnd(r.endContainer,r.endOffset); }catch(_){ return; } var t=document.createElement('div'); t.appendChild(rr.cloneContents()); b.html=sanitize(t.innerHTML); }
+    var fbe=doc.querySelector('.block[data-id="'+f.id+'"] .be'), lbe=doc.querySelector('.block[data-id="'+l.id+'"] .be');
+    if(fbe&&fbe.contains(r.startContainer)) part(f,true);
+    if(lbe&&lbe.contains(r.endContainer)) part(l,false);
+    return payload;
+  }
   function doCopy(e, isCut){
     var cd=e.clipboardData; if(!cd) return;
     var sel=window.getSelection(); if(!sel.rangeCount || sel.isCollapsed) return;
@@ -1868,7 +1886,7 @@
     var partial=false, be0=null;
     if(ids.length===1){ be0=ownBe(ids[0]); if(be0){ var st=(sel.getRangeAt(0).toString()||''); var all=(be0.textContent||''); partial = st!=='' && st!==all; } }
     if(partial){
-      var r=sel.getRangeAt(0); var tmp=document.createElement('div'); tmp.appendChild(r.cloneContents());
+      var r=sel.getRangeAt(0); var tmp=document.createElement('div'); tmp.appendChild(wrapInlineAncestors(r,be0));
       var html=sanitize(tmp.innerHTML);
       cd.setData(SCN_INLINE, html); cd.setData('text/html', html); cd.setData('text/plain', r.toString());
       e.preventDefault();
@@ -1883,11 +1901,15 @@
     else ids.forEach(function(id){ var tb=topLevelBlockOf(id); if(tb && !topSeen[tb.id]){ topSeen[tb.id]=1; topBlocks.push(tb); } });
     if(!topBlocks.length) return;
     var payload=JSON.parse(JSON.stringify(topBlocks));
+    if(sameArr) trimPartialBlocks(payload, sel.getRangeAt(0));
     cd.setData(SCN_BLOCKS, JSON.stringify(payload));
     cd.setData('text/plain', payload.map(blockPlainText).join('\n'));
     try{ cd.setData('text/html', payload.map(staticBlockHTML).join('')); }catch(_){}
     e.preventDefault();
     if(isCut){
+      /* 行の途中から／途中までの切り取りは選んだ文字だけ消す。行まるごとなら行を消す */
+      var whole=!sameArr || (payload[0].html===topBlocks[0].html && payload[payload.length-1].html===topBlocks[topBlocks.length-1].html);
+      if(sameArr && topBlocks.length>1 && !whole){ safeMulti('', false); return; }
       /* 切り取った場所の近くにカーソルを残す（ページ先頭へ戻さない） */
       deleteBlocks(topBlocks.map(function(tb){ return tb.id; }));
     }
@@ -1923,7 +1945,12 @@
   }
   function insertInlineHTML(html){
     var be=curBe(); if(!be){ return; }
-    document.execCommand('insertHTML', false, html);
+    /* そのまま差し込む（ブラウザ任せだと文字の大きさなどが固定値で付いてしまうため） */
+    var sel=window.getSelection(), r=sel.rangeCount?sel.getRangeAt(0):null, ok=false;
+    if(r && be.contains(r.startContainer)){
+      try{ r.deleteContents(); var frag=r.createContextualFragment(html); var last=frag.lastChild; r.insertNode(frag); if(last){ var nr=document.createRange(); nr.setStartAfter(last); nr.collapse(true); sel.removeAllRanges(); sel.addRange(nr); } ok=true; }catch(_){ ok=false; }
+    }
+    if(!ok) document.execCommand('insertHTML', false, html);
     var c=ctx(be.dataset.id); if(c) c.b.html=sanitize(be.innerHTML); persist();
   }
   doc.addEventListener('paste',function(e){
