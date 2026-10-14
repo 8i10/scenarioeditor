@@ -256,6 +256,7 @@
   .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#0000ff}
   .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
   .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
+  .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl{color:var(--text)} /* カードの見出し文字色は枠の色と連動させない */
   .block[data-type="ccard2"] .lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
   .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
