@@ -175,6 +175,7 @@
   .block[data-type="q"] .be::before{content:"Q.";display:inline-block;margin-right:3px;font-weight:700}
   .block[data-type="q"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:700;color:#2383c7}
   .block[data-type="quote"] .be{border-left:2px solid var(--accent2);margin-left:8px;padding-left:14px;color:var(--accent)}
+  .block[data-type="quote"] .be{padding-top:1px;padding-bottom:1px} /* 本文（段落）と同じ行間・縦線は途切れさせない */
   .block[data-type="bullet"]{padding-left:20px}
   .block[data-type="bullet"]>.be::before{content:"•";position:absolute;left:4px;color:var(--red)}
   .block[data-type="bullet"]>.be{position:static}
@@ -2256,6 +2257,15 @@
     return true;
   }
   function rightInsert(type){
+    /* 複数行を選択しているときは、選んだ行すべてに適用（枠などの入れ物にする種類は先頭行のみ） */
+    if(!isCtn(type)){
+      var info=selectionBes();
+      if(info){
+        var done=0, lastBe=null;
+        info.list.forEach(function(be){ var cc=ctx(be.dataset.id); if(!cc||isCtn(cc.b.type)||be.classList.contains('lbl')) return; cc.b.html=sanitize(be.innerHTML); cc.b.type=type; done++; });
+        if(done){ var keep=info.list.map(function(be){ return be.dataset.id; }); keep.forEach(function(id){ var cc=ctx(id); if(cc&&!isCtn(cc.b.type)) reType(cc.b); }); var le=doc.querySelector('.block[data-id="'+keep[keep.length-1]+'"] .be'); if(le) setCaretEnd(le); persist(); return; }
+      }
+    }
     var c=focusedId?ctx(focusedId):null;
     if(!c){ var bs=state.blocks; if(!bs.length){ bs.push(newBlock('p','')); render(); } c=ctx(state.blocks[state.blocks.length-1].id); }
     if(!c) return;
