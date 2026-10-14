@@ -1341,7 +1341,7 @@
       tk.onclick=function(){ b.done=!b.done; wrap.classList.toggle('done',b.done); scheduleSave(); };
       wrap.appendChild(tk);
     }
-    if(b.type==='divider'){ var hr=document.createElement('hr'); hr.setAttribute('contenteditable','false'); wrap.appendChild(hr); return wrap; }
+    if(b.type==='divider'){ var hr=document.createElement('hr'); hr.setAttribute('contenteditable','false'); wrap.appendChild(hr); wrap.setAttribute('contenteditable','false'); wrap.addEventListener('mousedown',function(){ focusedId=b.id; }); return wrap; } /* 区切り線の余白にカーソルが入らないようにする */
     if(b.type==='npcref'){ var nc=document.createElement('div'); nc.setAttribute('contenteditable','false'); nc.innerHTML=npcCardHTML(b.npc,b.color,b.card); nc.addEventListener('mousedown',function(){ focusedId=b.id; }); wrap.appendChild(nc); return wrap; }
 
     if(b.type==='columns'){
