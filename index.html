@@ -252,10 +252,13 @@
   .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
   /* カード：左端に設定色・そこから薄いグラデーション */
-  .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#000000;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="ccard3"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#000000;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
   .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#0000ff}
-  .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
-  .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
+  .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="ccard3"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
+  .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="ccard3"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
+  .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl,.block[data-type="ccard3"]>.lbl{color:var(--text)}
+  /* カード：背景色は --cbg（未設定なら通常の背景）、文字色は背景の明るさから自動 */
+  .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="ccard3"]{background:var(--cbg,var(--card))!important} /* カードの見出し文字色は枠の色と連動させない */
   .block[data-type="ccard2"] .lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
   .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
@@ -457,6 +460,13 @@
   .entry-tog:hover{color:var(--text);border-color:var(--accent2)}
   .entry-tin{flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;font-weight:700}
   .entry-rbody{border-top:1px solid var(--line)}
+  .npc-rbox{border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  /* NPCデータのメモ欄とチャパレ欄：行背景・行下線・情報枠は各欄の幅に収め、欄の間に余白を取る */
+  .npc-cols2{column-gap:28px!important}
+  .npc-cols2>div{min-width:0;overflow-x:clip;overflow-y:visible}
+  .npc-rich{max-width:100%}
+  .npc-rhead{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--hover)}
+  .npc-rbox .entry-inline{padding:6px 10px}
   .entry-prev{font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-wrap;word-break:break-word;padding:9px 12px;cursor:pointer}
   .entry-prev:hover{background:var(--hover)}
   .entry-prev-empty{color:var(--muted);opacity:.7}
@@ -822,6 +832,7 @@
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
       <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span><span class="ulstyle" id="ulStyle"><button data-uls="solid" class="on" title="実線">─</button><button data-uls="dotted" title="点線">┉</button><button data-uls="dashed" title="破線">╌</button></span></div>
       <div class="fcell"><span class="lb">情報枠</span><span class="grp" id="palBox"></span></div>
+      <div class="fcell"><span class="lb" style="width:auto;margin-right:6px">カード背景</span><span class="grp" id="palCardBg"></span></div>
     </div>
   </div>
 </div>
@@ -858,6 +869,7 @@
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
     {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1, dl:'カード'},
     {t:'ccard2',  ic:'▌', nm:'カード（見出し下線）',     ph:'見出し', ctn:1, dl:'カード'},
+    {t:'ccard3',  ic:'▌', nm:'カード（背景色）',         ph:'見出し', ctn:1, dl:'カード', hidden:1},
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
@@ -879,10 +891,16 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='ccard2'||t==='skcard'||t==='skcard2'; }
-  function isCard(t){ return t==='ccard'||t==='ccard2'||t==='skcard'||t==='skcard2'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='ccard2'||t==='ccard3'||t==='skcard'||t==='skcard2'; }
+  function isCard(t){ return t==='ccard'||t==='ccard2'||t==='ccard3'||t==='skcard'||t==='skcard2'; }
+  /* 背景色が暗ければ白文字、明るければ黒文字 */
+  function cardFg(c){ var m=String(c||'').match(/^#?([0-9a-f]{6})$/i), r,g,b; if(m){ r=parseInt(m[1].slice(0,2),16); g=parseInt(m[1].slice(2,4),16); b=parseInt(m[1].slice(4,6),16); } else { var q=String(c||'').match(/rgba?\(([^)]+)\)/); if(!q) return '#ffffff'; var p=q[1].split(',').map(function(x){return parseFloat(x);}); r=p[0]; g=p[1]; b=p[2]; if(p.length>3&&p[3]<0.5) return '#1a1a1a'; } return (0.299*r+0.587*g+0.114*b)>150?'#1a1a1a':'#ffffff'; }
+  function isBgCard(t){ return t==='ccard'||t==='ccard2'||t==='ccard3'; }
+  /* カードの背景色（未設定なら白＝通常の背景）と、それに合わせた文字色 */
+  function cardVars(b){ if(!b.cardbg) return ''; var fg=cardFg(b.cardbg); return ';--cbg:'+b.cardbg+';--text:'+fg+';color:'+fg; }
+  function applyCardVars(w,b){ ['--cbg','--text','color'].forEach(function(k){ w.style.removeProperty(k); }); if(b.cardbg){ var fg=cardFg(b.cardbg); w.style.setProperty('--cbg',b.cardbg); w.style.setProperty('--text',fg); w.style.color=fg; } }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
-  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : (t==='ccard'||t==='ccard2') ? '#000000' : (t==='skcard'||t==='skcard2') ? '#0000ff' : BOX_DEFAULT; }
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : (t==='ccard'||t==='ccard2') ? '#000000' :  (t==='skcard'||t==='skcard2') ? '#0000ff' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
@@ -895,7 +913,9 @@
   function readUsers(){ try{ return JSON.parse(localStorage.getItem('scn_users'))||{}; }catch(e){ return {}; } }
   function writeUsers(u){ try{ localStorage.setItem('scn_users', JSON.stringify(u)); }catch(e){} }
   var editTarget=null; /* null=シナリオ本文 / {kind:'data'|'event', id} = データ・イベント項目を本文エディタで編集中 */
-  function editTargetObj(){ if(!editTarget) return null; var arr=(editTarget.kind==='data')?state.materials:state.events; for(var i=0;i<(arr||[]).length;i++){ if(arr[i] && arr[i].id===editTarget.id) return arr[i]; } return null; }
+  function editTargetObj(){ if(!editTarget) return null;
+    if(editTarget.kind==='npc'){ var nn=(state.npcs||[]).filter(function(x){ return x&&x.id===editTarget.id; })[0]; if(!nn) return null; nn.rt=nn.rt||{}; if(!nn.rt[editTarget.field]) nn.rt[editTarget.field]={blocks:[]}; return nn.rt[editTarget.field]; }
+    var arr=(editTarget.kind==='data')?state.materials:state.events; for(var i=0;i<(arr||[]).length;i++){ if(arr[i] && arr[i].id===editTarget.id) return arr[i]; } return null; }
   function entryId(pfx){ return pfx+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
   var COPY_ICON='<svg class="cpi" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>';
   var CHECK_ICON='<svg class="cki" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a9e4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
@@ -1034,6 +1054,7 @@
   function updateUndoBtns(){ var u=document.getElementById('btnUndo'),r=document.getElementById('btnRedo'); if(u)u.disabled=!undoStack.length; if(r)r.disabled=!redoStack.length; }
 
   function persist(){
+    syncNpcRich();
     scheduleUndo();
     if(!state.id) state.id=docId();
     state.updated=Date.now(); state.rev=(state.rev||0)+1;
@@ -1199,7 +1220,7 @@
   function detachEntryEdit(){ if(!editTarget) return; var sw=scenarioWrapEl(); if(sw&&doc.parentNode!==sw) sw.appendChild(doc); if(matOvl) matOvl.classList.remove('editing','show'); editTarget=null; }
   /* データ／イベント項目をその場（一覧内）で本文と同じエディタで開閉 */
   function openEntryInline(kind,id){ var arr=(kind==='data')?state.materials:state.events; var found=null; (arr||[]).forEach(function(x){ if(x&&x.id===id) found=x; }); if(!found) return; beforePageChange(); stashInlineDoc(); editTarget={kind:kind,id:id}; if(!Array.isArray(found.blocks)||!found.blocks.length) found.blocks=[newBlock('p','')]; if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); persist(); }
-  function collapseEntryInline(){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); stashInlineDoc(); editTarget=null; render(); if(kind==='data') renderMatList(); else renderEvtList(); afterPageChange(); }
+  function collapseEntryInline(){ if(!editTarget) return; var kind=editTarget.kind; beforePageChange(); stashInlineDoc(); editTarget=null; render(); if(kind==='data') renderMatList(); else if(kind==='npc') renderNpcList(); else renderEvtList(); afterPageChange(); persist(); }
   function toggleEntryInline(kind,id){ if(editTarget && editTarget.kind===kind && editTarget.id===id) collapseEntryInline(); else openEntryInline(kind,id); }
   function exitEntryEdit(){ collapseEntryInline(); }
   function newDoc(name){ state=freshDoc(name); persist(); render(); applyOutline(); updateDocName(); var be=doc.querySelector('.be'); if(be) setCaretStart(be); }
@@ -1371,7 +1392,7 @@
       if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; var _co=opaqueColor(_c); wrap.style.background=_c; wrap.style.borderColor=_co; lbl.style.background=_co; lbl.style.color='#fff'; lbl.style.borderColor=_co; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var _o=opaqueColor(b.boxc||boxDefault(b.type)); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
       else if(b.type==='npc'){ if(b.boxc){ var _n=opaqueColor(b.boxc); wrap.style.borderColor=_n; lbl.style.background=_n; lbl.style.color='#fff'; } }
-      else if(isCard(b.type)){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); }
+      else if(isCard(b.type)){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); if(isBgCard(b.type)) applyCardVars(wrap,b); }
       wrap.appendChild(lbl);
       wrap.appendChild(childrenRegion(b));
     }else if(isCtn(b.type)){
@@ -2006,6 +2027,15 @@
   }
   function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
   function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc'||isCard(c.b.type)) return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc'||isCard(p.type)) return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
+  /* カード（背景色）の背景色を変更 */
+  function setCardBg(c){
+    var cc=focusedId?ctx(focusedId):null, box=null;
+    if(cc){ if(isBgCard(cc.b.type)) box=cc.b; else { var p=cc.parent; while(p){ if(isBgCard(p.type)){ box=p; break; } var pc=ctx(p.id); p=pc?pc.parent:null; } } }
+    if(!box){ alert('「カード」または「カード（見出し下線）」の中を選択してから背景色を選んでください。'); return; }
+    box.cardbg=c||'';
+    var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(w) applyCardVars(w,box);
+    persist();
+  }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
     box.boxc=c||boxDefault(box.type);
@@ -2188,6 +2218,7 @@
     makeColorGroup('palRow', QUICK_ROW, function(c){setRowBg(c);},       function(){setRowBg('');},       '#000000');
     makeColorGroup('palUl',  QUICK_UL,  function(c){setRowUl(c);},       function(){setRowUl('');},       '#000000');
     makeColorGroup('palBox', QUICK_BOX, function(c){setBoxColor(c);},     function(){setBoxColor('');},     '#7676e8');
+    makeColorGroup('palCardBg', QUICK_TEXT, function(c){setCardBg(c);}, function(){setCardBg('');}, '#ffffff');
     var uls=document.getElementById('ulStyle');
     if(uls) uls.querySelectorAll('button').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setRowUlStyle(b.getAttribute('data-uls')); }; });
     var fsd=document.getElementById('btnFsDown'), fsu=document.getElementById('btnFsUp');
@@ -2436,6 +2467,8 @@
       var ndel=e.target.closest('.npc-del'); if(ndel){ state.npcs.splice(+ndel.getAttribute('data-i'),1); renderNpcList(); render(); persist(); return; }
       if(e.target.id==='npcAllOpen'){ (state.npcs||[]).forEach(function(n,i){ npcExpanded[(n.id||i)]=true; }); renderNpcList(); return; }
       if(e.target.id==='npcAllClose'){ npcExpanded={}; renderNpcList(); return; }
+      var ro=e.target.closest('.npc-ropen'); if(ro){ openNpcField(+ro.getAttribute('data-i'), ro.getAttribute('data-f')); return; }
+      if(e.target.closest('.npc-rclose')){ collapseEntryInline(); return; }
       if(e.target.id==='npcAdd'){ var nb={id:nid(),name:''}; state.npcs.push(nb); npcExpanded[nb.id]=true; renderNpcList(); persist(); var nin=matOvl.querySelectorAll('.npc-name'); if(nin.length) nin[nin.length-1].focus(); return; }
     });
   }
@@ -2452,12 +2485,21 @@
     var data={name:(n.name||'NPC'),memo:'',initiative:init,externalUrl:'',status:status,params:params,iconUrl:null,faces:[],x:0,y:0,angle:0,width:5,height:5,active:false,secret:false,invisible:false,hideStatus:false,color:(n.color||'#888888'),commands:(n.chat||n.skills||''),owner:null};
     return JSON.stringify({kind:'character',data:data});
   }
+  /* NPC/エネミーのチャパレ・メモ・行動方針（本文と同じエディタで編集：n.rt[欄].blocks） */
+  var NPC_RICH=['chat','notes','policy'];
+  function htmlToText(h){ var d=document.createElement('div'); d.innerHTML=String(h||'').replace(/<br\s*\/?>/gi,'\n'); return (d.textContent||'').replace(/\u200B/g,''); }
+  function blocksToText(bl){ var out=[]; (function walk(a){ (a||[]).forEach(function(b){ if(b.type!=='divider'&&b.type!=='npcref') out.push(htmlToText(b.html)); if(b.children) walk(b.children); }); })(bl); while(out.length&&!out[out.length-1].trim()) out.pop(); return out.join('\n'); }
+  function textToBlocks(t){ var ls=String(t||'').replace(/\r\n?/g,'\n').split('\n'); while(ls.length>1&&!ls[ls.length-1].trim()) ls.pop(); return ls.map(function(l){ return newBlock('p',esc(l)); }); }
+  function npcRich(n,f){ var r=n&&n.rt&&n.rt[f]; return (r&&r.blocks&&r.blocks.length&&blocksToText(r.blocks).trim())?r.blocks:null; }
+  function syncNpcRich(){ (state.npcs||[]).forEach(function(n){ if(!n||!n.rt) return; NPC_RICH.forEach(function(f){ var r=n.rt[f]; if(r&&Array.isArray(r.blocks)){ n[f]=blocksToText(r.blocks); if(f==='chat'&&n.skills) delete n.skills; } }); }); }
+  function npcFieldHTML(n,f){ var rb=npcRich(n,f); if(rb) return '<div class="npc-rich">'+rb.map(staticBlockHTML).join('')+'</div>'; var v=(f==='chat')?(n.chat||n.skills||''):(n[f]||''); return esc(v).replace(/\n/g,'<br>'); }
+  function npcChatHTML(n){ var rb=npcRich(n,'chat'); var nm=esc(n.name||'').replace(/"/g,'&quot;'); if(!rb) return cpLines(n.chat||n.skills,n.name); return rb.map(function(b){ if(b.type==='p') return (plainText(b.html)?'<span class="cp-ln" data-nm="'+nm+'">'+b.html+'</span>':'')+'<br>'; return staticBlockHTML(b); }).join('').replace(/(<br>)+$/,''); }
   function npcById(id){ return (state.npcs||[]).filter(function(n){return n.id===id;})[0]; }
   function npcInner(n, openAll){
     var sl=[['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu],['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]];
     var stats=sl.filter(function(s){return (s[1]!=null && s[1]!=='');}).map(function(s){ return '<span class="npc-stat"><b class="npc-k">＜'+s[0]+'＞</b>'+esc(String(s[1]))+'</span>'; }).join('');
-    function det(lbl,v){ return v?'<details class="npc-det"'+(openAll?' open':'')+'><summary>'+lbl+'</summary><div class="npc-detb">'+esc(v).replace(/\n/g,'<br>')+'</div></details>':''; }
-    return (stats?'<div class="npc-stats">'+stats+'</div>':'')+det('チャパレ',n.chat||n.skills)+det('メモ',n.notes)+det('行動方針',n.policy);
+    function det(lbl,f){ var v=(f==='chat')?(n.chat||n.skills):n[f]; return v?'<details class="npc-det"'+(openAll?' open':'')+'><summary>'+lbl+'</summary><div class="npc-detb">'+npcFieldHTML(n,f)+'</div></details>':''; }
+    return (stats?'<div class="npc-stats">'+stats+'</div>':'')+det('チャパレ','chat')+det('メモ','notes')+det('行動方針','policy');
   }
   /* チャパレを1行ずつクリックできる形で出力（閲覧用HTMLの送信モードで1行送信） */
   function cpLines(chat,name){ var nm=esc(name||'').replace(/"/g,'&quot;'); return String(chat||'').split(/\r?\n/).map(function(l){ return l.trim()?'<span class="cp-ln" data-nm="'+nm+'">'+esc(l)+'</span>':esc(l); }).join('<br>'); }
@@ -2466,8 +2508,8 @@
     var r1=statRow([['STR',n.str],['CON',n.con],['POW',n.pow],['DEX',n.dex],['APP',n.app],['SIZ',n.siz],['INT',n.int],['EDU',n.edu]]);
     var r2=statRow([['SAN',n.san],['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]]);
     var notes=n.notes||'', chat=n.chat||n.skills||'', policy=n.policy||'';
-    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">メモ</span>'+esc(notes).replace(/\n/g,'<br>'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ<button class="npc-copy" data-cp="'+encodeURIComponent(chat)+'" title="内容をコピー">'+COPY_ICON+'</button></span>'+cpLines(chat,n.name):'')+'</div></div>'):'';
-    var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+esc(policy).replace(/\n/g,'<br>')+'</div>'):'';
+    var cols=(notes||chat)?('<div class="npc-cols2"><div class="npc-col-n">'+(notes?'<span class="npc-fl">メモ</span>'+npcFieldHTML(n,'notes'):'')+'</div><div class="npc-col-c">'+(chat?'<span class="npc-fl">チャパレ<button class="npc-copy" data-cp="'+encodeURIComponent(chat)+'" title="内容をコピー">'+COPY_ICON+'</button></span>'+npcChatHTML(n):'')+'</div></div>'):'';
+    var pol=policy?('<hr class="npc-rule npc-rule-dot"><div class="npc-policy"><span class="npc-fl">行動方針</span>'+npcFieldHTML(n,'policy')+'</div>'):'';
     return r1+r2+cols+pol;
   }
   function npcCardHTML(id, color, card){ var n=npcById(id); if(!n) return '<div class="npc-card npc-missing">（NPC/エネミーデータが見つかりません）</div>'; var col=color||n.color; var tri='<span class="npc-tri"'+(col?' style="color:'+esc(col)+'"':'')+'>▶</span>'; var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>'; if(card) return '<div class="npc-card ncard" style="--cc:'+esc(col||'#d94a8c')+'"><div class="npc-card-name">'+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; return '<div class="npc-card"><div class="npc-card-name">'+tri+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</div><hr class="npc-rule">'+npcCardBody(n)+'</div>'; }
@@ -2477,8 +2519,8 @@
     var derived=[['HP',npcVal(n,'hp')],['MP',npcVal(n,'mp')],['DB',npcVal(n,'db')],['装甲',n.armor]].filter(function(s){return s[1]!=null&&s[1]!=='';});
     var rows=''; for(var i=0;i<chars.length;i+=4){ rows+='<div class="npc-statrow">'+chars.slice(i,i+4).map(sp).join('')+'</div>'; }
     if(derived.length) rows+='<div class="npc-statrow npc-drow">'+derived.map(sp).join('')+'</div>';
-    function detF(lbl,v,copyable){ if(!v) return ''; var cp=copyable?'<button class="npc-copy" data-cp="'+encodeURIComponent(v)+'" title="内容をコピー">'+COPY_ICON+'</button>':''; return '<details class="npc-pd'+(copyable?' npc-chatpd':'')+'" open><summary>'+lbl+cp+'</summary><div class="npc-pdb">'+(copyable?cpLines(v,n.name):esc(v).replace(/\n/g,'<br>'))+'</div></details>'; }
-    var fields=detF('チャパレ',n.chat||n.skills,true)+detF('メモ',n.notes,false)+detF('行動方針',n.policy,false);
+    function detF(lbl,f,copyable){ var v=(f==='chat')?(n.chat||n.skills):n[f]; if(!v) return ''; var cp=copyable?'<button class="npc-copy" data-cp="'+encodeURIComponent(v)+'" title="内容をコピー">'+COPY_ICON+'</button>':''; return '<details class="npc-pd'+(copyable?' npc-chatpd':'')+'" open><summary>'+lbl+cp+'</summary><div class="npc-pdb">'+(copyable?npcChatHTML(n):npcFieldHTML(n,f))+'</div></details>'; }
+    var fields=detF('チャパレ','chat',true)+detF('メモ','notes',false)+detF('行動方針','policy',false);
     var ccbtn='<button class="npc-copy npc-ccf" data-cp="'+encodeURIComponent(npcCcfolia(n))+'" title="ココフォリアにコピー">🐔</button>';
     return '<details class="mat-item npc-item"'+(n.vopen===false?'':' open')+'><summary class="mat-isum"'+(n.color?' style="--mk:'+esc(n.color)+'"':'')+'>'+esc(n.name||'NPC')+'<span class="npc-sp"></span>'+ccbtn+'</summary><div class="npc-item-body">'+rows+fields+'</div></details>';
   }
@@ -2507,10 +2549,24 @@
     ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='npcpCancel'){ close(); return; } var b=e.target.closest('.npcpick'); if(b){ var id=b.getAttribute('data-id'); close(); var nb={id:nid(),type:'npcref',npc:id}; if(card) nb.card=true; var c=focusedId?ctx(focusedId):null; if(c){ c.arr.splice(c.i+1,0,nb); } else { (state.blocks).push(nb); } render(); persist(); } });
   }
   var npcExpanded={};
+  function openNpcField(i,f){
+    var n=(state.npcs||[])[i]; if(!n||NPC_RICH.indexOf(f)<0) return; if(!n.id) n.id=nid();
+    n.rt=n.rt||{}; if(!n.rt[f]||!Array.isArray(n.rt[f].blocks)||!n.rt[f].blocks.length) n.rt[f]={blocks:textToBlocks(f==='chat'?(n.chat||n.skills||''):(n[f]||''))};
+    beforePageChange(); stashInlineDoc(); editTarget={kind:'npc',id:n.id,field:f}; renderNpcList(); afterPageChange(); persist();
+  }
   function renderNpcList(){
     var el=document.getElementById('npcList'); if(!el) return; var rows=state.npcs||[];
+    if(el.contains(doc)) stashInlineDoc();
+    (rows||[]).forEach(function(n){ if(n&&!n.id) n.id=nid(); });
     el.innerHTML = rows.length ? rows.map(function(n,i){
       var open=!!npcExpanded[n.id||i];
+      /* チャパレ・メモ・行動方針：クリックで本文と同じエディタを開く */
+      function richBox(f,lbl){
+        var editing=editTarget&&editTarget.kind==='npc'&&editTarget.id===n.id&&editTarget.field===f;
+        var v=(f==='chat')?(n.chat||n.skills||''):(n[f]||'');
+        return '<div class="npc-rbox'+(editing?' open':'')+'"><div class="npc-rhead"><span class="npc-lbl2" style="margin:0">'+lbl+'</span>'+(editing?'<button class="hb2 npc-rclose" data-i="'+i+'">閉じる</button>':'')+'</div>'
+          +(editing?'<div class="entry-inline wrap" id="entryInlineMount"></div>':'<div class="entry-prev npc-ropen" data-i="'+i+'" data-f="'+f+'">'+(v.trim()?esc(v):'<span class="entry-prev-empty">（内容なし）クリックして編集</span>')+'</div>')+'</div>';
+      }
       function fld(k,lbl,extra){ return '<label class="npc-f"><span>'+lbl+'</span><input class="npc-in" data-i="'+i+'" data-k="'+k+'" inputmode="numeric" value="'+esc(n[k]||'')+'"'+(extra||'')+'></label>'; }
       var charGrid=NPC_CHARS.map(function(c){ return fld(c[0],c[1]); }).join('');
       var derived=fld('san','SAN')
@@ -2523,13 +2579,12 @@
         +'<div class="npc-grid npc-chars">'+charGrid+'</div>'
         +'<div class="npc-grid npc-derived">'+derived+'</div>'
         +'<div class="npc-autonote">HP/MP/DBは空欄なら自動算出（入力すると手動値が優先）</div>'
-        +'<label class="npc-lbl2">チャパレ</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="chat" placeholder="チャットパレット（技能・攻撃などのダイスコマンド）" rows="3">'+esc(n.chat||n.skills||'')+'</textarea>'
-        +'<label class="npc-lbl2">メモ</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="notes" placeholder="メモ" rows="2">'+esc(n.notes||'')+'</textarea>'
-        +'<label class="npc-lbl2">行動方針</label><textarea class="npc-in npc-ta" data-i="'+i+'" data-k="policy" placeholder="行動方針" rows="2">'+esc(n.policy||'')+'</textarea>') : '';
+        +richBox('chat','チャパレ')+richBox('notes','メモ')+richBox('policy','行動方針')) : '';
       return '<div class="npc-row'+(open?'':' collapsed')+'" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px">'
         +'<div class="npc-top" style="display:flex;gap:6px;align-items:center"><button class="npc-tog" data-i="'+i+'" title="開閉">'+(open?'▾':'▸')+'</button><input class="npc-in npc-name" data-i="'+i+'" data-k="name" placeholder="名前（NPC／エネミー）" value="'+esc(n.name||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'+vopenBtn('npc-vopen',i,n)+'<button class="npc-up" data-i="'+i+'" title="上へ">▲</button><button class="npc-dn" data-i="'+i+'" title="下へ">▼</button><button class="npc-dup" data-i="'+i+'" title="複製">⧉</button><button class="npc-del" data-i="'+i+'" title="削除">🗑</button></div>'
         +body+'</div>';
     }).join('') : '<div class="fhint">まだNPC/エネミーがありません。「＋ NPC/エネミーを追加」で追加してください。</div>';
+    if(editTarget&&editTarget.kind==='npc'){ if(el.querySelector('#entryInlineMount')) mountInlineDoc(el); else { editTarget=null; stashInlineDoc(); render(); } }
     setTimeout(function(){ [].forEach.call(el.querySelectorAll('.npc-ta'), npcAutoGrow); },0);
   }
   function npcAutoGrow(t){ if(!t) return; t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
@@ -3049,7 +3104,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+'"'; }
+      else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+(isBgCard(b.type)?cardVars(b):'')+'"'; }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
       var lblInner;
       if(b.type==='skill2'||b.type==='skill'||b.type==='skcard'||b.type==='skcard2'){ lblInner=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
