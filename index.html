@@ -137,7 +137,7 @@
   .colcell.drag-over{box-shadow:inset 0 0 0 2px var(--red);border-radius:6px}
   .block.dragging{opacity:.4}
 
-  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1em;line-height:1.3;padding:0 2px}
+  .be{outline:0;white-space:pre-wrap;word-break:break-word;min-height:1em;line-height:var(--lh,1.3);padding:0 2px}
   #doc,#doc:focus,#doc:focus-visible{outline:none}
   .doc-img{float:left;max-width:46%;height:auto;margin:3px 16px 8px 0;border-radius:6px;border:1px solid var(--line)}
   #imgRz{position:fixed;width:14px;height:14px;background:var(--red);border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:9998;box-shadow:0 1px 4px rgba(0,0,0,.4);display:none}
@@ -222,7 +222,7 @@
   /* KP情報：塗りつぶしのダーク枠・白抜き文字 */
   .block[data-type="kp"]{background:var(--kp-bg);color:var(--kp-text)}
   .block[data-type="kp"]>.children,.block[data-type="kp"]>.children .be{font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
-  .block[data-type="kp"]>.children .be{line-height:1.3;min-height:1em}
+  .block[data-type="kp"]>.children .be{line-height:var(--lh,1.3);min-height:1em}
   .block[data-type="kp"]>.children>.block{margin:0}
   .block[data-type="kp"] .be{color:var(--kp-text)}
   .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22);font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
@@ -677,6 +677,9 @@
       <div class="hm-sec">文字サイズ</div>
       <div class="hm-row"><span>大きさ</span>
         <div class="seg2" id="segFs"><button data-fs="xs">極小</button><button data-fs="sm" class="on">小</button><button data-fs="md">中</button></div>
+      </div>
+      <div class="hm-row"><span>行間</span>
+        <div class="seg2" id="segLh"><button data-lh="sm">小</button><button data-lh="md" class="on">中</button><button data-lh="lg">大</button></div>
       </div>
       <div class="hm-sec">フォント</div>
       <div class="hm-row"><select id="fontSel" class="hm-select"></select></div>
@@ -2745,7 +2748,9 @@
   function applyTheme(){ root.setAttribute('data-theme',state.theme); document.getElementById('btnTheme').textContent=state.theme==='dark'?'☀ ライト':'🌙 ダーク'; applyBgColor(); }
   function applyBgColor(){ if(state.bgColor){ root.style.setProperty('--bg',state.bgColor); } else { root.style.removeProperty('--bg'); } var bp=document.getElementById('bgColorPick'); if(bp && state.bgColor) bp.value=state.bgColor; }
   var FS={xs:0.66,sm:0.8,md:1};
-  function applyFs(){ document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--fs',FS[state.fs]); }); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
+  var LH={sm:1.2,md:1.3,lg:1.4}; /* 本文の行間（中＝従来の値） */
+  function lhVal(){ return LH[state.lh]||LH.md; }
+  function applyFs(){ document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--fs',FS[state.fs]); w.style.setProperty('--lh',lhVal()); }); document.querySelectorAll('#segLh button').forEach(function(x){x.classList.toggle('on',x.dataset.lh===(LH[state.lh]?state.lh:'md'));}); document.querySelectorAll('#segFs button').forEach(function(x){x.classList.toggle('on',x.dataset.fs===state.fs);}); }
   var GOTHIC='"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif';
   var FONTS=[
     {n:'ゴシック（既定）', v:GOTHIC},
@@ -2836,6 +2841,7 @@
   document.getElementById('btnLocalFonts') && (document.getElementById('btnLocalFonts').onclick=loadLocalFonts);
   (function(){ var eb=document.getElementById('embedFonts'); if(eb){ eb.checked=!!state.embedFonts; eb.onchange=function(){ state.embedFonts=eb.checked; persist(); }; } })();
   document.getElementById('segFs').addEventListener('click',function(e){ var b=e.target.closest('button[data-fs]'); if(b){ state.fs=b.dataset.fs; applyFs(); persist(); } });
+  document.getElementById('segLh').addEventListener('click',function(e){ var b=e.target.closest('button[data-lh]'); if(b){ state.lh=b.dataset.lh; applyFs(); persist(); } });
   document.getElementById('btnTheme').onclick=function(){ state.theme=state.theme==='dark'?'light':'dark'; applyTheme(); persist(); };
   (function(){ var bp=document.getElementById('bgColorPick'), br=document.getElementById('bgColorReset');
     if(bp){ bp.oninput=function(){ state.bgColor=bp.value; applyBgColor(); persist(); }; }
@@ -3079,7 +3085,7 @@
       +convKeysOn().map(function(k){ return '<div class="cv-row"><span class="cv-k">{'+esc(k)+'}</span><span class="cv-ar">→</span><input class="cv-in" data-k="'+esc(k).replace(/"/g,'&quot;')+'" placeholder="置き換える文字"></div>'; }).join('')
       +(convKeysOn().length?'':'<div class="clip-empty">変換項目がありません（エディタの「データ」→「変換」で設定）。</div>')+'</div></aside>';
     var VFS={xs:0.58,sm:0.7,sm2:0.775,md:0.85};
-    var body='<div class="wrap" style="--fs:'+VFS.sm2+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
+    var body='<div class="wrap" style="--fs:'+VFS.sm2+';--lh:'+lhVal()+';--doc-font:'+String(state.font||GOTHIC).replace(/"/g,"'")+'">'+ptHTML+pagesHTML+'</div>';
     var vcss=' .v-head{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:10px;'
       +'padding:0 16px;background:var(--header-bg);color:var(--header-text);z-index:100}'
       +' .v-head .v-title{font-weight:700;letter-spacing:.04em;font-size:14px;color:var(--header-text);'
