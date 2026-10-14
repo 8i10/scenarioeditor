@@ -122,6 +122,8 @@
   .block{position:relative;margin:0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
   .block.has-bg{padding-top:.3em;padding-bottom:.3em;padding-left:12px;padding-right:12px;margin-top:4px;margin-bottom:4px}
   .block.has-bg>.be{min-height:0!important;margin-top:0!important;margin-bottom:0!important}
+  /* 行背景の帯の中で文字を上下中央に（フォントごとの上下の余白の差で、文字が上に寄らないように） */
+  @supports (text-box: trim-both cap alphabetic){ .block.has-bg>.be{text-box:trim-both cap alphabetic;padding-top:.32em;padding-bottom:.32em} }
   /* 見出しの直下1行目だけ、見出しとの間隔を広げる */
   .block[data-type="title"]+.block,.block[data-type="h1"]+.block,.block[data-type="h2"]+.block,.block[data-type="h3"]+.block,.block[data-type="h4"]+.block,.block[data-type="h5"]+.block{padding-top:1em}
   /* 行背景を付けた行は、間隔を内側の余白ではなく外側に取る（背景の中で文字の位置がずれないように） */
