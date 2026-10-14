@@ -252,11 +252,13 @@
   .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
   /* カード：左端に設定色・そこから薄いグラデーション */
-  .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#000000;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
+  .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="ccard3"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#000000;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
   .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#0000ff}
-  .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
-  .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
-  .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl{color:var(--text)} /* カードの見出し文字色は枠の色と連動させない */
+  .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="ccard3"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
+  .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="ccard3"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
+  .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl,.block[data-type="ccard3"]>.lbl{color:var(--text)}
+  /* カード（背景色）：背景色は --cbg、文字色は背景の明るさから自動（--cfg） */
+  .block[data-type="ccard3"]{--cc:#ff0000;--cbg:#000000;--cfg:#ffffff;--text:var(--cfg);background:var(--cbg)!important;color:var(--cfg)} /* カードの見出し文字色は枠の色と連動させない */
   .block[data-type="ccard2"] .lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
   .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
@@ -823,6 +825,7 @@
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
       <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span><span class="ulstyle" id="ulStyle"><button data-uls="solid" class="on" title="実線">─</button><button data-uls="dotted" title="点線">┉</button><button data-uls="dashed" title="破線">╌</button></span></div>
       <div class="fcell"><span class="lb">情報枠</span><span class="grp" id="palBox"></span></div>
+      <div class="fcell"><span class="lb">カード背景</span><span class="grp" id="palCardBg"></span></div>
     </div>
   </div>
 </div>
@@ -859,6 +862,7 @@
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
     {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1, dl:'カード'},
     {t:'ccard2',  ic:'▌', nm:'カード（見出し下線）',     ph:'見出し', ctn:1, dl:'カード'},
+    {t:'ccard3',  ic:'▌', nm:'カード（背景色）',         ph:'見出し', ctn:1, dl:'カード'},
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
@@ -880,10 +884,14 @@
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
   function isCtn(t){ return t==='columns'||t==='col'||!!(TMAP[t]&&TMAP[t].ctn); }
-  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='ccard2'||t==='skcard'||t==='skcard2'; }
-  function isCard(t){ return t==='ccard'||t==='ccard2'||t==='skcard'||t==='skcard2'; }
+  function isCallout(t){ return t==='kp'||t==='info'||t==='skill'||t==='skill2'||t==='secret'||t==='cbox'||t==='cbox2'||t==='cbox3'||t==='npc'||t==='lbox'||t==='ccard'||t==='ccard2'||t==='ccard3'||t==='skcard'||t==='skcard2'; }
+  function isCard(t){ return t==='ccard'||t==='ccard2'||t==='ccard3'||t==='skcard'||t==='skcard2'; }
+  var CARDBG_DEFAULT='#000000';
+  /* 背景色が暗ければ白文字、明るければ黒文字 */
+  function cardFg(c){ var m=String(c||'').match(/^#?([0-9a-f]{6})$/i), r,g,b; if(m){ r=parseInt(m[1].slice(0,2),16); g=parseInt(m[1].slice(2,4),16); b=parseInt(m[1].slice(4,6),16); } else { var q=String(c||'').match(/rgba?\(([^)]+)\)/); if(!q) return '#ffffff'; var p=q[1].split(',').map(function(x){return parseFloat(x);}); r=p[0]; g=p[1]; b=p[2]; if(p.length>3&&p[3]<0.5) return '#1a1a1a'; } return (0.299*r+0.587*g+0.114*b)>150?'#1a1a1a':'#ffffff'; }
+  function cardVars(b){ var bg=b.cardbg||CARDBG_DEFAULT; return '--cbg:'+bg+';--cfg:'+cardFg(bg); }
   var BOX_DEFAULT='rgba(118,118,232,0.5)';
-  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : (t==='ccard'||t==='ccard2') ? '#000000' : (t==='skcard'||t==='skcard2') ? '#0000ff' : BOX_DEFAULT; }
+  function boxDefault(t){ return t==='cbox2' ? '#8b0000' : (t==='ccard'||t==='ccard2') ? '#000000' : t==='ccard3' ? '#ff0000' : (t==='skcard'||t==='skcard2') ? '#0000ff' : BOX_DEFAULT; }
   function opaqueColor(c){ c=c||BOX_DEFAULT; var m=c.match(/rgba?\(([^)]+)\)/); if(m){ var p=m[1].split(',').map(function(s){return s.trim();}); return 'rgba('+p[0]+','+p[1]+','+p[2]+',0.95)'; } return c; }
   function defLabel(t){ return (TMAP[t]&&TMAP[t].dl)||''; }
 
@@ -1372,7 +1380,7 @@
       if(b.type==='cbox'){ var _c=b.boxc||BOX_DEFAULT; var _co=opaqueColor(_c); wrap.style.background=_c; wrap.style.borderColor=_co; lbl.style.background=_co; lbl.style.color='#fff'; lbl.style.borderColor=_co; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var _o=opaqueColor(b.boxc||boxDefault(b.type)); wrap.style.borderColor=_o; lbl.style.background=_o; lbl.style.color='#fff'; lbl.style.borderColor=_o; }
       else if(b.type==='npc'){ if(b.boxc){ var _n=opaqueColor(b.boxc); wrap.style.borderColor=_n; lbl.style.background=_n; lbl.style.color='#fff'; } }
-      else if(isCard(b.type)){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); }
+      else if(isCard(b.type)){ wrap.style.setProperty('--cc',opaqueColor(b.boxc||boxDefault(b.type))); if(b.type==='ccard3'){ var _bg=b.cardbg||CARDBG_DEFAULT; wrap.style.setProperty('--cbg',_bg); wrap.style.setProperty('--cfg',cardFg(_bg)); } }
       wrap.appendChild(lbl);
       wrap.appendChild(childrenRegion(b));
     }else if(isCtn(b.type)){
@@ -2007,6 +2015,15 @@
   }
   function setRowBg(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.bg=c||''; var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w){ w.style.background=c||''; w.classList.toggle('has-bg', !!c); } }); persist(); }
   function nearestCbox(id){ var c=id?ctx(id):null; if(!c) return null; if(c.b.type==='cbox'||c.b.type==='cbox2'||c.b.type==='cbox3'||c.b.type==='npc'||isCard(c.b.type)) return c.b; var p=c.parent; while(p){ if(p.type==='cbox'||p.type==='cbox2'||p.type==='cbox3'||p.type==='npc'||isCard(p.type)) return p; var pc=ctx(p.id); p=pc?pc.parent:null; } return null; }
+  /* カード（背景色）の背景色を変更 */
+  function setCardBg(c){
+    var cc=focusedId?ctx(focusedId):null, box=null;
+    if(cc){ if(cc.b.type==='ccard3') box=cc.b; else { var p=cc.parent; while(p){ if(p.type==='ccard3'){ box=p; break; } var pc=ctx(p.id); p=pc?pc.parent:null; } } }
+    if(!box){ alert('「カード（背景色）」の中を選択してから背景色を選んでください。'); return; }
+    box.cardbg=c||'';
+    var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(w){ var bg=box.cardbg||CARDBG_DEFAULT; w.style.setProperty('--cbg',bg); w.style.setProperty('--cfg',cardFg(bg)); }
+    persist();
+  }
   function setBoxColor(c){
     var box=nearestCbox(focusedId); if(!box){ alert('「情報ボックス（色変更可）」を選択してから色を変えてください。'); return; }
     box.boxc=c||boxDefault(box.type);
@@ -2189,6 +2206,7 @@
     makeColorGroup('palRow', QUICK_ROW, function(c){setRowBg(c);},       function(){setRowBg('');},       '#000000');
     makeColorGroup('palUl',  QUICK_UL,  function(c){setRowUl(c);},       function(){setRowUl('');},       '#000000');
     makeColorGroup('palBox', QUICK_BOX, function(c){setBoxColor(c);},     function(){setBoxColor('');},     '#7676e8');
+    makeColorGroup('palCardBg', QUICK_TEXT, function(c){setCardBg(c);}, function(){setCardBg('');}, '#000000');
     var uls=document.getElementById('ulStyle');
     if(uls) uls.querySelectorAll('button').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setRowUlStyle(b.getAttribute('data-uls')); }; });
     var fsd=document.getElementById('btnFsDown'), fsu=document.getElementById('btnFsUp');
@@ -3050,7 +3068,7 @@
       if(b.type==='cbox'){ var cc=b.boxc||BOX_DEFAULT; var cco=opaqueColor(cc); boxStyle=' style="background:'+cc+';border-color:'+cco+'"'; lblStyle=' style="background:'+cco+';color:#fff;border-color:'+cco+'"'; }
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
-      else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+'"'; }
+      else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+(b.type==='ccard3'?';'+cardVars(b):'')+'"'; }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
       var lblInner;
       if(b.type==='skill2'||b.type==='skill'||b.type==='skcard'||b.type==='skcard2'){ lblInner=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
