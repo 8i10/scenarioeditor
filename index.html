@@ -1404,7 +1404,7 @@
     bindBe(be,b);
     return be;
   }
-  function render(){ doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); applyColLine(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); }
+  function render(){ var _sy=window.scrollY; doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); applyColLine(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); if(Math.abs(window.scrollY-_sy)>2) window.scrollTo(0,_sy); }
   function reType(b){
     var wrap=doc.querySelector('.block[data-id="'+b.id+'"]'); if(!wrap) return;
     var nw=blockEl(b); wrap.parentNode.replaceChild(nw,wrap);
@@ -1433,11 +1433,20 @@
     var headFrag=headR.cloneContents();
     var tailR=document.createRange(); tailR.selectNodeContents(eBe); tailR.setStart(r.endContainer,r.endOffset);
     var tailFrag=tailR.cloneContents();
+    /* 選択の終わりが枠の見出しなら、枠は残して見出しの残りだけ置く（枠ごと消さない） */
+    var endIsLbl=eBe.classList.contains('lbl');
     sBe.innerHTML=''; sBe.appendChild(headFrag);
     var boundary=sBe.childNodes.length; var tnode=null;
     if(text){ tnode=document.createTextNode(text); sBe.appendChild(tnode); }
-    sBe.appendChild(tailFrag);
-    info.list.slice(1).forEach(function(be){ var id=be.dataset.id; var c=ctx(id); if(c) c.arr.splice(c.i,1); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.remove(); });
+    if(endIsLbl){ eBe.innerHTML=''; eBe.appendChild(tailFrag); var ec=ctx(eBe.dataset.id); if(ec) ec.b.html=sanitize(eBe.innerHTML); }
+    else sBe.appendChild(tailFrag);
+    var endId=eBe.dataset.id;
+    info.list.slice(1).forEach(function(be){
+      var id=be.dataset.id; if(endIsLbl&&id===endId) return;
+      /* 選択の途中に枠の見出しがあり、枠の中身が選択の外まで続く場合：枠は残し見出しだけ消す */
+      if(be.classList.contains('lbl') && isWithin(id,endId)){ var lc=ctx(id); be.innerHTML=''; if(lc) lc.b.html=''; return; }
+      var c=ctx(id); if(c) c.arr.splice(c.i,1); var el=doc.querySelector('.block[data-id="'+id+'"]'); if(el) el.remove();
+    });
     var sc=ctx(sBe.dataset.id); if(sc) sc.b.html=sBe.innerHTML;
     var sel=window.getSelection(); var rng=document.createRange();
     if(text&&tnode){ rng.setStart(tnode,tnode.length); } else { rng.setStart(sBe, Math.min(boundary,sBe.childNodes.length)); }
@@ -1476,6 +1485,7 @@
   }
   function doBackspaceStart(be,b){
     var c2=ctx(b.id); if(!c2) return false;
+    if(isCtn(b.type)) return true; /* 枠・トグルの見出しの先頭：前の行とつなぐと枠ごと消えるので何もしない */
     if(c2.i>0){
       var prev=c2.arr[c2.i-1];
       if(prev.type==='divider'){ c2.arr.splice(c2.i-1,1); var pd=doc.querySelector('.block[data-id="'+prev.id+'"]'); if(pd) pd.remove(); persist(); return true; }
@@ -1492,7 +1502,7 @@
         persist(); return true;
       }
     }
-    else if(c2.parent && c2.parent.type==='col'){ return true; } /* 段の先頭：隣の段とつながないようにする */
+    else if(c2.parent){ return true; } /* 枠・段・トグルの先頭：見出しや隣の段とつながないようにする */
     return false;
   }
   /* 段の中身が全部消えたら空行を1つ戻す（書き込めない段を作らない） */
@@ -1521,7 +1531,7 @@
         return true;
       }
     }
-    else if(c4.parent && c4.parent.type==='col'){ return true; } /* 段の末尾：隣の段とつながないようにする */
+    else if(c4.parent){ return true; } /* 枠・段・トグルの末尾：枠の外や隣の段とつながないようにする */
     return false;
   }
   function safeMulti(text,split){
