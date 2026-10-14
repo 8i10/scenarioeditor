@@ -461,6 +461,10 @@
   .entry-tin{flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit;font-weight:700}
   .entry-rbody{border-top:1px solid var(--line)}
   .npc-rbox{border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  /* NPCデータ内（メモ・チャパレ・行動方針）の行背景・行下線は、文字の幅だけに付ける（隣の欄まで伸ばさない） */
+  .npc-rich>.block.has-bg,.npc-rich>.block>.be[style*="border-bottom"]{width:fit-content;max-width:100%;box-sizing:border-box}
+  .npc-rich>.block:has(>.be[style*="border-bottom"]){width:fit-content;max-width:100%}
+  .npc-cols2>div{overflow:hidden}
   .npc-rhead{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--hover)}
   .npc-rbox .entry-inline{padding:6px 10px}
   .entry-prev{font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-wrap;word-break:break-word;padding:9px 12px;cursor:pointer}
