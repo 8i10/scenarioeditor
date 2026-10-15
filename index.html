@@ -132,6 +132,10 @@
   .cp-pop .cp-more{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:11.5px;white-space:nowrap}
   /* 行左線：続く行どうしの間（行の余白）にも線を通す */
   .block.has-ll{border-radius:0!important}
+  /* 行左線＋行下線：左の線と下線の角をつなげる */
+  .block.has-ll.has-ul{padding-left:0!important;padding-bottom:0!important}
+  .block.has-ll.has-ul>.be{padding-left:.6em!important;margin-bottom:0!important}
+  .block.has-ll.has-ul:not(:has(+ .block.has-ll)){margin-bottom:4px}
   .block.has-ll:has(+ .block.has-ll){padding-bottom:1px}
   .block.has-ll + .block.has-ll{padding-top:1px}
   /* ── block ── */
@@ -2145,13 +2149,14 @@
     saveSel(); persist(); return true;
   }
   /* 行左線（実線・二重線・点線） */
-  function llBorder(b){ if(!b||!b.ll) return ''; var st=b.lls||'solid'; return (st==='double'?'4px':'2px')+' '+st+' '+b.ll; }
+  function llBorder(b){ if(!b||!b.ll) return ''; var st=b.lls||'solid'; return (st==='double'?'3px':'1px')+' '+st+' '+b.ll; }
   /* 行左線は行（ブロック）の外枠に付ける：続く行どうしで線がつながる */
-  function applyLl(w,b){ if(!w) return; if(w.classList&&!w.classList.contains('block')&&w.closest) w=w.closest('.block')||w; w.classList.toggle('has-ll',!!b.ll); if(b.ll){ w.style.borderLeft=llBorder(b); w.style.paddingLeft='.6em'; } else { w.style.borderLeft=''; w.style.paddingLeft=''; } }
+  function hasUl(b){ return !!(b&&(b.ul||b.type==='evr'||b.type==='nvr')); }
+  function applyLl(w,b){ if(!w) return; if(w.classList&&!w.classList.contains('block')&&w.closest) w=w.closest('.block')||w; w.classList.toggle('has-ll',!!b.ll); w.classList.toggle('has-ul',hasUl(b)); if(b.ll){ w.style.borderLeft=llBorder(b); w.style.paddingLeft='.6em'; } else { w.style.borderLeft=''; w.style.paddingLeft=''; } }
   function setRowLl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ll=c||''; applyLl(doc.querySelector('.block[data-id="'+id+'"]'),ci.b); }); persist(); }
   function setRowLlStyle(st){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.lls=st; applyLl(doc.querySelector('.block[data-id="'+id+'"]'),ci.b); }); var ls=document.getElementById('llStyle'); if(ls) ls.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-lls')===st);}); persist(); }
   function ulBorder(b){ return b&&b.ul?('1px '+(b.uls||'solid')+' '+b.ul):''; }
-  function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=ulBorder(ci.b); }); persist(); }
+  function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=ulBorder(ci.b); applyLl(doc.querySelector('.block[data-id="'+id+'"]'),ci.b); }); persist(); }
   function setRowUlStyle(s){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.uls=s; var be=ownBe(id); if(be&&ci.b.ul) be.style.borderBottom=ulBorder(ci.b); }); var us=document.getElementById('ulStyle'); if(us) us.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-uls')===s);}); persist(); }
   function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
   function stepFontSize(dir){
@@ -3193,7 +3198,7 @@
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var h=staticBlockHTML0(b);
-    if(b&&b.ll){ var m=h.match(/^<div class="block([^"]*)"([^>]*)>/); if(m){ var bs='border-left:'+esc(llBorder(b))+';padding-left:.6em;'; var at=m[2]; at=/ style="/.test(at)?at.replace(' style="',' style="'+bs):(at+' style="'+bs+'"'); h='<div class="block'+m[1]+' has-ll"'+at+'>'+h.slice(m[0].length); } }
+    if(b&&b.ll){ var m=h.match(/^<div class="block([^"]*)"([^>]*)>/); if(m){ var bs='border-left:'+esc(llBorder(b))+';padding-left:.6em;'; var at=m[2]; at=/ style="/.test(at)?at.replace(' style="',' style="'+bs):(at+' style="'+bs+'"'); h='<div class="block'+m[1]+' has-ll'+(hasUl(b)?' has-ul':'')+'"'+at+'>'+h.slice(m[0].length); } }
     return h;
   }
   function staticBlockHTML0(b){
