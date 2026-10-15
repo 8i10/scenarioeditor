@@ -170,10 +170,11 @@
   .block[data-type="h3"] .be{font-weight:700;font-size:1.28em;color:var(--accent);margin:20px 0 6px}
   .block[data-type="h4"] .be{font-weight:700;font-size:1.12em;color:var(--accent);margin:16px 0 5px}
   .block[data-type="h5"] .be{font-weight:700;font-size:1em;color:var(--muted);margin:14px 0 4px}
+  .block[data-type="nv"] .be::before,.block[data-type="nvr"] .be::before{content:"∇";display:inline-block;color:#e5352b;font-weight:800;margin-right:1px;text-decoration:none}
   .block[data-type="ev"] .be::before,.block[data-type="evr"] .be::before{content:"！";display:inline-block;color:#e5352b;font-weight:800;margin-right:1px;text-decoration:none}
-  .block[data-type="ev"] .be,.block[data-type="evr"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:800;color:var(--text);font-size:1.02em;letter-spacing:.02em;margin:14px 0 5px}
-  .block[data-type="ev"] .be{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
-  .block[data-type="evr"] .be{border-bottom:1px solid var(--text);padding-bottom:3px}
+  .block[data-type="ev"] .be,.block[data-type="evr"] .be,.block[data-type="nv"] .be,.block[data-type="nvr"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:800;color:var(--text);font-size:1.02em;letter-spacing:.02em;margin:14px 0 5px}
+  .block[data-type="ev"] .be,.block[data-type="nv"] .be{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+  .block[data-type="evr"] .be,.block[data-type="nvr"] .be{border-bottom:1px solid var(--text);padding-bottom:3px}
   .block[data-type="q"] .be::before{content:"Q.";display:inline-block;margin-right:3px;font-weight:700}
   .block[data-type="q"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:700;color:#2383c7}
   .block[data-type="quote"] .be{border-left:2px solid var(--accent2);margin-left:8px;padding-left:14px;color:var(--accent)}
@@ -888,6 +889,8 @@
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
     {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
     {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
+    {t:'nv',      ic:'∇', nm:'∇（下線）',              ph:'項目'},
+    {t:'nvr',     ic:'∇', nm:'∇（行下線）',            ph:'項目'},
     {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト'},
     {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'toggle',  ic:'▸',  nm:'トグル',               ph:'トグル', cat:'トグル', ctn:1},
@@ -3103,7 +3106,7 @@
   /* ---- 書き出し（HTML / PDF） ---- */
   function skillNameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞]/g,'').trim(); }
   function skill2NameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var st=t.indexOf('※'); if(st>=0) t=t.slice(0,st); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞※]/g,'').trim(); }
-  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
+  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var style=(b.bg||b.indent)?(' style="'+(b.bg?('background:'+esc(b.bg)+';'):'')+(b.indent?('margin-left:'+(b.indent*24)+'px'):'')+'"'):'';
@@ -3130,7 +3133,7 @@
     if(b.type==='act'||b.type==='exb'||b.type==='actb'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act')?'<span class="asym asym-exl">■行動可能＜</span>':('<span class="asym asym-exl asym-exb">'+(b.type==='exb'?'［探索箇所］':'［行動可能］')+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+(b.type==='act'?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
     if(b.type==='explore'){ var exCopy='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block" data-type="explore"'+did+style+'>'+exCopy+'<div class="be"'+us+'><span class="asym asym-exl">■探索箇所＜</span>'+(b.html||'')+'<span class="asym asym-exr">＞</span></div></div>'; }
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
-    var asymPre=(b.type==='ev'||b.type==='evr')?'<span class="asym asym-ev">！</span>':(b.type==='q'?'<span class="asym asym-q">Q.</span>':'');
+    var asymPre=(b.type==='ev'||b.type==='evr')?'<span class="asym asym-ev">！</span>':(b.type==='nv'||b.type==='nvr')?'<span class="asym asym-ev">∇</span>':(b.type==='q'?'<span class="asym asym-q">Q.</span>':'');
     return '<div class="block'+done+(b.bg?' has-bg':'')+'" data-type="'+b.type+'"'+did+style+'>'+tick+'<div class="be"'+us+'>'+asymPre+(b.html||(b.type==='p'?'<br>':''))+'</div></div>';
   }
   function nameKey(){ var s=((state.name||'')+'').trim()||'scn'; var h=5381; for(var i=0;i<s.length;i++){ h=(((h<<5)+h)+s.charCodeAt(i))>>>0; } return 'n'+h.toString(36); }
@@ -3204,7 +3207,7 @@
       +' .asym-lbox{margin-right:2px}'
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
       +' .block[data-type="skill"] .lbl>.sk-wrap,.block[data-type="skill2"] .lbl>.sk-wrap,.block[data-type="skcard"] .lbl>.sk-wrap,.block[data-type="skcard2"] .lbl>.sk-wrap{display:inline}'
-      +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
+      +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="nv"]>.be::before,.block[data-type="nvr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
       +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
       +' .block[data-type="skill"] .lbl .sknm::before,.block[data-type="skill"] .lbl .sknm::after,.block[data-type="skill2"] .lbl .sknm::before,.block[data-type="skill2"] .lbl .sknm::after,.block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::after{content:""!important}'
