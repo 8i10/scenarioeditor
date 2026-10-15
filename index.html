@@ -214,6 +214,8 @@
   .block[data-type="todo"].done>.tick::after{content:"";position:absolute;left:50%;top:45%;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:translate(-50%,-50%) rotate(45deg);box-sizing:content-box}
   .block[data-type="todo"].done>.be{color:var(--muted);text-decoration:line-through}
   .block[data-type="divider"]{padding:9px 0}
+  /* 区切り線のすぐ下の見出し3～5は上の余白を詰める（線が見出しから離れすぎないように） */
+  .block[data-type="divider"]+.block[data-type="h3"]>.be,.block[data-type="divider"]+.block[data-type="h4"]>.be,.block[data-type="divider"]+.block[data-type="h5"]>.be{margin-top:4px}
   .block[data-type="divider"] hr{border:0;border-top:1px solid var(--line);margin:0}
 
   /* container (toggle / toggle-heading / callout) */
