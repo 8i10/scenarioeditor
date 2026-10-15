@@ -130,6 +130,10 @@
   .cp-pop .cp-cur{width:26px;height:22px;border-radius:5px;border:1px solid var(--line)}
   .cp-pop .cp-hexin{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font-family:monospace;font-size:12px}
   .cp-pop .cp-more{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:11.5px;white-space:nowrap}
+  /* 行左線：続く行どうしの間（行の余白）にも線を通す */
+  .block.has-ll{border-radius:0!important}
+  .block.has-ll:has(+ .block.has-ll){padding-bottom:1px}
+  .block.has-ll + .block.has-ll{padding-top:1px}
   /* ── block ── */
   .send-pill{position:absolute;top:-7px;right:4px;z-index:3;background:var(--card);border:1px solid var(--accent2);color:var(--accent2);border-radius:9px;padding:0 7px;font-size:10px;line-height:15px;font-weight:700;pointer-events:none;-webkit-user-select:none;user-select:none;white-space:nowrap}
   .block{position:relative;margin:0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
@@ -273,7 +277,9 @@
   .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl,.block[data-type="ccard3"]>.lbl{color:var(--text)}
   /* カード：背景色は --cbg（未設定なら通常の背景）、文字色は背景の明るさから自動 */
   .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="ccard3"],.block[data-type="ccard0"]{background:var(--cbg,var(--card))!important}
-  .block[data-type="ccard0"]>.lbl{display:none!important} /* カードの見出し文字色は枠の色と連動させない */
+  .block[data-type="ccard0"]>.lbl{display:none!important}
+  .block[data-type="ccard0"]>.children>.block:first-child>.be,.block[data-type="ccard0"]>.children>.block:first-child>.chead>.be{margin-top:0!important}
+  .block[data-type="ccard0"]>.children>.block:first-child{padding-top:0!important} /* カードの見出し文字色は枠の色と連動させない */
   .block[data-type="ccard2"] .lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
   .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
   .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
@@ -854,9 +860,9 @@
       <div class="fcell"><span class="lb">文字背景</span><span class="grp" id="palMark"></span></div>
       <div class="fcell"><span class="lb">行背景</span><span class="grp" id="palRow"></span></div>
       <div class="fcell"><span class="lb">行下線</span><span class="grp" id="palUl"></span><span class="ulstyle" id="ulStyle"><button data-uls="solid" class="on" title="実線">─</button><button data-uls="dotted" title="点線">┉</button><button data-uls="dashed" title="破線">╌</button></span></div>
-      <div class="fcell"><span class="lb">行左線</span><span class="grp" id="palLl"></span><span class="ulstyle" id="llStyle"><button data-lls="solid" class="on" title="実線">│</button><button data-lls="double" title="二重線">║</button><button data-lls="dotted" title="点線">┊</button></span></div>
       <div class="fcell"><span class="lb">情報枠</span><span class="grp" id="palBox"></span></div>
       <div class="fcell"><span class="lb" style="width:auto;margin-right:6px">カード背景</span><span class="grp" id="palCardBg"></span></div>
+      <div class="fcell"><span class="lb">行左線</span><span class="grp" id="palLl"></span><span class="ulstyle" id="llStyle"><button data-lls="solid" class="on" title="実線">│</button><button data-lls="double" title="二重線">║</button><button data-lls="dotted" title="点線">┊</button></span></div>
     </div>
   </div>
 </div>
@@ -1390,6 +1396,7 @@
     wrap.dataset.type=b.type; wrap.dataset.id=b.id; wrap.id='b_'+b.id;
     if(b.bg){ wrap.style.background=b.bg; wrap.classList.add('has-bg'); }
     if(b.indent) wrap.style.marginLeft=(b.indent*24)+'px';
+    if(b.ll) applyLl(wrap,b);
 
     var bg=document.createElement('div'); bg.className='bgrip'; bg.textContent='⋮⋮'; bg.setAttribute('contenteditable','false'); bg.setAttribute('draggable','true'); bg.title='Altを押しながらドラッグで並べ替え';
     wrap.appendChild(bg);
@@ -1480,7 +1487,6 @@
     be.className='be'; be.dataset.ph=ph(b.type); be.dataset.id=b.id;
     be.innerHTML=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):((b.type==='skill'||b.type==='skcard')?skillLabel(b.html):(b.html||''));
     if(b.ul) be.style.borderBottom=ulBorder(b);
-    if(b.ll){ be.style.borderLeft=llBorder(b); be.style.paddingLeft='.6em'; }
     if(b.align) be.style.textAlign=b.align;
     bindBe(be,b);
     return be;
@@ -2140,9 +2146,10 @@
   }
   /* 行左線（実線・二重線・点線） */
   function llBorder(b){ if(!b||!b.ll) return ''; var st=b.lls||'solid'; return (st==='double'?'4px':'2px')+' '+st+' '+b.ll; }
-  function applyLl(be,b){ if(!be) return; if(b.ll){ be.style.borderLeft=llBorder(b); be.style.paddingLeft='.6em'; } else { be.style.borderLeft=''; be.style.paddingLeft=''; } }
-  function setRowLl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ll=c||''; applyLl(ownBe(id),ci.b); }); persist(); }
-  function setRowLlStyle(st){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.lls=st; applyLl(ownBe(id),ci.b); }); var ls=document.getElementById('llStyle'); if(ls) ls.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-lls')===st);}); persist(); }
+  /* 行左線は行（ブロック）の外枠に付ける：続く行どうしで線がつながる */
+  function applyLl(w,b){ if(!w) return; if(w.classList&&!w.classList.contains('block')&&w.closest) w=w.closest('.block')||w; w.classList.toggle('has-ll',!!b.ll); if(b.ll){ w.style.borderLeft=llBorder(b); w.style.paddingLeft='.6em'; } else { w.style.borderLeft=''; w.style.paddingLeft=''; } }
+  function setRowLl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ll=c||''; applyLl(doc.querySelector('.block[data-id="'+id+'"]'),ci.b); }); persist(); }
+  function setRowLlStyle(st){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.lls=st; applyLl(doc.querySelector('.block[data-id="'+id+'"]'),ci.b); }); var ls=document.getElementById('llStyle'); if(ls) ls.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-lls')===st);}); persist(); }
   function ulBorder(b){ return b&&b.ul?('1px '+(b.uls||'solid')+' '+b.ul):''; }
   function setRowUl(c){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.ul=c||''; var be=ownBe(id); if(be) be.style.borderBottom=ulBorder(ci.b); }); persist(); }
   function setRowUlStyle(s){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.uls=s; var be=ownBe(id); if(be&&ci.b.ul) be.style.borderBottom=ulBorder(ci.b); }); var us=document.getElementById('ulStyle'); if(us) us.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-uls')===s);}); persist(); }
@@ -3185,8 +3192,13 @@
   function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
+    var h=staticBlockHTML0(b);
+    if(b&&b.ll){ var m=h.match(/^<div class="block([^"]*)"([^>]*)>/); if(m){ var bs='border-left:'+esc(llBorder(b))+';padding-left:.6em;'; var at=m[2]; at=/ style="/.test(at)?at.replace(' style="',' style="'+bs):(at+' style="'+bs+'"'); h='<div class="block'+m[1]+' has-ll"'+at+'>'+h.slice(m[0].length); } }
+    return h;
+  }
+  function staticBlockHTML0(b){
     var style=(b.bg||b.indent)?(' style="'+(b.bg?('background:'+esc(b.bg)+';'):'')+(b.indent?('margin-left:'+(b.indent*24)+'px'):'')+'"'):'';
-    var us=(b.ul||b.align||b.ll)?(' style="'+(b.ul?('border-bottom:1px '+(b.uls||'solid')+' '+esc(b.ul)+';'):'')+(b.ll?('border-left:'+esc(llBorder(b))+';padding-left:.6em;'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
+    var us=(b.ul||b.align)?(' style="'+(b.ul?('border-bottom:1px '+(b.uls||'solid')+' '+esc(b.ul)+';'):'')+(b.align?('text-align:'+esc(b.align)):'')+'"'):'';
     var did=' id="b_'+b.id+'" data-id="'+b.id+'"'+(b.send?' data-send="'+esc(b.send)+'"':'');
     if(b.type==='divider') return '<div class="block" data-type="divider"'+did+'><hr></div>';
     if(b.type==='npcref') return '<div class="block" data-type="npcref"'+did+'>'+npcCardHTML(b.npc,b.color,b.card)+'</div>';
