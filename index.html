@@ -1636,6 +1636,15 @@
     if(tb){ focusedId=tb.dataset.id||tgt.id; if(toPrev) setCaretEnd(tb); else setCaretStart(tb); } else focusedId=null;
     persist(); return true;
   }
+  /* 枠（情報枠・カード・トグル・2段組など）の下に空行を追加。枠の外にいるときはその行の下に追加 */
+  function addLineBelow(id){
+    var c=id?ctx(id):null; if(!c){ alert('行（または枠の中）をクリックしてから選んでください。'); return; }
+    var t=c.b;
+    if(!(isCtn(t.type)&&t.type!=='col')){ var p=c.parent; while(p){ if(isCtn(p.type)&&p.type!=='col'){ t=p; break; } var pc=ctx(p.id); p=pc?pc.parent:null; } }
+    var tc=ctx(t.id); if(!tc) return;
+    var nb=newBlock('p',''); tc.arr.splice(tc.i+1,0,nb);
+    render(); var be=doc.querySelector('.block[data-id="'+nb.id+'"] .be'); if(be){ focusedId=nb.id; setCaretStart(be); } persist();
+  }
   function deleteSelection(){
     var ids=selectedBlockIds();
     if(!ids.length){ alert('削除する行（枠を消すときは枠の見出し）をクリックしてから選んでください。'); return; }
@@ -1796,7 +1805,7 @@
     var c=id?ctx(id):null; if(!c) return;
     var nm=isCtn(c.b.type)?(c.b.type==='columns'?'この2段組を削除':'この枠を削除'):'この行を削除';
     menuMode='grip'; menuTargetId=id;
-    menu.innerHTML='<button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
+    menu.innerHTML='<button data-act="below"><span class="ic">↵</span><span class="nm">'+(isCtn(c.b.type)?'この枠の下に行を追加':'この下に行を追加')+'</span></button><button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
     menu.style.top=(y+window.scrollY+2)+'px'; var vw=document.documentElement.clientWidth; var left=x+window.scrollX; if(left+200>window.scrollX+vw) left=window.scrollX+vw-204; menu.style.left=left+'px';
     var f=menu.querySelector('button'); if(f) f.classList.add('sel'); menu.classList.add('show');
   }
@@ -1859,6 +1868,7 @@
     if(act==='up'&&c.i>0){ var a=c.arr; var t=a[c.i-1]; a[c.i-1]=a[c.i]; a[c.i]=t; render(); }
     else if(act==='down'&&c.i<c.arr.length-1){ var a2=c.arr; var t2=a2[c.i+1]; a2[c.i+1]=a2[c.i]; a2[c.i]=t2; render(); }
     else if(act==='dup'){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid(); (x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); }
+    else if(act==='below'){ addLineBelow(menuTargetId); return; }
     else if(act==='del'){ c.arr.splice(c.i,1); if(!state.blocks.length) state.blocks.push(newBlock('p','')); fixEmptyCols(); render(); }
     persist();
   }
@@ -2397,6 +2407,7 @@
       +'<button class="rb-item" data-rimg="1"><span class="ic">🖼</span><span class="nm">画像を挿入</span></button>'
       +'<button class="rb-item" data-rcol2="1"><span class="ic">▥</span><span class="nm">2段組にする</span></button>'
       +'<button class="rb-item" data-rdup="1"><span class="ic">⧉</span><span class="nm">選択行を複製</span></button>'
+      +'<button class="rb-item" data-rbelow="1" title="カーソルのある枠（情報枠・カード・トグル・2段組など）のすぐ下に空行を追加します"><span class="ic">↵</span><span class="nm">枠の下に行を追加</span></button>'
       +'<button class="rb-item" data-rdel="1" title="カーソルのある行・選択した行を削除します。枠ごと消すときは枠の見出しをクリックしてから押してください"><span class="ic">🗑</span><span class="nm">選択行・枠を削除</span></button>'
       +'<button class="rb-item" data-rnpc="1"><span class="ic">👤</span><span class="nm">NPC/エネミーデータ</span></button>'
       +'<button class="rb-item" data-rnpc="card"><span class="ic">🪪</span><span class="nm">NPC/エネミーデータ（カード）</span></button>'
@@ -2440,7 +2451,7 @@
     if(!afterDivider(b)){ var be=doc.querySelector('.block[data-id="'+b.id+'"] '+(b.type==='ccard0'?'.children .be':'.be')); if(be) setCaretEnd(be); }
     persist();
   }
-  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rdel')){ deleteSelection(); return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(it.getAttribute('data-rnpc')==='card'); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
+  if(rbar){ rbar.addEventListener('mousedown',function(e){ if(e.target.closest('.rb-item')) e.preventDefault(); }); rbar.addEventListener('click',function(e){ if(e.target.id==='rbX'){ state.rightMenu=false; applyRightMenu(); persist(); return; } var accH=e.target.closest('.macc-h'); if(accH){ accH.parentNode.classList.toggle('open'); return; } var it=e.target.closest('.rb-item'); if(it){ if(it.getAttribute('data-reg')){ registerSelection(it.getAttribute('data-reg'), it); return; } if(it.getAttribute('data-rimg')){ triggerImageInsert(focusedId,false); return; } if(it.getAttribute('data-rcol2')){ createColumns(focusedId,false); return; } if(it.getAttribute('data-rdup')){ var c=focusedId?ctx(focusedId):null; if(c){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid();(x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); persist(); } return; } if(it.getAttribute('data-rdel')){ deleteSelection(); return; } if(it.getAttribute('data-rbelow')){ addLineBelow(focusedId); return; } if(it.getAttribute('data-rnpc')){ insertNpcRef(it.getAttribute('data-rnpc')==='card'); return; } rightInsert(it.getAttribute('data-rt')); } }); rbar.addEventListener('click',function(e){ if(rbTemp && (e.target.closest('.rb-item')||e.target.id==='rbX')){ rbTemp=false; applyRightMenu(); } }); }
   (function(){ var b=document.getElementById('btnRightMenu'); if(b) b.onclick=function(){ state.rightMenu=!state.rightMenu; applyRightMenu(); persist(); hmenu.classList.remove('show'); }; })();
   /* ---- ルビ設定（作品ごと） ---- */
   var matOvl=document.getElementById('matOvl');
@@ -2958,17 +2969,43 @@
     {n:'メイリオ', v:'Meiryo,"メイリオ",sans-serif'},
     {n:'MS ゴシック', v:'"MS Gothic","ＭＳ ゴシック",monospace'},
     {n:'MS 明朝', v:'"MS Mincho","ＭＳ 明朝",serif'},
-    {n:'システムフォント', v:'system-ui,-apple-system,sans-serif'}
+    {n:'システムフォント', v:'system-ui,-apple-system,sans-serif'},
+    /* Webフォント（インストール不要。閲覧用HTMLでもそのまま表示される） */
+    {n:'Noto Sans JP', v:'"Noto Sans JP",sans-serif', gf:'Noto+Sans+JP:wght@400;500;700'},
+    {n:'Noto Serif JP', v:'"Noto Serif JP",serif', gf:'Noto+Serif+JP:wght@400;600;700'},
+    {n:'M PLUS 1p', v:'"M PLUS 1p",sans-serif', gf:'M+PLUS+1p:wght@400;500;700'},
+    {n:'M PLUS Rounded 1c', v:'"M PLUS Rounded 1c",sans-serif', gf:'M+PLUS+Rounded+1c:wght@400;500;700'},
+    {n:'Zen Maru Gothic', v:'"Zen Maru Gothic",sans-serif', gf:'Zen+Maru+Gothic:wght@400;500;700'},
+    {n:'Zen Old Mincho', v:'"Zen Old Mincho",serif', gf:'Zen+Old+Mincho:wght@400;600;700'},
+    {n:'Kosugi Maru', v:'"Kosugi Maru",sans-serif', gf:'Kosugi+Maru:wght@400'},
+    {n:'BIZ UDPGothic', v:'"BIZ UDPGothic",sans-serif', gf:'BIZ+UDPGothic:wght@400;700'},
+    {n:'BIZ UDPMincho', v:'"BIZ UDPMincho",serif', gf:'BIZ+UDPMincho:wght@400;700'},
+    {n:'Sawarabi Gothic', v:'"Sawarabi Gothic",sans-serif', gf:'Sawarabi+Gothic:wght@400'},
+    {n:'Sawarabi Mincho', v:'"Sawarabi Mincho",serif', gf:'Sawarabi+Mincho:wght@400'},
+    {n:'Kaisei Opti', v:'"Kaisei Opti",serif', gf:'Kaisei+Opti:wght@400;500;700'},
+    {n:'Klee One', v:'"Klee One",sans-serif', gf:'Klee+One:wght@400;600'},
+    {n:'Murecho', v:'"Murecho",sans-serif', gf:'Murecho:wght@400;500;700'},
+    {n:'IBM Plex Sans JP', v:'"IBM Plex Sans JP",sans-serif', gf:'IBM+Plex+Sans+JP:wght@400;500;700'},
+    {n:'Kiwi Maru', v:'"Kiwi Maru",serif', gf:'Kiwi+Maru:wght@400;500'},
+    {n:'Hina Mincho', v:'"Hina Mincho",serif', gf:'Hina+Mincho:wght@400'},
+    {n:'Yuji Syuku', v:'"Yuji Syuku",serif', gf:'Yuji+Syuku:wght@400'},
+    {n:'Dela Gothic One', v:'"Dela Gothic One",sans-serif', gf:'Dela+Gothic+One:wght@400'},
+    {n:'DotGothic16', v:'"DotGothic16",sans-serif', gf:'DotGothic16:wght@400'}
   ];
+  /* Webフォント：選んだ（使っている）ものだけ読み込む */
+  function webFontsUsed(text){ text=String(text||''); return FONTS.filter(function(f){ return f.gf && text.indexOf(f.v.split(',')[0].replace(/"/g,''))>=0; }); }
+  function webFontLinks(list){ if(!list.length) return ''; return '<link href="https://fonts.googleapis.com/css2?'+list.map(function(f){ return 'family='+f.gf; }).join('&')+'&display=swap" rel="stylesheet">'; }
+  function ensureWebFonts(text){ webFontsUsed(text).forEach(function(f){ var id='gf_'+f.gf.replace(/[^a-z0-9]/gi,''); if(document.getElementById(id)) return; var l=document.createElement('link'); l.id=id; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family='+f.gf+'&display=swap'; document.head.appendChild(l); }); }
   function applyFont(){
-    document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--doc-font', state.font||GOTHIC); });
+    document.querySelectorAll('.wrap').forEach(function(w){ w.style.setProperty('--doc-font', state.font||GOTHIC); }); ensureWebFonts(state.font||'');
     var sel=document.getElementById('fontSel'); if(sel && [].some.call(sel.options,function(o){return o.value===(state.font||GOTHIC);})) sel.value=state.font||GOTHIC;
     var eb=document.getElementById('embedFonts'); if(eb) eb.checked=!!state.embedFonts;
   }
   function buildFontSelect(){
     var sel=document.getElementById('fontSel'); if(!sel) return;
     sel.innerHTML='';
-    FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; sel.appendChild(o); });
+    var og1=document.createElement('optgroup'); og1.label='端末のフォント（インストールが必要）'; var og2=document.createElement('optgroup'); og2.label='Webフォント（インストール不要）';
+    FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; (f.gf?og2:og1).appendChild(o); }); sel.appendChild(og1); sel.appendChild(og2);
     localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=jpFontDisplay(fam); sel.appendChild(o); });
     if(state.font && !FONTS.some(function(f){return f.v===state.font;}) && localFontList.indexOf(state.font.replace(/"/g,''))<0){
       var o=document.createElement('option'); o.value=state.font; o.textContent=state.font.replace(/"/g,''); sel.insertBefore(o, sel.firstChild);
@@ -2980,10 +3017,11 @@
     if(fi){
       fi.innerHTML='';
       var ph0=document.createElement('option'); ph0.value=''; ph0.textContent='書体…'; fi.appendChild(ph0);
-      FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; fi.appendChild(o); });
+      var fg1=document.createElement('optgroup'); fg1.label='端末のフォント（インストールが必要）'; var fg2=document.createElement('optgroup'); fg2.label='Webフォント（インストール不要）';
+      FONTS.forEach(function(f){ var o=document.createElement('option'); o.value=f.v; o.textContent=f.n; (f.gf?fg2:fg1).appendChild(o); }); fi.appendChild(fg1); fi.appendChild(fg2);
       localFontList.forEach(function(fam){ var o=document.createElement('option'); o.value='"'+fam+'"'; o.textContent=jpFontDisplay(fam); fi.appendChild(o); });
       var rst=document.createElement('option'); rst.value='inherit'; rst.textContent='解除（既定）'; fi.appendChild(rst);
-      fi.onchange=function(){ var v=fi.value; if(v){ wrapSelectionFont(v); } fi.value=''; };
+      fi.onchange=function(){ var v=fi.value; if(v){ ensureWebFonts(v); wrapSelectionFont(v); } fi.value=''; };
     }
   }
   var localFontData={}, localFontList=[];
@@ -3648,6 +3686,7 @@
       +'<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name)+'</title>'
       +'<link rel="icon" type="image/png" href="data:image/png;base64,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">'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
+      +webFontLinks(webFontsUsed((state.font||'')+body+matHTML+flagHTML+evtHTML+pcHTML))
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
       +'<body class="ol-open">'+vhead+nav+body+matHTML+flagHTML+evtHTML+pcHTML+clipHTML+'<div class="send-tip" id="sendTip"></div><div class="send-toast" id="sendToast"></div>'+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
@@ -4351,7 +4390,7 @@
     ];
     persist();
   }
-  buildPalettes(); buildFontSelect();
+  buildPalettes(); buildFontSelect(); try{ ensureWebFonts(JSON.stringify(state.pages||[])+JSON.stringify(state.materials||[])); }catch(_){}
   document.addEventListener('keydown',function(e){
     var mod=e.ctrlKey||e.metaKey; if(!mod) return;
     var k=e.key.toLowerCase();
