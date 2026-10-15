@@ -220,7 +220,7 @@
 
   /* container (toggle / toggle-heading / callout) */
   .chead{display:flex;align-items:center;gap:4px}
-  .hlink{color:var(--blue);text-decoration:underline;cursor:pointer}
+  .hlink{color:inherit;text-decoration:underline;cursor:pointer}
   .tri{flex:none;width:22px;height:1.5em;border:0;background:transparent;cursor:pointer;color:var(--accent2);font-size:calc(16px * var(--fs) - 1px);line-height:1;display:flex;align-items:center;justify-content:center;transition:transform .12s}
   .block.collapsed>.chead .tri{transform:rotate(-90deg)}
   .chead .be{flex:1}
@@ -1837,9 +1837,9 @@
     menuMode='hlink';
     var h='<div class="mcat">見出しへリンク</div>';
     pages.forEach(function(p){
-      var its=headingsOf(p.blocks); if(!its.length) return;
+      var its=hlDepths(headingsOf(p.blocks)); if(!its.length) return;
       h+='<div class="mcat mcat-pg">'+esc(p.name||'ページ')+(p.id===state.curPage?'（現在）':'')+'</div>';
-      its.forEach(function(it){ h+='<button data-hgoto="'+it.id+'"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t||'(無題)')+'</span></button>'; });
+      its.forEach(function(it){ h+='<button data-hgoto="'+it.id+'" data-ht="'+esc(it.t||'')+'">'+hlItemInner(it)+'</button>'; });
     });
     menu.innerHTML=h; var f=menu.querySelector('button'); if(f) f.classList.add('sel');
     posMenu(anchor); menu.classList.add('show');
@@ -2373,6 +2373,9 @@
     (function walk(arr){ arr.forEach(function(b){ if(HL[b.type]) items.push({id:b.id,lv:HL[b.type],t:plainText(b.html)}); if(b.children) walk(b.children); }); })(state.blocks);
     return items;
   }
+  /* 見出しリンクの一覧用：前の見出しとの親子関係から階層の深さを求め、字下げで表示する */
+  function hlDepths(its){ var st=[]; its.forEach(function(it){ while(st.length && st[st.length-1]>=it.lv) st.pop(); it.depth=st.length; st.push(it.lv); }); return its; }
+  function hlItemInner(it){ return '<span class="nm" style="padding-left:'+(it.depth*16)+'px'+(it.depth?'':';font-weight:700')+'">'+(it.depth?'<span style="color:var(--muted);margin-right:4px">└</span>':'')+esc(it.t||'(無題)')+'</span>'; }
   function headingsOf(blocks){ var items=[]; (function walk(arr){ (arr||[]).forEach(function(b){ if(HL[b.type]) items.push({id:b.id,lv:HL[b.type],t:plainText(b.html)}); if(b.children) walk(b.children); }); })(blocks); return items; }
   function totalCharsAll(){ var n=0; (state.pages||[]).forEach(function(p){ (function walk(arr){ (arr||[]).forEach(function(b){ n+=plainText(b.html).replace(/\s/g,'').length; if(b.children) walk(b.children); }); })(p.blocks||[]); }); return n; }
   var olOpen={};
@@ -2540,16 +2543,16 @@
   function matInsertCols(i){ matInsert(i,'<div class="mat-cols"><div class="mat-col"><br></div><div class="mat-col"><br></div></div><br>'); }
   function matInsertHLink(i){
     var body=matOvl.querySelector('.mat-b-in[data-i="'+i+'"]'); if(!body) return;
-    var items=[]; (state.pages||[]).forEach(function(p){ headingsOf(p.blocks).forEach(function(it){ items.push({id:it.id,lv:it.lv,t:it.t||'(無題)',pg:p.name||'ページ'}); }); });
+    var items=[]; (state.pages||[]).forEach(function(p){ hlDepths(headingsOf(p.blocks)).forEach(function(it){ items.push({id:it.id,lv:it.lv,depth:it.depth,t:it.t||'(無題)',pg:p.name||'ページ'}); }); });
     if(!items.length){ alert('リンク先の見出しがありません。先に見出しを作成してください。'); return; }
     var sel=window.getSelection(); var selText=(sel&&sel.toString())||'';
     var byPage={}, order=[]; items.forEach(function(it){ if(!byPage[it.pg]){byPage[it.pg]=[];order.push(it.pg);} byPage[it.pg].push(it); });
-    var listHtml=order.map(function(pg){ return '<div class="mcat mcat-pg">'+esc(pg)+(pg===state.name?'':'')+'</div>'+byPage[pg].map(function(it){ return '<button class="hlpick" data-hid="'+it.id+'" style="display:flex;width:100%;text-align:left;gap:8px;align-items:center;background:transparent;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--text)"><span class="ic">'+it.lv+'</span><span class="nm">'+esc(it.t)+'</span></button>'; }).join(''); }).join('');
+    var listHtml=order.map(function(pg){ return '<div class="mcat mcat-pg">'+esc(pg)+(pg===state.name?'':'')+'</div>'+byPage[pg].map(function(it){ return '<button class="hlpick" data-hid="'+it.id+'" style="display:flex;width:100%;text-align:left;gap:8px;align-items:center;background:transparent;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--text)" data-ht="'+esc(it.t)+'">'+hlItemInner(it)+'</button>'; }).join(''); }).join('');
     var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
     ov.innerHTML='<div class="dlg" style="max-width:420px"><div class="dlg-h">見出しへリンク</div><div class="dlg-b"><div class="fhint">リンク先の見出しを選んでください。閲覧用HTMLでクリックすると、その見出しへ移動します。</div><div style="max-height:52vh;overflow:auto;margin-top:6px">'+listHtml+'</div></div><div class="dlg-f"><button class="hb2" id="hlpCancel">キャンセル</button></div></div>';
     document.body.appendChild(ov);
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
-    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hlpCancel'){ close(); return; } var b=e.target.closest('.hlpick'); if(b){ var id=b.getAttribute('data-hid'); var label=selText || (b.querySelector('.nm')?b.querySelector('.nm').textContent:'見出し'); close(); matInsert(i,'<a class="hlink" data-h="'+id+'">'+esc(label)+'</a>'); } });
+    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hlpCancel'){ close(); return; } var b=e.target.closest('.hlpick'); if(b){ var id=b.getAttribute('data-hid'); var label=selText || b.getAttribute('data-ht') || '見出し'; close(); matInsert(i,'<a class="hlink" data-h="'+id+'">'+esc(label)+'</a>'); } });
   }
   function renderEvtList(){
     var el=document.getElementById('evtList'); if(!el) return; var rows=state.events||[];
