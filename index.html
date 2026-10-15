@@ -340,7 +340,7 @@
   .block[data-type="exb"]+.block[data-type="actb"] .be,.block[data-type="actb"]+.block[data-type="exb"] .be,.block[data-type="exb"]+.block[data-type="exb"] .be,.block[data-type="actb"]+.block[data-type="actb"] .be{margin-top:2px}
 
   /* ── menu ── */
-  .menu{position:absolute;z-index:200;width:264px;max-height:340px;overflow:auto;background:var(--card);
+  .menu{position:absolute;z-index:350;width:264px;max-height:340px;overflow:auto;background:var(--card);
     border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.22);padding:6px;display:none}
   .menu.show{display:block}
   .menu .mcat{font-size:10px;letter-spacing:.14em;color:var(--muted);padding:7px 10px 3px}
@@ -1809,7 +1809,7 @@
     var c=id?ctx(id):null; if(!c) return;
     var nm=isCtn(c.b.type)?(c.b.type==='columns'?'この2段組を削除':'この枠を削除'):'この行を削除';
     menuMode='grip'; menuTargetId=id;
-    menu.innerHTML='<button data-act="below"><span class="ic">↵</span><span class="nm">'+(isCtn(c.b.type)?'この枠の下に行を追加':'この下に行を追加')+'</span></button><button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
+    menu.innerHTML='<button data-act="copy"><span class="ic">⧉</span><span class="nm">'+(isCtn(c.b.type)?(c.b.type==='columns'?'この2段組をコピー':'この枠をコピー'):'この行をコピー')+'</span></button><button data-act="below"><span class="ic">↵</span><span class="nm">'+(isCtn(c.b.type)?'この枠の下に行を追加':'この下に行を追加')+'</span></button><button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
     menu.style.top=(y+window.scrollY+2)+'px'; var vw=document.documentElement.clientWidth; var left=x+window.scrollX; if(left+200>window.scrollX+vw) left=window.scrollX+vw-204; menu.style.left=left+'px';
     var f=menu.querySelector('button'); if(f) f.classList.add('sel'); menu.classList.add('show');
   }
@@ -1873,6 +1873,7 @@
     else if(act==='down'&&c.i<c.arr.length-1){ var a2=c.arr; var t2=a2[c.i+1]; a2[c.i+1]=a2[c.i]; a2[c.i]=t2; render(); }
     else if(act==='dup'){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid(); (x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); }
     else if(act==='below'){ addLineBelow(menuTargetId); return; }
+    else if(act==='copy'){ gripCopyData=JSON.parse(JSON.stringify([c.b])); try{ document.execCommand('copy'); }catch(_){ } gripCopyData=null; return; }
     else if(act==='del'){ c.arr.splice(c.i,1); if(!state.blocks.length) state.blocks.push(newBlock('p','')); fixEmptyCols(); render(); }
     persist();
   }
@@ -1993,6 +1994,16 @@
       deleteBlocks(topBlocks.map(function(tb){ return tb.id; }));
     }
   }
+  /* 「⋮⋮」メニューの「コピー」：行・枠をまるごとクリップボードへ（貼り付け先で同じ行・枠になる） */
+  var gripCopyData=null;
+  document.addEventListener('copy', function(e){
+    if(!gripCopyData||!e.clipboardData) return;
+    var payload=gripCopyData; gripCopyData=null;
+    e.clipboardData.setData(SCN_BLOCKS, JSON.stringify(payload));
+    e.clipboardData.setData('text/plain', payload.map(blockPlainText).join('\n'));
+    try{ e.clipboardData.setData('text/html', payload.map(staticBlockHTML).join('')); }catch(_){}
+    e.preventDefault(); e.stopImmediatePropagation();
+  }, true);
   doc.addEventListener('copy', function(e){ doCopy(e,false); });
   doc.addEventListener('cut', function(e){ doCopy(e,true); });
   function pasteBlocks(arr){
