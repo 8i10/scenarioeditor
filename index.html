@@ -117,6 +117,21 @@
   #pageOverlay .page-line{position:absolute;left:40px;right:40px;border-top:1px dashed var(--page-line)}
   #pageOverlay .page-line span{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;white-space:nowrap;font-size:10px;line-height:1;color:var(--page-line);font-family:sans-serif}
 
+  /* 源暎ゴシックN（端末にインストールされている場合に使用）：全ウェイトを1つの書体名にまとめる＋ウェイト固定版 */
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-EL'),local('GenEiGothicN EL'),local('GenEi Gothic N EL'),local('源暎ゴシックN EL'),local('源暎ゴシックN-EL'),local('GenEiGothicN-ExtraLight'),local('GenEiGothicN ExtraLight'),local('GenEi Gothic N ExtraLight'),local('源暎ゴシックN ExtraLight'),local('源暎ゴシックN-ExtraLight');font-weight:200;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-L'),local('GenEiGothicN L'),local('GenEi Gothic N L'),local('源暎ゴシックN L'),local('源暎ゴシックN-L'),local('GenEiGothicN-Light'),local('GenEiGothicN Light'),local('GenEi Gothic N Light'),local('源暎ゴシックN Light'),local('源暎ゴシックN-Light');font-weight:300;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-R'),local('GenEiGothicN R'),local('GenEi Gothic N R'),local('源暎ゴシックN R'),local('源暎ゴシックN-R'),local('GenEiGothicN-Regular'),local('GenEiGothicN Regular'),local('GenEi Gothic N Regular'),local('源暎ゴシックN Regular'),local('源暎ゴシックN-Regular'),local('GenEiGothicN'),local('源暎ゴシックN'),local('GenEi Gothic N');font-weight:400;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-M'),local('GenEiGothicN M'),local('GenEi Gothic N M'),local('源暎ゴシックN M'),local('源暎ゴシックN-M'),local('GenEiGothicN-Medium'),local('GenEiGothicN Medium'),local('GenEi Gothic N Medium'),local('源暎ゴシックN Medium'),local('源暎ゴシックN-Medium');font-weight:500;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-SB'),local('GenEiGothicN SB'),local('GenEi Gothic N SB'),local('源暎ゴシックN SB'),local('源暎ゴシックN-SB'),local('GenEiGothicN-SemiBold'),local('GenEiGothicN SemiBold'),local('GenEi Gothic N SemiBold'),local('源暎ゴシックN SemiBold'),local('源暎ゴシックN-SemiBold');font-weight:600;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-B'),local('GenEiGothicN B'),local('GenEi Gothic N B'),local('源暎ゴシックN B'),local('源暎ゴシックN-B'),local('GenEiGothicN-Bold'),local('GenEiGothicN Bold'),local('GenEi Gothic N Bold'),local('源暎ゴシックN Bold'),local('源暎ゴシックN-Bold');font-weight:700;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN（全ウェイト）';src:local('GenEiGothicN-H'),local('GenEiGothicN H'),local('GenEi Gothic N H'),local('源暎ゴシックN H'),local('源暎ゴシックN-H'),local('GenEiGothicN-Heavy'),local('GenEiGothicN Heavy'),local('GenEi Gothic N Heavy'),local('源暎ゴシックN Heavy'),local('源暎ゴシックN-Heavy'),local('GenEiGothicN-Black'),local('GenEiGothicN Black'),local('GenEi Gothic N Black'),local('源暎ゴシックN Black'),local('源暎ゴシックN-Black');font-weight:900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN ExtraLight';src:local('GenEiGothicN-EL'),local('GenEiGothicN EL'),local('GenEi Gothic N EL'),local('源暎ゴシックN EL'),local('源暎ゴシックN-EL'),local('GenEiGothicN-ExtraLight'),local('GenEiGothicN ExtraLight'),local('GenEi Gothic N ExtraLight'),local('源暎ゴシックN ExtraLight'),local('源暎ゴシックN-ExtraLight');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN Light';src:local('GenEiGothicN-L'),local('GenEiGothicN L'),local('GenEi Gothic N L'),local('源暎ゴシックN L'),local('源暎ゴシックN-L'),local('GenEiGothicN-Light'),local('GenEiGothicN Light'),local('GenEi Gothic N Light'),local('源暎ゴシックN Light'),local('源暎ゴシックN-Light');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN Regular';src:local('GenEiGothicN-R'),local('GenEiGothicN R'),local('GenEi Gothic N R'),local('源暎ゴシックN R'),local('源暎ゴシックN-R'),local('GenEiGothicN-Regular'),local('GenEiGothicN Regular'),local('GenEi Gothic N Regular'),local('源暎ゴシックN Regular'),local('源暎ゴシックN-Regular'),local('GenEiGothicN'),local('源暎ゴシックN'),local('GenEi Gothic N');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN Medium';src:local('GenEiGothicN-M'),local('GenEiGothicN M'),local('GenEi Gothic N M'),local('源暎ゴシックN M'),local('源暎ゴシックN-M'),local('GenEiGothicN-Medium'),local('GenEiGothicN Medium'),local('GenEi Gothic N Medium'),local('源暎ゴシックN Medium'),local('源暎ゴシックN-Medium');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN SemiBold';src:local('GenEiGothicN-SB'),local('GenEiGothicN SB'),local('GenEi Gothic N SB'),local('源暎ゴシックN SB'),local('源暎ゴシックN-SB'),local('GenEiGothicN-SemiBold'),local('GenEiGothicN SemiBold'),local('GenEi Gothic N SemiBold'),local('源暎ゴシックN SemiBold'),local('源暎ゴシックN-SemiBold');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN Bold';src:local('GenEiGothicN-B'),local('GenEiGothicN B'),local('GenEi Gothic N B'),local('源暎ゴシックN B'),local('源暎ゴシックN-B'),local('GenEiGothicN-Bold'),local('GenEiGothicN Bold'),local('GenEi Gothic N Bold'),local('源暎ゴシックN Bold'),local('源暎ゴシックN-Bold');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源暎ゴシックN Heavy';src:local('GenEiGothicN-H'),local('GenEiGothicN H'),local('GenEi Gothic N H'),local('源暎ゴシックN H'),local('源暎ゴシックN-H'),local('GenEiGothicN-Heavy'),local('GenEiGothicN Heavy'),local('GenEi Gothic N Heavy'),local('源暎ゴシックN Heavy'),local('源暎ゴシックN-Heavy'),local('GenEiGothicN-Black'),local('GenEiGothicN Black'),local('GenEi Gothic N Black'),local('源暎ゴシックN Black'),local('源暎ゴシックN-Black');font-weight:100 900;font-display:swap}
   /* ── block ── */
   .send-pill{position:absolute;top:-7px;right:4px;z-index:3;background:var(--card);border:1px solid var(--accent2);color:var(--accent2);border-radius:9px;padding:0 7px;font-size:10px;line-height:15px;font-weight:700;pointer-events:none;-webkit-user-select:none;user-select:none;white-space:nowrap}
   .block{position:relative;margin:0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
@@ -2865,6 +2880,14 @@
     {n:'明朝', v:'"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif'},
     {n:'UDデジタル教科書体', v:'"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",sans-serif'},
     {n:'Zen Kaku Gothic New', v:'"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif'},
+    {n:'源暎ゴシックN（全ウェイト）', v:'"源暎ゴシックN（全ウェイト）","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN ExtraLight', v:'"源暎ゴシックN ExtraLight","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Light', v:'"源暎ゴシックN Light","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Regular', v:'"源暎ゴシックN Regular","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Medium', v:'"源暎ゴシックN Medium","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN SemiBold', v:'"源暎ゴシックN SemiBold","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Bold', v:'"源暎ゴシックN Bold","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Heavy', v:'"源暎ゴシックN Heavy","源暎ゴシックN","GenEiGothicN","GenEi Gothic N","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
     {n:'源暎こぶり明朝 v6', v:'"源暎こぶり明朝 v6","GenEiKoburiMincho v6","GenEi Koburi Mincho v6",serif'},
     {n:'游明朝 Demibold', v:'"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho",serif'},
     {n:'游ゴシック Medium', v:'"Yu Gothic Medium","游ゴシック Medium","YuGothic Medium","YuGothic-Medium","Yu Gothic",sans-serif'},
@@ -2910,7 +2933,7 @@
     if(!window.queryLocalFonts){ alert('この環境では端末フォントの取得に対応していません。\nChrome系ブラウザで、ローカルフォントアクセスの許可が必要です。'); return; }
     window.queryLocalFonts().then(function(fonts){
       var added=0;
-      fonts.forEach(function(f){ if(!localFontData[f.family]) localFontData[f.family]=f;
+      fonts.forEach(function(f){ if(!localFontData[f.family]) localFontData[f.family]=f; if(typeof localFontFaces!=="undefined"){ var lf=(localFontFaces[f.family]=localFontFaces[f.family]||[]); if(lf.indexOf(f)<0) lf.push(f); }
         if(FONTS.some(function(x){return x.n===f.family;})) return;
         if(localFontList.indexOf(f.family)>=0) return;
         localFontList.push(f.family); added++; });
@@ -2927,21 +2950,26 @@
     var skip={'Zen Kaku Gothic New':1,'Shippori Mincho B1':1,'Noto Serif JP':1};
     return Object.keys(set).filter(function(f){ return !skip[f]; });
   }
+  var localFontFaces={};
   function collectFontFaces(){
     var families=neededFontFamilies();
     if(!families.length) return Promise.resolve('');
     var need=families.filter(function(f){ return !localFontData[f]; });
     var ready=(need.length && window.queryLocalFonts)
-      ? window.queryLocalFonts().then(function(fonts){ fonts.forEach(function(fd){ if(!localFontData[fd.family]) localFontData[fd.family]=fd; }); }).catch(function(){})
+      ? window.queryLocalFonts().then(function(fonts){ fonts.forEach(function(fd){ if(!localFontData[fd.family]) localFontData[fd.family]=fd; var lf2=(localFontFaces[fd.family]=localFontFaces[fd.family]||[]); if(lf2.indexOf(fd)<0) lf2.push(fd); }); }).catch(function(){})
       : Promise.resolve();
+    /* 書体の太さ（style名から推定）。同じ書体名の全ウェイトを埋め込む */
+    function styleWeight(st){ st=String(st||''); if(/extra\s*light|ultra\s*light|\bEL\b/i.test(st)) return 200; if(/semi\s*bold|demi\s*bold|\bSB\b/i.test(st)) return 600; if(/light|\bL\b/i.test(st)) return 300; if(/medium|\bM\b/i.test(st)) return 500; if(/heavy|black|\bH\b/i.test(st)) return 900; if(/bold|\bB\b/i.test(st)) return 700; return 400; }
     return ready.then(function(){
       var css='';
       return families.reduce(function(p,fam){
         return p.then(function(){
-          var fd=localFontData[fam]; if(!fd) return;
-          return fd.blob().then(function(blob){ return blob.arrayBuffer(); }).then(function(buf){
-            css+='@font-face{font-family:"'+fam+'";src:url(data:font/opentype;base64,'+ab2b64(buf)+')}';
-          }).catch(function(){});
+          var list=(localFontFaces[fam]&&localFontFaces[fam].length)?localFontFaces[fam]:(localFontData[fam]?[localFontData[fam]]:[]);
+          return list.reduce(function(q,fd){ return q.then(function(){
+            return fd.blob().then(function(blob){ return blob.arrayBuffer(); }).then(function(buf){
+              css+='@font-face{font-family:"'+fam+'";src:url(data:font/opentype;base64,'+ab2b64(buf)+')'+(list.length>1?';font-weight:'+styleWeight(fd.style):'')+(/italic|oblique/i.test(fd.style||'')?';font-style:italic':'')+'}';
+            }).catch(function(){});
+          }); }, Promise.resolve());
         });
       }, Promise.resolve()).then(function(){ return css; });
     });
