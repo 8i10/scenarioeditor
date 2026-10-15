@@ -138,6 +138,10 @@
   .block.has-ll.has-ul:not(:has(+ .block.has-ll)){margin-bottom:4px}
   .block.has-ll:has(+ .block.has-ll){padding-bottom:1px}
   .block.has-ll + .block.has-ll{padding-top:1px}
+  /* 端末の書体を太さ固定で使うための別名（同じ書体名の中の特定ウェイトを指定） */
+  @font-face{font-family:'源暎ゴシックN（Light）';src:local('GenEi Gothic N Light'),local('GenEiGothicN-Light'),local('GenEi Gothic N L'),local('源暎ゴシックN Light'),local('源暎ゴシックN L');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源柔ゴシック（Bold）';src:local('GenJyuuGothic Bold'),local('GenJyuuGothic-Bold'),local('源柔ゴシック Bold');font-weight:100 900;font-display:swap}
+  @font-face{font-family:'源柔ゴシック（Medium）';src:local('GenJyuuGothic Medium'),local('GenJyuuGothic-Medium'),local('源柔ゴシック Medium');font-weight:100 900;font-display:swap}
   /* ── block ── */
   .send-pill{position:absolute;top:-7px;right:4px;z-index:3;background:var(--card);border:1px solid var(--accent2);color:var(--accent2);border-radius:9px;padding:0 7px;font-size:10px;line-height:15px;font-weight:700;pointer-events:none;-webkit-user-select:none;user-select:none;white-space:nowrap}
   .block{position:relative;margin:0;border-radius:5px;scroll-margin-top:calc(var(--topbar-h,92px) + 8px)}
@@ -2952,12 +2956,12 @@
     {n:'明朝', v:'"Shippori Mincho B1","Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif'},
     {n:'UDデジタル教科書体', v:'"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",sans-serif'},
     {n:'Zen Kaku Gothic New', v:'"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif'},
-    {n:'源柔ゴシック Bold', v:'"源柔ゴシック Bold","GenJyuuGothic Bold","GenJyuuGothic-Bold","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
-    {n:'源柔ゴシック Medium', v:'"源柔ゴシック Medium","GenJyuuGothic Medium","GenJyuuGothic-Medium","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
-    {n:'源柔ゴシック Regular', v:'"源柔ゴシック Regular","GenJyuuGothic Regular","GenJyuuGothic-Regular","源柔ゴシック","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
-    {n:'源暎ゴシックN H-KL', v:'"源暎ゴシックN H-KL","GenEiGothicN H-KL","GenEiGothicN-H-KL","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
-    {n:'源暎ゴシックN Light', v:'"源暎ゴシックN Light","GenEiGothicN Light","GenEiGothicN-Light","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
-    {n:'源暎ゴシックN Regular', v:'"源暎ゴシックN Regular","GenEiGothicN Regular","GenEiGothicN-Regular","源暎ゴシックN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源柔ゴシック Bold', v:'"源柔ゴシック（Bold）","源柔ゴシック Bold","GenJyuuGothic Bold","GenJyuuGothic","源柔ゴシック","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源柔ゴシック Medium', v:'"源柔ゴシック（Medium）","源柔ゴシック Medium","GenJyuuGothic Medium","GenJyuuGothic","源柔ゴシック","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源柔ゴシック Regular', v:'"源柔ゴシック Regular","GenJyuuGothic Regular","GenJyuuGothic","源柔ゴシック","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN H-KL', v:'"GenEi Gothic N KL","源暎ゴシックN H-KL","源暎ゴシックN KL","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Light', v:'"源暎ゴシックN（Light）","GenEi Gothic N","源暎ゴシックN","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
+    {n:'源暎ゴシックN Regular', v:'"GenEi Gothic N","源暎ゴシックN","源暎ゴシックN Regular","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif'},
     {n:'装甲明朝', v:'"装甲明朝","SoukouMincho","Soukou Mincho",serif'},
     {n:'源暎こぶり明朝 v6', v:'"源暎こぶり明朝 v6","GenEiKoburiMincho v6","GenEi Koburi Mincho v6",serif'},
     {n:'游明朝 Demibold', v:'"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho",serif'},
