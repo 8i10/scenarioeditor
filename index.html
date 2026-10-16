@@ -341,6 +341,11 @@
   .block[data-type="act"] .be::after{content:"＞";display:inline-block}
   .block[data-type="exb"] .be::before{content:"［探索箇所］";display:inline-block;font-weight:700}
   .block[data-type="actb"] .be::before{content:"［行動可能］";display:inline-block;font-weight:700}
+  .block[data-type="view"] .be::before{content:"■閲覧可能＜";display:inline-block}
+  .block[data-type="view"] .be::after{content:"＞";display:inline-block}
+  .block[data-type="viewb"] .be::before{content:"［閲覧可能］";display:inline-block;font-weight:700}
+  .block[data-type="view"] .be,.block[data-type="viewb"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
+  .block[data-type="exb"]+.block[data-type="viewb"] .be,.block[data-type="actb"]+.block[data-type="viewb"] .be,.block[data-type="viewb"]+.block[data-type="viewb"] .be,.block[data-type="viewb"]+.block[data-type="exb"] .be,.block[data-type="viewb"]+.block[data-type="actb"] .be{margin-top:2px}
   .block[data-type="act"] .be,.block[data-type="exb"] .be,.block[data-type="actb"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
   .asym-exb{font-weight:700}
   .block[data-type="exb"]+.block[data-type="actb"] .be,.block[data-type="actb"]+.block[data-type="exb"] .be,.block[data-type="exb"]+.block[data-type="exb"] .be,.block[data-type="actb"]+.block[data-type="actb"] .be{margin-top:2px}
@@ -911,10 +916,10 @@
     {t:'cbox',    ic:'▣', nm:'色変えボックス①',         ph:'情報ボックス', ctn:1},
     {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
-    {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1, dl:'カード'},
-    {t:'ccard2',  ic:'▌', nm:'カード（見出し下線）',     ph:'見出し', ctn:1, dl:'カード'},
+    {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1},
+    {t:'ccard2',  ic:'▌', nm:'カード（見出し下線）',     ph:'見出し', ctn:1},
     {t:'ccard0',  ic:'▌', nm:'カード（見出しなし）',     ph:'', ctn:1, dl:''},
-    {t:'ccard3',  ic:'▌', nm:'カード（背景色）',         ph:'見出し', ctn:1, dl:'カード', hidden:1},
+    {t:'ccard3',  ic:'▌', nm:'カード（背景色）',         ph:'見出し', ctn:1, hidden:1},
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
@@ -922,6 +927,8 @@
     {t:'act',     ic:'■', nm:'■行動可能＜＞',           ph:'行動'},
     {t:'exb',     ic:'［', nm:'［探索箇所］',             ph:'○○／○○'},
     {t:'actb',    ic:'［', nm:'［行動可能］',             ph:'○○／○○'},
+    {t:'view',    ic:'■', nm:'■閲覧可能＜＞',           ph:'閲覧'},
+    {t:'viewb',   ic:'［', nm:'［閲覧可能］',             ph:'○○／○○'},
     {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
     {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
     {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
@@ -3293,7 +3300,7 @@
   /* ---- 書き出し（HTML / PDF） ---- */
   function skillNameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞]/g,'').trim(); }
   function skill2NameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var st=t.indexOf('※'); if(st>=0) t=t.slice(0,st); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞※]/g,'').trim(); }
-  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
+  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='view'){ return '■閲覧可能＜'+p+'＞'; } if(t==='viewb'){ return '［閲覧可能］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var h=staticBlockHTML0(b);
@@ -3322,7 +3329,7 @@
       return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'>'+boxCopy+'<div class="be lbl"'+lblStyle+'>'+lblInner+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)){ var tgCopy='<button class="npc-copy box-copy box-copy-tg" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+'>'+tgCopy+'<div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>'; }
-    if(b.type==='act'||b.type==='exb'||b.type==='actb'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act')?'<span class="asym asym-exl">■行動可能＜</span>':('<span class="asym asym-exl asym-exb">'+(b.type==='exb'?'［探索箇所］':'［行動可能］')+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+(b.type==='act'?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
+    if(b.type==='act'||b.type==='exb'||b.type==='actb'||b.type==='view'||b.type==='viewb'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act'||b.type==='view')?'<span class="asym asym-exl">'+(b.type==='act'?'■行動可能＜':'■閲覧可能＜')+'</span>':('<span class="asym asym-exl asym-exb">'+({exb:'［探索箇所］',actb:'［行動可能］',viewb:'［閲覧可能］'}[b.type])+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+((b.type==='act'||b.type==='view')?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
     if(b.type==='explore'){ var exCopy='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block" data-type="explore"'+did+style+'>'+exCopy+'<div class="be"'+us+'><span class="asym asym-exl">■探索箇所＜</span>'+(b.html||'')+'<span class="asym asym-exr">＞</span></div></div>'; }
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
     var asymPre=(b.type==='ev'||b.type==='evr')?'<span class="asym asym-ev">！</span>':(b.type==='nv'||b.type==='nvr')?'<span class="asym asym-ev">∇</span>':(b.type==='q'?'<span class="asym asym-q">Q.</span>':'');
@@ -3400,7 +3407,7 @@
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
       +' .block[data-type="skill"] .lbl>.sk-wrap,.block[data-type="skill2"] .lbl>.sk-wrap,.block[data-type="skcard"] .lbl>.sk-wrap,.block[data-type="skcard2"] .lbl>.sk-wrap{display:inline}'
       +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="nv"]>.be::before,.block[data-type="nvr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
-      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before{content:""!important;display:none!important}'
+      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
       +' .block[data-type="skill"] .lbl .sknm::before,.block[data-type="skill"] .lbl .sknm::after,.block[data-type="skill2"] .lbl .sknm::before,.block[data-type="skill2"] .lbl .sknm::after,.block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::after{content:""!important}'
       +' .block .box-copy{position:absolute;top:-11px;right:3px;z-index:4;opacity:0;transition:opacity .12s;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 5px}'
