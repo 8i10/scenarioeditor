@@ -918,9 +918,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'cbox',    ic:'▣', nm:'色変えボックス①',         ph:'情報ボックス', ctn:1},
     {t:'cbox2',   ic:'▢', nm:'色変えボックス②',         ph:'情報ボックス', ctn:1},
     {t:'cbox3',   ic:'▤', nm:'色変えボックス③',         ph:'情報ボックス', ctn:1},
-    {t:'ccard',   ic:'▌', nm:'カード',                  ph:'見出し', ctn:1},
-    {t:'ccard2',  ic:'▌', nm:'カード（見出し下線）',     ph:'見出し', ctn:1},
-    {t:'ccard0',  ic:'▌', nm:'カード（見出しなし）',     ph:'', ctn:1, dl:''},
+    {t:'ccard0',  ic:'▌', nm:'カード',                  ph:'', ctn:1, dl:''},
+    {t:'ccard',   ic:'▌', nm:'カード（見出し）',         ph:'見出し', ctn:1},
+    {t:'ccard2',  ic:'▌', nm:'カード（下線）',           ph:'見出し', ctn:1},
     {t:'ccard3',  ic:'▌', nm:'カード（背景色）',         ph:'見出し', ctn:1, hidden:1},
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
@@ -2117,7 +2117,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function setCardBg(c){
     var cc=focusedId?ctx(focusedId):null, box=null;
     if(cc){ if(isBgCard(cc.b.type)) box=cc.b; else { var p=cc.parent; while(p){ if(isBgCard(p.type)){ box=p; break; } var pc=ctx(p.id); p=pc?pc.parent:null; } } }
-    if(!box){ alert('「カード」または「カード（見出し下線）」の中を選択してから背景色を選んでください。'); return; }
+    if(!box){ alert('カードの中を選択してから背景色を選んでください。'); return; }
     box.cardbg=c||'';
     var w=doc.querySelector('.block[data-id="'+box.id+'"]'); if(w) applyCardVars(w,box);
     persist();
