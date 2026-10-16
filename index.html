@@ -891,6 +891,8 @@
 <div class="menu" id="menu"></div>
 
 <script>
+/* 再読み込み（F5）でブラウザが前回のスクロール位置を復元すると、本文の描画前の位置がずれて途中に飛ぶため、常に先頭から表示する */
+try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(_){}
 (function(){
   "use strict";
   var doc=document.getElementById('doc');
