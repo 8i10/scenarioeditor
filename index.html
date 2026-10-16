@@ -243,11 +243,11 @@
   /* callout（KP情報 / PL情報 / 技能情報）：左上バッジ + 本文 */
   .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="secret"]{
     position:relative;border-radius:7px;padding:13px 14px 4px;margin:17px 0 10px}
-  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{
+  .block[data-type="kp"]>.lbl,.block[data-type="info"]>.lbl,.block[data-type="skill"]>.lbl,.block[data-type="secret"]>.lbl{
     position:absolute;top:-10px;left:8px;min-height:0;font-weight:700;font-size:0.9em;
     letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px}
-  .block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl{font-size:1.06em;top:-12px}
-  .block[data-type="kp"] .lbl:empty::before,.block[data-type="info"] .lbl:empty::before,.block[data-type="skill"] .lbl:empty::before,.block[data-type="secret"] .lbl:empty::before{opacity:.85}
+  .block[data-type="info"]>.lbl,.block[data-type="skill"]>.lbl,.block[data-type="secret"]>.lbl{font-size:1.06em;top:-12px}
+  .block[data-type="kp"]>.lbl:empty::before,.block[data-type="info"]>.lbl:empty::before,.block[data-type="skill"]>.lbl:empty::before,.block[data-type="secret"]>.lbl:empty::before{opacity:.85}
   .block[data-type="kp"]>.children,.block[data-type="info"]>.children,.block[data-type="skill"]>.children,.block[data-type="skill2"]>.children,.block[data-type="secret"]>.children{
     margin:0;border-left:0;padding-left:0}
 
@@ -257,36 +257,36 @@
   .block[data-type="kp"]>.children .be{line-height:var(--lh,1.3);min-height:1em}
   .block[data-type="kp"]>.children>.block{margin:0}
   .block[data-type="kp"] .be{color:var(--kp-text)}
-  .block[data-type="kp"] .lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22);font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
+  .block[data-type="kp"]>.lbl{background:var(--kp-bg);color:var(--kp-text);border:1px solid rgba(255,255,255,.22);font-family:"UD デジタル 教科書体 NK-R","UD Digital Kyokasho NK-R","UDデジタル教科書体 NK-R",var(--doc-font),sans-serif}
   .block[data-type="kp"] .addchild{color:rgba(255,255,255,.55)}
   .block[data-type="kp"] .addchild:hover{background:rgba(255,255,255,.12);color:#fff}
 
   /* PL情報：ライト枠・左端だけ黒 */
   .block[data-type="info"]{background:var(--card);border:1px solid var(--pl-edge);border-left-width:4px}
-  .block[data-type="info"] .lbl{background:var(--pl-edge);color:#fff}
+  .block[data-type="info"]>.lbl{background:var(--pl-edge);color:#fff}
 
   /* NPCセリフ：四角（角丸なし）・見出しバッジを左端に完全に寄せる */
   .block[data-type="npc"]{position:relative;background:var(--card);border:1.5px solid var(--pl-edge);border-radius:7px;padding:16px 10.5px 5px;margin:19px 0 10px}
-  .block[data-type="npc"] .lbl{position:absolute;top:-13px;left:-1.5px;min-height:0;font-weight:400;font-size:0.98em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;background:var(--pl-edge);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+  .block[data-type="npc"]>.lbl{position:absolute;top:-13px;left:-1.5px;min-height:0;font-weight:400;font-size:0.98em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;background:var(--pl-edge);color:#fff;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
   .block[data-type="npc"]>.children{margin:0;border-left:0;padding-left:0}
 
   /* 情報ボックス（任意色・boxcで背景指定） */
   .block[data-type="cbox"]{position:relative;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px;border:1px solid var(--line)}
-  .block[data-type="cbox"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;background:var(--card);border:1px solid var(--line)}
+  .block[data-type="cbox"]>.lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;background:var(--card);border:1px solid var(--line)}
   .block[data-type="cbox"]>.children{margin:0;border-left:0;padding-left:0}
 
   /* 情報ボックス（白地・枠色変更可） */
   .block[data-type="cbox2"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:7px;padding:13px 14px 9px;margin:17px 0 10px}
-  .block[data-type="cbox2"] .lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;color:#fff}
+  .block[data-type="cbox2"]>.lbl{position:absolute;top:-12px;left:8px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 10px;border-radius:4px;color:#fff}
   .block[data-type="cbox2"]>.children{margin:0;border-left:0;padding-left:0}
   /* 色変えボックス③：やや丸い枠・左右が太線・四角い見出し（枠色変更可） */
   .block[data-type="cbox3"]{position:relative;background:var(--card);border:1px solid var(--line);border-left-width:5px;border-right-width:5px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
-  .block[data-type="cbox3"] .lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
+  .block[data-type="cbox3"]>.lbl{position:absolute;top:-13px;left:-5px;min-height:0;font-weight:700;font-size:1.06em;letter-spacing:.08em;line-height:1.3;padding:2px 12px;border-radius:0;color:#fff}
   .block[data-type="cbox3"]>.children{margin:0;border-left:0;padding-left:0}
   /* カード：左端に設定色・そこから薄いグラデーション */
   .block[data-type="ccard"],.block[data-type="ccard2"],.block[data-type="ccard3"],.block[data-type="ccard0"],.block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#000000;position:relative;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;margin:14px 0;box-shadow:0 4px 14px rgba(40,30,80,.06)}
   .block[data-type="skcard"],.block[data-type="skcard2"]{--cc:#0000ff}
-  .block[data-type="ccard"] .lbl,.block[data-type="ccard2"] .lbl,.block[data-type="ccard3"] .lbl,.block[data-type="skcard"] .lbl,.block[data-type="skcard2"] .lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
+  .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl,.block[data-type="ccard3"]>.lbl,.block[data-type="skcard"]>.lbl,.block[data-type="skcard2"]>.lbl{min-height:0;font-weight:700;font-size:1.02em;letter-spacing:.06em;line-height:1.4;color:var(--cc);margin:0 0 6px}
   .block[data-type="ccard"]>.children,.block[data-type="ccard2"]>.children,.block[data-type="ccard3"]>.children,.block[data-type="ccard0"]>.children,.block[data-type="skcard"]>.children,.block[data-type="skcard2"]>.children{margin:0;border-left:0;padding-left:0}
   .block[data-type="ccard"]>.lbl,.block[data-type="ccard2"]>.lbl,.block[data-type="ccard3"]>.lbl{color:var(--text)}
   /* カード：背景色は --cbg（未設定なら通常の背景）、文字色は背景の明るさから自動 */
@@ -294,36 +294,36 @@
   .block[data-type="ccard0"]>.lbl{display:none!important}
   .block[data-type="ccard0"]>.children>.block:first-child>.be,.block[data-type="ccard0"]>.children>.block:first-child>.chead>.be{margin-top:0!important}
   .block[data-type="ccard0"]>.children>.block:first-child{padding-top:0!important} /* カードの見出し文字色は枠の色と連動させない */
-  .block[data-type="ccard2"] .lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
-  .block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::before{content:"＜"}
-  .block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::after{content:"＞"}
-  .block[data-type="skcard2"] .lbl .sk-note::before{content:"　※"}
-  .block[data-type="skcard2"] .lbl .sknm,.block[data-type="skcard2"] .lbl .sk-note{white-space:pre}
+  .block[data-type="ccard2"]>.lbl{border-bottom:1px solid color-mix(in srgb,var(--cc) 30%,var(--line));padding-bottom:5px;margin-bottom:8px}
+  .block[data-type="skcard"]>.lbl .sknm::before,.block[data-type="skcard2"]>.lbl .sknm::before{content:"＜"}
+  .block[data-type="skcard"]>.lbl .sknm::after,.block[data-type="skcard2"]>.lbl .sknm::after{content:"＞"}
+  .block[data-type="skcard2"]>.lbl .sk-note::before{content:"　※"}
+  .block[data-type="skcard2"]>.lbl .sknm,.block[data-type="skcard2"]>.lbl .sk-note{white-space:pre}
   .npc-card.ncard{--cc:#d94a8c;background:var(--card);border:1px solid color-mix(in srgb,var(--cc) 28%,var(--line));border-left:4px solid var(--cc);border-radius:14px;padding:12px 18px 10px;box-shadow:0 4px 14px rgba(40,30,80,.06)}
   .npc-card.ncard .npc-card-name{color:var(--text)}
   .npc-card.ncard .npc-rule{border-color:color-mix(in srgb,var(--cc) 30%,var(--line))}
   /* 色変えボックス③と同じデザイン（左だけ太線・右は太くしない）を 技能/情報(囲い)/色変え①② に適用 */
   .block[data-type="skill"],.block[data-type="info"],.block[data-type="cbox"],.block[data-type="cbox2"]{position:relative;border-radius:0!important;border-left-width:5px!important;border-right-width:1px!important;border-top-width:1px!important;border-bottom-width:1px!important;padding:13px 7px 4px!important;margin-top:18px!important;margin-right:0!important;margin-bottom:10px!important;margin-left:0}
-  .block[data-type="skill"] .lbl,.block[data-type="info"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{left:-5px!important;top:-13px!important;border-radius:0!important;padding-left:12px!important;padding-right:12px!important}
+  .block[data-type="skill"]>.lbl,.block[data-type="info"]>.lbl,.block[data-type="cbox"]>.lbl,.block[data-type="cbox2"]>.lbl,.block[data-type="cbox3"]>.lbl{left:-5px!important;top:-13px!important;border-radius:0!important;padding-left:12px!important;padding-right:12px!important}
 
   /* 技能情報：ライト枠・左端と見出しだけ青 */
   .block[data-type="skill"]{background:var(--card);border:1px solid var(--blue);border-left-width:4px}
-  .block[data-type="skill"] .lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+  .block[data-type="skill"]>.lbl{background:var(--blue);color:#fff;font-size:0.9em;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
   .block[data-type="skill2"]{position:relative;background:var(--card);border:1px solid var(--blue);border-left-width:5px;border-right-width:1px;border-top-width:1px;border-bottom-width:1px;border-radius:0;padding:13px 7px 4px;margin:18px 0 10px}
-  .block[data-type="skill2"] .lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
+  .block[data-type="skill2"]>.lbl{position:absolute;left:-5px;top:-13px;border-radius:0;background:var(--blue);color:#fff;font-size:0.9em;font-weight:700;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;min-height:0;letter-spacing:.08em;line-height:1;padding:4px 12px;display:inline-flex;align-items:center}
   .sk-note{font-size:0.9em;font-weight:700}
-  .block[data-type="skill2"] .lbl .sknm::before{content:"＜"}
-  .block[data-type="skill2"] .lbl .sknm::after{content:"＞"}
-  .block[data-type="skill"] .lbl .sknm::before{content:"＜"}
-  .block[data-type="skill"] .lbl .sknm::after{content:"＞"}
-  .block[data-type="skill2"] .lbl .sk-note::before{content:"　※"}
-  .block[data-type="skill2"] .lbl .sknm,.block[data-type="skill2"] .lbl .sk-note{white-space:pre}
+  .block[data-type="skill2"]>.lbl .sknm::before{content:"＜"}
+  .block[data-type="skill2"]>.lbl .sknm::after{content:"＞"}
+  .block[data-type="skill"]>.lbl .sknm::before{content:"＜"}
+  .block[data-type="skill"]>.lbl .sknm::after{content:"＞"}
+  .block[data-type="skill2"]>.lbl .sk-note::before{content:"　※"}
+  .block[data-type="skill2"]>.lbl .sknm,.block[data-type="skill2"]>.lbl .sk-note{white-space:pre}
 
   /* 秘匿情報：白背景・落ち着いた赤の枠と見出し */
   .block[data-type="secret"]{background:var(--card);border:1px solid var(--secret);border-left-width:4px;border-radius:0}
-  .block[data-type="secret"] .lbl{background:var(--secret);color:#fff}
-  .block[data-type="info"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
-  .block[data-type="kp"] .lbl,.block[data-type="info"] .lbl,.block[data-type="skill"] .lbl,.block[data-type="secret"] .lbl,.block[data-type="cbox"] .lbl,.block[data-type="cbox2"] .lbl,.block[data-type="cbox3"] .lbl{display:inline-flex;align-items:center;line-height:1;padding-top:4px;padding-bottom:4px}
+  .block[data-type="secret"]>.lbl{background:var(--secret);color:#fff}
+  .block[data-type="info"]>.lbl,.block[data-type="secret"]>.lbl,.block[data-type="cbox"]>.lbl,.block[data-type="cbox2"]>.lbl,.block[data-type="cbox3"]>.lbl{font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
+  .block[data-type="kp"]>.lbl,.block[data-type="info"]>.lbl,.block[data-type="skill"]>.lbl,.block[data-type="secret"]>.lbl,.block[data-type="cbox"]>.lbl,.block[data-type="cbox2"]>.lbl,.block[data-type="cbox3"]>.lbl{display:inline-flex;align-items:center;line-height:1;padding-top:4px;padding-bottom:4px}
   /* 情報枠②：見出しは枠外（上）、本文だけを左＋下の細い罫線で囲む */
   .block[data-type="lbox"]{border:0;background:transparent;border-radius:0;padding:0;margin:14px 0}
   .block[data-type="lbox"]>.lbl{position:static;display:flex;align-items:flex-end;background:transparent;border:0;color:var(--text);font-weight:400;font-size:1.13em;letter-spacing:.02em;padding:0;margin:0;line-height:1.1;border-radius:0;min-height:1.4em;border-radius:0;font-family:"Yu Mincho Demibold","游明朝 Demibold","YuMincho Demibold","YuMincho-Demibold","Yu Mincho","游明朝",serif}
@@ -331,7 +331,7 @@
   .block[data-type="lbox"]>.children{border-left:1px solid var(--text);border-bottom:1px solid var(--text);border-radius:0;padding:4px 6px 1px 12px;margin:0}
   /* 技能枠：見出しと左線のみ（上・右・下線なし、下マージンなし） */
   .block[data-type="skill"],.block[data-type="skill2"]{background:transparent!important;border-top-width:0!important;border-right-width:0!important;border-bottom-width:0!important;border-left-width:1px!important;border-left-style:dotted!important;padding-bottom:0!important}
-  .block[data-type="skill"] .lbl,.block[data-type="skill2"] .lbl{left:-1px!important}
+  .block[data-type="skill"]>.lbl,.block[data-type="skill2"]>.lbl{left:-1px!important}
   /* ■探索箇所＜＞ */
   .block[data-type="explore"] .be::before{content:"■探索箇所＜";display:inline-block}
   .block[data-type="explore"] .be::after{content:"＞";display:inline-block}
@@ -676,12 +676,12 @@
     .block[data-type="kp"] .be{color:var(--kp-text)!important}
     .block[data-type="info"]{background:var(--card)!important;border:1px solid var(--pl-edge)!important;border-left-width:5px!important;border-right-width:1px!important;border-radius:0!important}
     .block[data-type="npc"]{background:var(--card)!important;border:1.5px solid var(--pl-edge)!important;border-radius:7px!important}
-    .block[data-type="npc"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
+    .block[data-type="npc"]>.lbl{background:var(--pl-edge)!important;color:#fff!important}
     .block[data-type="secret"]{background:var(--card)!important;border:1px solid var(--secret)!important;border-left-width:4px!important}
-    .block[data-type="kp"] .lbl{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid rgba(255,255,255,.4)!important}
-    .block[data-type="info"] .lbl{background:var(--pl-edge)!important;color:#fff!important}
-    .block[data-type="skill"] .lbl,.block[data-type="skill2"] .lbl{background:var(--blue)!important;color:#fff!important}
-    .block[data-type="secret"] .lbl{background:var(--secret)!important;color:#fff!important}
+    .block[data-type="kp"]>.lbl{background:var(--kp-bg)!important;color:var(--kp-text)!important;border:1px solid rgba(255,255,255,.4)!important}
+    .block[data-type="info"]>.lbl{background:var(--pl-edge)!important;color:#fff!important}
+    .block[data-type="skill"]>.lbl,.block[data-type="skill2"]>.lbl{background:var(--blue)!important;color:#fff!important}
+    .block[data-type="secret"]>.lbl{background:var(--secret)!important;color:#fff!important}
     .block[data-type="h1"] .be{color:var(--text)!important}
   }
 
@@ -3409,11 +3409,11 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +' .asym-q{font-weight:700;margin-right:3px}'
       +' .asym-lbox{margin-right:2px}'
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
-      +' .block[data-type="skill"] .lbl>.sk-wrap,.block[data-type="skill2"] .lbl>.sk-wrap,.block[data-type="skcard"] .lbl>.sk-wrap,.block[data-type="skcard2"] .lbl>.sk-wrap{display:inline}'
+      +' .block[data-type="skill"]>.lbl>.sk-wrap,.block[data-type="skill2"]>.lbl>.sk-wrap,.block[data-type="skcard"]>.lbl>.sk-wrap,.block[data-type="skcard2"]>.lbl>.sk-wrap{display:inline}'
       +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="nv"]>.be::before,.block[data-type="nvr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
       +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
-      +' .block[data-type="skill"] .lbl .sknm::before,.block[data-type="skill"] .lbl .sknm::after,.block[data-type="skill2"] .lbl .sknm::before,.block[data-type="skill2"] .lbl .sknm::after,.block[data-type="skcard"] .lbl .sknm::before,.block[data-type="skcard"] .lbl .sknm::after,.block[data-type="skcard2"] .lbl .sknm::before,.block[data-type="skcard2"] .lbl .sknm::after{content:""!important}'
+      +' .block[data-type="skill"]>.lbl .sknm::before,.block[data-type="skill"]>.lbl .sknm::after,.block[data-type="skill2"]>.lbl .sknm::before,.block[data-type="skill2"]>.lbl .sknm::after,.block[data-type="skcard"]>.lbl .sknm::before,.block[data-type="skcard"]>.lbl .sknm::after,.block[data-type="skcard2"]>.lbl .sknm::before,.block[data-type="skcard2"]>.lbl .sknm::after{content:""!important}'
       +' .block .box-copy{position:absolute;top:-11px;right:3px;z-index:4;opacity:0;transition:opacity .12s;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 5px}'
       +' .block[data-type="npc"]{padding-top:11px}'
       +' .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="skill2"],.block[data-type="secret"],.block[data-type="cbox"],.block[data-type="cbox2"],.block[data-type="cbox3"],.block[data-type="lbox"]{padding-top:11px}'
