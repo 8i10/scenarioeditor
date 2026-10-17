@@ -3767,7 +3767,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<body class="ol-open">'+vhead+nav+body+matHTML+flagHTML+evtHTML+pcHTML+clipHTML+'<div class="send-tip" id="sendTip"></div><div class="send-toast" id="sendToast"></div>'+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
       +'</body></html>';
-    var blob=new Blob([html],{type:'text/html'});
+    var blob=new Blob([encodeViewerHTML(html)],{type:'text/html'});
     if(preview){ showPreview(blob); return; }
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'.html'; a.click();
@@ -3787,7 +3787,24 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var bp=document.getElementById('btnPreview'); if(bp) bp.onclick=function(){ exportHTML(true); };
   })();
   document.getElementById('btnHtml').onclick=function(){ exportHTML(false); };
+  /* 閲覧用HTMLの中身を暗号化して保存する（ソースを表示しても本文が読めないように）。開いたときにページ内で復元して表示する */
+  var ENC_DECODER='(function(){var e=document.getElementById("scn-enc");if(!e)return;var k=e.getAttribute("data-k"),kb=[];for(var i=0;i<k.length;i+=2)kb.push(parseInt(k.substr(i,2),16));var d=atob(e.textContent.replace(/\\s/g,"")),u=new Uint8Array(d.length);for(var j=0;j<d.length;j++)u[j]=d.charCodeAt(j)^kb[j%kb.length];e.parentNode.removeChild(e);document.write(new TextDecoder().decode(u).replace(/^<!DOCTYPE html>/i,""));})();';
+  function encodeViewerHTML(html){
+    var bytes=new TextEncoder().encode(html), key=new Uint8Array(32);
+    if(window.crypto&&crypto.getRandomValues) crypto.getRandomValues(key); else for(var i=0;i<key.length;i++) key[i]=Math.floor(Math.random()*256);
+    for(var j=0;j<bytes.length;j++) bytes[j]^=key[j%key.length];
+    var bin='', CH=0x8000; for(var p=0;p<bytes.length;p+=CH) bin+=String.fromCharCode.apply(null, bytes.subarray(p,p+CH));
+    var b64=btoa(bin).replace(/(.{1000})/g,'$1\n');
+    var hex=Array.prototype.map.call(key,function(x){ return (x<16?'0':'')+x.toString(16); }).join('');
+    return '<!DOCTYPE html><html lang="ja" data-theme="light"><head><meta charset="UTF-8"><title>'+esc(state.name||'シナリオ')+'</title>'
+      +'<'+'script id="scn-enc" type="text/plain" data-k="'+hex+'">\n'+b64+'\n<\/script><'+'script>'+ENC_DECODER+'<\/script></head></html>';
+  }
+  function decodeViewerHTML(text){
+    var m=text.match(/<script id="scn-enc"[^>]*data-k="([0-9a-f]+)"[^>]*>([\s\S]*?)<\/script>/); if(!m) return text;
+    try{ var k=m[1], kb=[]; for(var i=0;i<k.length;i+=2) kb.push(parseInt(k.substr(i,2),16)); var d=atob(m[2].replace(/\s/g,'')), u=new Uint8Array(d.length); for(var j=0;j<d.length;j++) u[j]=d.charCodeAt(j)^kb[j%kb.length]; return new TextDecoder().decode(u); }catch(_){ return text; }
+  }
   function importScenarioHTML(text){
+    text=decodeViewerHTML(text);
     var m=text.match(/<script id="scn-data"[^>]*>([\s\S]*?)<\/script>/);
     if(!m){ alert('このHTMLには編集用データが含まれていません。\n新しい版のエディタで「HTMLで保存」したファイルを読み込んでください。'); return; }
     var json=m[1].replace(/\\u003c/g,'<'); var o;
