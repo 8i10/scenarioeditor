@@ -3326,6 +3326,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
       else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+(isBgCard(b.type)?cardVars(b):'')+'"'; }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
+      /* NPCセリフ枠：見出しなし（セリフだけ）のコピーボタンも付ける */
+      if(b.type==='npc') boxCopy+='<button class="npc-copy box-copy box-copy-nh" data-cp="'+encodeURIComponent((b.children||[]).map(blockCopyText).filter(Boolean).join('\n'))+'" title="内容だけコピー（見出しなし）">'+COPY_ICON+'<span class="bc-t">見出しなし</span></button>';
       var lblInner;
       if(b.type==='skill2'||b.type==='skill'||b.type==='skcard'||b.type==='skcard2'){ lblInner=(b.type==='skill2'||b.type==='skcard2')?skill2Label(b.html):skillLabel(b.html); lblInner=lblInner.replace('</span>','</span><span class="asym asym-sk">＞</span>').replace('<span class="sknm">','<span class="asym asym-sk">＜</span><span class="sknm">'); lblInner='<span class="sk-wrap">'+lblInner+'</span>'; }
       else if(b.type==='lbox'){ lblInner='<span class="lbox-h"><span class="asym asym-lbox">▼</span>'+(b.html||'')+'</span>'; }
@@ -3419,6 +3421,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +' .block[data-type="kp"],.block[data-type="info"],.block[data-type="skill"],.block[data-type="skill2"],.block[data-type="secret"],.block[data-type="cbox"],.block[data-type="cbox2"],.block[data-type="cbox3"],.block[data-type="lbox"]{padding-top:11px}'
       +' .block:hover>.box-copy,.block>.box-copy:focus,.block>.box-copy.copied{opacity:1}'
       +' .block .box-copy.box-copy-tg,.block .box-copy.box-copy-ex{top:1px;right:4px;box-shadow:none}'
+      +' .block .box-copy.box-copy-nh{right:36px;display:inline-flex;align-items:center;gap:3px}'
+      +' .block .box-copy .bc-t{font-size:10px;line-height:1;color:var(--muted)}'
       +' @media (hover:none){ .block .box-copy{opacity:.9} }'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
       +' html{--pw:clamp(236px,26vw,460px)}'
