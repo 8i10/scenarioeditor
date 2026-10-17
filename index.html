@@ -422,7 +422,7 @@
   .outline .ol-ruby:hover{background:var(--hover);color:var(--text)}
   .print-toc .pt-p{font-weight:800;font-size:1.05em;margin:10px 0 4px;letter-spacing:.04em}
   @media (min-width:821px){ body.ol-open .wrap{margin-left:300px;margin-right:auto;max-width:min(920px,calc(100vw - 340px))} }
-  .rbar{position:fixed;top:var(--topbar-h,92px);right:0;width:212px;height:calc(100vh - var(--topbar-h,92px));overflow-y:auto;background:var(--card);border-left:1px solid var(--line);z-index:90;transform:translateX(100%);transition:transform .18s;padding:0 0 24px}
+  .rbar{position:fixed;top:var(--topbar-h,92px);right:0;width:var(--rbw);max-width:92vw;height:calc(100vh - var(--topbar-h,92px));overflow-y:auto;background:var(--card);border-left:1px solid var(--line);z-index:90;transform:translateX(100%);transition:transform .18s;padding:0 0 24px}
   .rbar.open{transform:none}
   .rbar .rb-ttl{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:13px;padding:12px 12px 9px;color:var(--text);border-bottom:1px solid var(--line);margin-bottom:4px}
   .rbar .rb-x{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
@@ -439,7 +439,10 @@
   .rbar .macc-body{display:none;padding:3px 0}
   .rbar .macc.open .macc-body{display:block}
   .hm-item.on{color:var(--red);font-weight:700}
-  @media (min-width:821px){ body.rb-open .wrap{margin-right:242px} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 580px))} .rbar .rb-x{display:none} }
+  /* 挿入メニューの幅：閲覧用HTMLのデータタブと同じ（画面幅の26%・236〜460px、狭い画面では86%） */
+  html{--rbw:clamp(236px,26vw,460px)}
+  @media (max-width:820px){ .rbar{width:86vw;max-width:86vw} }
+  @media (min-width:821px){ body.rb-open .wrap{margin-right:calc(var(--rbw) + 30px)} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 368px - var(--rbw)))} .rbar .rb-x{display:none} }
 
   /* ── ファイル管理ダイアログ ── */
   .ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:18px}
@@ -499,7 +502,7 @@
   .mat-inner{max-width:720px;margin:0 auto;padding:16px 16px 60px}
   /* データパネルを上ツールバーの下・右パレットの左に収め、閲覧編集と一体化 */
   #matOvl{top:var(--topbar-h,92px);bottom:0;left:0;right:0}
-  @media (min-width:821px){ body.rb-open #matOvl{right:212px} }
+  @media (min-width:821px){ body.rb-open #matOvl{right:var(--rbw)} }
   /* データ／イベント項目：折り畳み＋その場編集 */
   .entry-row{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg)}
   .entry-row.open{border-color:var(--accent2);box-shadow:0 1px 6px rgba(0,0,0,.06)}
