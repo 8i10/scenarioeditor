@@ -871,6 +871,8 @@
         <button class="fb" data-align="center" title="中央揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="6" y1="10" x2="14" y2="10"/><line x1="4" y1="15" x2="16" y2="15"/></svg></button>
         <button class="fb" data-align="right" title="右揃え"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="5" x2="17" y2="5"/><line x1="8" y1="10" x2="17" y2="10"/><line x1="5" y1="15" x2="17" y2="15"/></svg></button>
         <button class="fb" id="btnColLine" title="二段組の中線 表示/非表示"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="12" rx="1"/><rect x="11.5" y="4" width="5.5" height="12" rx="1"/><line x1="10" y1="3" x2="10" y2="17" stroke-dasharray="2 2"/></svg></button>
+        <button class="fb" id="btnFrameOut" title="枠ごと左へ戻す（カーソルのある枠。枠の外では行）"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/><polyline points="6,7.5 3.5,10 6,12.5"/></svg></button>
+        <button class="fb" id="btnFrameIn" title="枠ごと右へずらす（カーソルのある枠。枠の外では行）"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/><polyline points="3.5,7.5 6,10 3.5,12.5"/></svg></button>
       </span></div>
       </div>
     </div>
@@ -1824,8 +1826,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var c=id?ctx(id):null; if(!c) return;
     var nm=isCtn(c.b.type)?(c.b.type==='columns'?'この2段組を削除':'この枠を削除'):'この行を削除';
     menuMode='grip'; menuTargetId=id;
-    var indH=isCtn(c.b.type)&&c.b.type!=='col'?('<button data-act="indent"><span class="ic">→</span><span class="nm">この枠を右へずらす（インデント）</span></button>'+((c.b.indent||0)>0?'<button data-act="outdent"><span class="ic">←</span><span class="nm">この枠を左へ戻す</span></button>':'')):'';
-    menu.innerHTML=indH+'<button data-act="copy"><span class="ic">⧉</span><span class="nm">'+(isCtn(c.b.type)?(c.b.type==='columns'?'この2段組をコピー':'この枠をコピー'):'この行をコピー')+'</span></button><button data-act="below"><span class="ic">↵</span><span class="nm">'+(isCtn(c.b.type)?'この枠の下に行を追加':'この下に行を追加')+'</span></button><button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
+    menu.innerHTML='<button data-act="copy"><span class="ic">⧉</span><span class="nm">'+(isCtn(c.b.type)?(c.b.type==='columns'?'この2段組をコピー':'この枠をコピー'):'この行をコピー')+'</span></button><button data-act="below"><span class="ic">↵</span><span class="nm">'+(isCtn(c.b.type)?'この枠の下に行を追加':'この下に行を追加')+'</span></button><button data-act="del"><span class="ic">🗑</span><span class="nm">'+nm+'</span></button>';
     menu.style.top=(y+window.scrollY+2)+'px'; var vw=document.documentElement.clientWidth; var left=x+window.scrollX; if(left+200>window.scrollX+vw) left=window.scrollX+vw-204; menu.style.left=left+'px';
     var f=menu.querySelector('button'); if(f) f.classList.add('sel'); menu.classList.add('show');
   }
@@ -1889,7 +1890,6 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     else if(act==='down'&&c.i<c.arr.length-1){ var a2=c.arr; var t2=a2[c.i+1]; a2[c.i+1]=a2[c.i]; a2[c.i]=t2; render(); }
     else if(act==='dup'){ var cp=JSON.parse(JSON.stringify(c.b)); (function re(x){x.id=nid(); (x.children||[]).forEach(re);})(cp); c.arr.splice(c.i+1,0,cp); render(); }
     else if(act==='below'){ addLineBelow(menuTargetId); return; }
-    else if(act==='indent'||act==='outdent'){ c.b.indent=Math.max(0,Math.min(8,(c.b.indent||0)+(act==='indent'?1:-1))); var iw=doc.querySelector('.block[data-id="'+c.b.id+'"]'); if(iw) iw.style.marginLeft=(c.b.indent?c.b.indent*24:0)+'px'; }
     else if(act==='copy'){ gripCopyData=JSON.parse(JSON.stringify([c.b])); try{ document.execCommand('copy'); }catch(_){ } gripCopyData=null; return; }
     else if(act==='del'){ c.arr.splice(c.i,1); if(!state.blocks.length) state.blocks.push(newBlock('p','')); fixEmptyCols(); render(); }
     persist();
@@ -2202,6 +2202,14 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   /* 書式バーで選んでいる線の種類（色を付けるときにも使う） */
   var curUls='solid', curLls='solid';
   function setRowUlStyle(s){ curUls=s; var us0=document.getElementById('ulStyle'); if(us0) us0.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-uls')===s);}); var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.uls=s; var be=ownBe(id); if(be&&ci.b.ul) be.style.borderBottom=ulBorder(ci.b); }); var us=document.getElementById('ulStyle'); if(us) us.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-uls')===s);}); persist(); }
+  /* 書式バーの枠インデント：カーソルのある一番内側の枠（2段組は除く）を枠ごとずらす。枠の外では行をずらす */
+  function frameIndent(dir){
+    var be=curBe(); var id=(be&&be.dataset.id)||focusedId; var c=id?ctx(id):null; if(!c) return;
+    var t=c.b; if(!(isCtn(t.type)&&t.type!=='col'&&t.type!=='columns')){ var p=c.parent; while(p&&(p.type==='col'||p.type==='columns')) p=(ctx(p.id)||{}).parent; if(p) t=p; }
+    t.indent=Math.max(0,Math.min(8,(t.indent||0)+dir));
+    var w=doc.querySelector('.block[data-id="'+t.id+'"]'); if(w) w.style.marginLeft=(t.indent?t.indent*24:0)+'px';
+    persist();
+  }
   function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
   function stepFontSize(dir){
     focusDoc(); restoreSel();
@@ -2377,6 +2385,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(pa) pa.querySelectorAll('button[data-align]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setBlockAlign(b.dataset.align); }; });
     var clb=document.getElementById('btnColLine');
     if(clb){ clb.onmousedown=function(e){e.preventDefault();}; clb.onclick=function(){ state.colline=!(state.colline!==false); applyColLine(); persist(); }; }
+    [['btnFrameIn',1],['btnFrameOut',-1]].forEach(function(x){ var fb=document.getElementById(x[0]); if(fb){ fb.onmousedown=function(e){e.preventDefault();}; fb.onclick=function(){ frameIndent(x[1]); }; } });
     updateUndoBtns();
     var bl=document.getElementById('btnHlink');
     if(bl){ bl.onmousedown=function(e){e.preventDefault();}; bl.onclick=function(e){ if(e){ e.stopPropagation(); e.preventDefault(); } if(!savedRange || String(savedRange).trim()===''){ alert('リンクにする文字を選択してから押してください。'); return; } openHlinkMenu(bl); }; }
