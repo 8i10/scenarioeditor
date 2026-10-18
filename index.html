@@ -443,7 +443,9 @@
   .rbar .macc.open .macc-body{display:block}
   .hm-item.on{color:var(--red);font-weight:700}
   /* 挿入メニューの幅：閲覧用HTMLのデータタブと同じ（画面幅の26%・236〜460px、狭い画面では86%） */
-  html{--rbw:clamp(236px,26vw,460px)}
+  /* 本文の幅を優先し、残りの幅で挿入メニューだけが伸び縮みする（236〜460px） */
+  body{--olw:62px;--rbw:clamp(236px,calc(100vw - 794px - var(--olw)),460px)}
+  body.ol-open{--olw:368px}
   @media (max-width:820px){ .rbar{width:86vw;max-width:86vw} }
   @media (min-width:821px){ body.rb-open .wrap{margin-right:calc(var(--rbw) + 30px)} body.ol-open.rb-open .wrap{max-width:min(920px,calc(100vw - 368px - var(--rbw)))} .rbar .rb-x{display:none} }
 
@@ -3459,7 +3461,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +' .block .box-copy .bc-t{font-size:10px;line-height:1;color:var(--muted)}'
       +' @media (hover:none){ .block .box-copy{opacity:.9} }'
       +' body>.wrap{padding-top:66px;padding-left:24px;padding-right:24px}'
-      +' html{--pw:clamp(236px,26vw,460px)}'
+      +' body{--olw:0px;--pw:clamp(236px,calc(100vw - 794px - 64px - var(--olw)),460px)} body.ol-open{--olw:236px}'
       +' @media (min-width:821px){ body.ol-open{padding-left:236px} body.rpanel-open{padding-right:var(--pw,236px)} body.ol-open .wrap,body.rpanel-open .wrap{margin-left:auto!important;margin-right:auto!important;max-width:100%!important} }'
       +' .outline{top:46px;height:calc(100vh - 46px);width:236px;background:#f1f0ec;border-right:1px solid #d6d5d0}'
       +' .outline .ol-list{padding:8px 6px}'
