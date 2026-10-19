@@ -3849,11 +3849,24 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var json=m[1].replace(/\\u003c/g,'<'); var o;
     try{ o=JSON.parse(json); }catch(e){ alert('編集用データを読み取れませんでした。'); return; }
     if(!o||!(o.pages||o.blocks)){ alert('編集用データが不正です。'); return; }
-    state=normalizeState(o); state.id=docId();
+    /* 書き出し元と同じID（シナリオID）で読み込む。同じIDのシナリオが端末にあれば、そのシナリオを読み込んだ内容で置き換える（新しいIDを作らない） */
+    var srcId=(typeof o.id==='string'&&o.id)?o.id:'';
+    var idx=readIndex(), ent=null; for(var ii=0;ii<idx.length;ii++){ if(idx[ii].id===srcId){ ent=idx[ii]; break; } }
+    var replace=false;
+    if(srcId && ent && !ent.del){
+      replace=confirm('この端末にある「'+(ent.name||'無題')+'」と同じシナリオです。\n\nOK：読み込んだ内容でこのシナリオを置き換える（IDはそのまま）\nキャンセル：別のシナリオ（新しいID）として読み込む');
+    }
+    var keepId=srcId && (replace || !ent || ent.del); var replaced=!!(replace&&ent);
+    var baseRev=Math.max(o.rev||0, (ent&&ent.rev)||0, (state&&state.id===srcId)?(state.rev||0):0);
+    var sameOpen=keepId && state && state.id===srcId;
+    if(sameOpen) keepUndoBeforeReplace();
+    state=normalizeState(o); state.id=keepId?srcId:docId();
     state.name=(o.name||'読み込んだシナリオ');
+    if(keepId){ state.rev=baseRev; if(ent&&ent.del){ delete ent.del; writeIndex(idx); } }
+    try{ localStorage.setItem(K_CUR(), state.id); }catch(_){}
     persist(); render(); applyOutline(); updateDocName(); buildFontSelect(); applyTheme(); applyFs(); applyFont();
-    undoStack.length=0; redoStack.length=0; lastSnap=snapshot(); updateUndoBtns();
-    alert('「'+state.name+'」を新規シナリオとして読み込みました。');
+    if(!sameOpen){ undoStack.length=0; redoStack.length=0; } lastSnap=snapshot(); updateUndoBtns();
+    alert(replaced ? ('「'+state.name+'」を読み込んだ内容で置き換えました（IDはそのまま）。'+(ghConnected()?'\nGitHub連携中は、自動同期（30秒ごと）で他の端末にも送られます。':'')) : keepId ? ('「'+state.name+'」を読み込みました（書き出し元と同じID）。') : ('「'+state.name+'」を新規シナリオとして読み込みました。'));
   }
   (function(){
     var bi=document.getElementById('btnImport'), fi=document.getElementById('importFile');
