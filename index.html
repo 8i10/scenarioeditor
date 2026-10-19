@@ -1140,7 +1140,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var idx=readIndex(), e=null;
     for(var i=0;i<idx.length;i++){ if(idx[i].id===state.id){ e=idx[i]; break; } }
     if(e){ e.name=state.name; e.updated=state.updated; e.rev=state.rev; e.folder=state.folder||''; } else idx.push({id:state.id,name:state.name,updated:state.updated,rev:state.rev,folder:state.folder||''});
-    try{ dirtyDocs[state.id]=1; }catch(_){}
+    try{ dirtyDocs[state.id]=1; smMark(state.id); }catch(_){}
     /* 大容量・確実なバックアップ（IndexedDB） */
     if(json){ idb.set(K_DOC(state.id), json).catch(function(){}); }
     idb.set('scn_index', JSON.stringify(idx)).catch(function(){});
@@ -1238,7 +1238,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var apply=function(o){ if(!o) return; o.name=nn; o.updated=Date.now(); o.rev=(o.rev||0)+1; var j=JSON.stringify(o);
       try{ localStorage.setItem(K_DOC(id), j); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(id), j).catch(function(){}); }catch(_){}
       var idx=readIndex().map(function(e){ return e.id===id?{id:id,name:nn,updated:o.updated,rev:o.rev,folder:(e.folder||'')}:e; }); writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
-      try{ dirtyDocs[id]=1; }catch(_){} if(typeof cloudPush==='function') cloudPush(); renderFileList(); document.getElementById('fHint').textContent='名前を変更しました：'+nn;
+      try{ dirtyDocs[id]=1; smMark(id); }catch(_){} if(typeof cloudPush==='function') cloudPush(); renderFileList(); document.getElementById('fHint').textContent='名前を変更しました：'+nn;
     };
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(_){}
     if(raw){ var o=null; try{ o=JSON.parse(raw); }catch(_){} if(o){ apply(o); return; } }
@@ -1310,9 +1310,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
     try{ localStorage.removeItem(K_DOC(id)); }catch(_){}
     try{ if(idb&&idb.set) idb.set(K_DOC(id), null).catch(function(){}); }catch(_){}
-    try{ delete dirtyDocs[id]; }catch(_){}
-    /* クラウド：索引に削除マークを反映＋作品ファイルを削除 */
-    if(ghConnected() && ghGist){ var files={}; files[cloudIdxFile()]={content:cloudIndexPayload()}; files[cloudDocFile(id)]=null; ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).catch(function(){}); }
+    try{ delete dirtyDocs[id]; smMark(id); }catch(_){}
+    /* クラウド：削除マークを（クラウドの索引と合わせて）送る */
+    if(ghConnected() && ghGist && !pushing){ setTimeout(function(){ if(!pushing) doPush(0); }, 300); }
     if(state.id===id){ var vis=idx.filter(function(x){return !x.del;}); if(vis[0]) openDoc(vis[0].id); else newDoc('無題のシナリオ'); }
   }
   function updateDocName(){ var el=document.getElementById('docName'); if(el) el.textContent=state.name||'無題'; }
@@ -3242,7 +3242,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var apply=function(o){ if(!o) return; o.folder=folder; o.updated=Date.now(); o.rev=(o.rev||0)+1; var j=JSON.stringify(o);
       try{ localStorage.setItem(K_DOC(id), j); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(id), j).catch(function(){}); }catch(_){}
       var idx=readIndex().map(function(e){ return e.id===id?{id:id,name:o.name,updated:o.updated,rev:o.rev,folder:folder}:e; }); writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
-      try{ dirtyDocs[id]=1; }catch(_){} if(typeof cloudPush==='function') cloudPush();
+      try{ dirtyDocs[id]=1; smMark(id); }catch(_){} if(typeof cloudPush==='function') cloudPush();
     };
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(_){}
     if(raw){ var o=null; try{ o=JSON.parse(raw); }catch(_){} if(o){ apply(o); return; } }
@@ -4270,6 +4270,16 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   }
   var pushTimer=null, pushing=false, lastPushAt=0, backoffUntil=0, backoffMs=0;
   var dirtyDocs={};
+  /* シナリオ単位の同期情報（端末ごとに保存）：base＝最後にクラウドと合わせた版、dirty＝その後この端末で編集した */
+  function smKey(){ return 'scn_sync_meta::'+account; }
+  function smGet(){ try{ return JSON.parse(localStorage.getItem(smKey())||'{}')||{}; }catch(e){ return {}; } }
+  function smSet(m){ try{ localStorage.setItem(smKey(), JSON.stringify(m)); }catch(e){} }
+  function smMark(id){ if(!id) return; var m=smGet(); m[id]=m[id]||{}; m[id].dirty=1; smSet(m); }
+  function smDirtyIds(){ var m=smGet(); return Object.keys(m).filter(function(k){ return m[k]&&m[k].dirty; }); }
+  function newVer(){ return 'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function remoteVerOf(e){ return (e&&e.ver) || ('r'+((e&&e.rev)||0)+'_'+((e&&e.updated)||0)); }
+  function localDocRev(id){ if(state&&state.id===id) return state.rev||0; try{ var d=JSON.parse(localStorage.getItem(K_DOC(id))||'null'); return d?(d.rev||0):-1; }catch(_){ return -1; } }
+  function parseCloudIndex(gd){ return readGistNamed(gd, cloudIdxFile()).then(function(raw){ var p=null; try{ p=raw?JSON.parse(raw):null; }catch(_){} return p; }); }
   function cloudIdxFile(){ return 'user-'+ghId()+'.json'; }
   function cloudDocFile(id){ return 'user-'+ghId()+'__'+id+'.json'; }
   function cloudIndexPayload(){
@@ -4282,38 +4292,59 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   var PUSH_DEBOUNCE=2000, MIN_PUSH_GAP=5000;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
   function doPush(retry){
-    pushing=true;
-    var migrated=false; try{ migrated=localStorage.getItem('scn_perdoc_migrated')==='1'; }catch(_){}
-    var ids = migrated ? Object.keys(dirtyDocs) : readIndex().filter(function(e){return !e.del;}).map(function(e){return e.id;});
-    if(ids.indexOf(state.id)<0) ids.push(state.id);
-    Promise.all(ids.map(function(id){ return getDocJson(id).then(function(j){ return {id:id,j:j}; }); })).then(function(list){
-      var files={}; files[cloudIdxFile()]={content:cloudIndexPayload()};
-      list.forEach(function(x){ if(x.j) files[cloudDocFile(x.id)]={content:x.j}; });
-      return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(r){
-        if(r.ok){ lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){} ids.forEach(function(id){ delete dirtyDocs[id]; }); saveInd.textContent='同期済 '+now(); pushing=false; return; }
-        if(r.status===404 && retry<1){
-          ghGist=''; try{localStorage.removeItem('scn_gh_gist_shared');}catch(e){}
-          return findSharedGist().then(function(gid){
-            if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} pushing=false; return doPush(retry+1); }
-            return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:files})}).then(function(rr){ return rr.ok?rr.json():null; }).then(function(gd){
-              if(gd&&gd.id){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){} lastPushAt=Date.now(); saveInd.textContent='同期済（Gist再作成） '+now(); }
-              else saveInd.textContent='同期失敗（Gist再作成不可／ローカルは保存済）';
-              pushing=false;
-            });
+    if(pushing) return; pushing=true;
+    var ids=smDirtyIds(); if(state.id && dirtyDocs[state.id] && ids.indexOf(state.id)<0) ids.push(state.id);
+    if(!ids.length){ pushing=false; return; }
+    var fail=function(msg){ pushing=false; saveInd.textContent=msg; };
+    /* 送る前にクラウドの最新を読み、他の端末が先に更新したシナリオは送らない（衝突は取得側で確認） */
+    ghFetch('/gists/'+ghGist).then(function(r){
+      if(r.status===404 && retry<1){
+        ghGist=''; try{localStorage.removeItem('scn_gh_gist_shared');}catch(e){}
+        return findSharedGist().then(function(gid){
+          if(gid){ ghGist=gid; try{localStorage.setItem('scn_gh_gist_shared',gid);}catch(e){} pushing=false; return doPush(retry+1); }
+          return ghFetch('/gists',{method:'POST',body:JSON.stringify({description:SHARED_DESC,public:false,files:{'placeholder.txt':{content:'scenario-editor'}}})}).then(function(rr){ return rr.ok?rr.json():null; }).then(function(gd){
+            if(gd&&gd.id){ ghGist=gd.id; try{localStorage.setItem('scn_gh_gist_shared',gd.id);}catch(e){} pushing=false; return doPush(retry+1); }
+            fail('同期失敗（Gist再作成不可／ローカルは保存済）');
           });
-        }
-        if(r.status===403 || r.status===429){
-          var ra=parseInt((r.headers&&r.headers.get&&r.headers.get('retry-after'))||'',10);
-          var reset=parseInt((r.headers&&r.headers.get&&r.headers.get('x-ratelimit-reset'))||'',10);
-          var w=!isNaN(ra)?ra*1000:(!isNaN(reset)?Math.max(0,reset*1000-Date.now()):0);
-          if(!w) w=backoffMs?Math.min(backoffMs*2,300000):30000; else w=Math.min(Math.max(w,20000),300000);
-          backoffMs=w; backoffUntil=Date.now()+w; pushing=false;
-          saveInd.textContent='同期を一時停止中（レート制限・約'+Math.round(w/1000)+'秒後に自動再開／ローカルは保存済）';
-          schedulePush(); return;
-        }
-        saveInd.textContent='同期失敗（'+statusMsg(r.status)+'／ローカルは保存済）'; pushing=false;
-      });
-    }).catch(function(){ pushing=false; backoffUntil=Date.now()+15000; saveInd.textContent='同期失敗（通信エラー・自動再試行します／ローカルは保存済）'; schedulePush(); });
+        });
+      }
+      if(r.status===403 || r.status===429){ backoffUntil=Date.now()+60000; fail('同期を一時停止中（レート制限・自動再開します／ローカルは保存済）'); return; }
+      if(!r.ok){ fail('同期失敗（'+statusMsg(r.status)+'／ローカルは保存済）'); return; }
+      return r.json().then(function(gd){ return parseCloudIndex(gd).then(function(parsed){
+        var ridx=(parsed&&!parsed.docs&&Array.isArray(parsed.index))?parsed.index:[]; /* 旧形式（全部入り）の索引は新形式に置き換える */
+        var rmap={}; ridx.forEach(function(e){ if(e&&e.id) rmap[e.id]=e; });
+        var meta=smGet(), localIdx=readIndex(), lmap={}; localIdx.forEach(function(e){ lmap[e.id]=e; });
+        var send=[], blocked=[];
+        ids.forEach(function(id){ var e=rmap[id], m=meta[id]||{}; if(e && remoteVerOf(e)!==m.base) blocked.push(id); else send.push(id); });
+        if(!send.length){ pushing=false; if(blocked.length) ghPull(true); return; }
+        return Promise.all(send.map(function(id){ return getDocJson(id).then(function(j){ return {id:id,j:j,rev:localDocRev(id)}; }); })).then(function(list){
+          var files={}, outIdx={}; ridx.forEach(function(e){ if(e&&e.id) outIdx[e.id]=e; });
+          var vers={};
+          list.forEach(function(x){
+            var le=lmap[x.id]; var ver=newVer(); vers[x.id]=ver;
+            if(le&&le.del){ outIdx[x.id]={id:x.id,name:le.name||'',updated:le.updated||Date.now(),rev:le.rev||0,del:1,ver:ver}; files[cloudDocFile(x.id)]=null; return; }
+            if(!x.j) return;
+            var d=null; try{ d=JSON.parse(x.j); }catch(_){}
+            outIdx[x.id]={id:x.id,name:(d&&d.name)||(le&&le.name)||'',updated:(d&&d.updated)||(le&&le.updated)||0,rev:(d&&d.rev)||0,folder:(d&&d.folder)||(le&&le.folder)||'',ver:ver};
+            files[cloudDocFile(x.id)]={content:x.j};
+          });
+          if(rmap && Object.keys(rmap).length===0){ /* クラウドが空・旧形式：端末の全シナリオを索引に載せる */ localIdx.forEach(function(e){ if(!outIdx[e.id] && !e.del){ var v=newVer(); vers[e.id]=vers[e.id]||v; outIdx[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,folder:e.folder||'',ver:v}; } }); }
+          var folders=[]; try{ folders=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); }catch(_){}
+          if(parsed&&Array.isArray(parsed.folders)) parsed.folders.forEach(function(f){ if(f&&folders.indexOf(f)<0) folders.push(f); });
+          files[cloudIdxFile()]={content:JSON.stringify({v:2,index:Object.keys(outIdx).map(function(k){ return outIdx[k]; }),folders:folders})};
+          return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(rr){
+            if(!rr.ok){ if(rr.status===403||rr.status===429){ backoffUntil=Date.now()+60000; } fail('同期失敗（'+statusMsg(rr.status)+'／ローカルは保存済）'); return; }
+            var m2=smGet();
+            list.forEach(function(x){ if(!vers[x.id]) return; var stillSame=(localDocRev(x.id)===x.rev); m2[x.id]={base:vers[x.id],dirty:stillSame?0:1}; if(stillSame) delete dirtyDocs[x.id]; });
+            Object.keys(vers).forEach(function(id){ if(!m2[id]) m2[id]={base:vers[id],dirty:0}; });
+            smSet(m2);
+            lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){}
+            pushing=false; saveInd.textContent='同期済 '+now();
+            if(blocked.length) ghPull(true);
+          });
+        });
+      }); });
+    }).catch(function(){ pushing=false; backoffUntil=Date.now()+15000; saveInd.textContent='同期失敗（通信エラー・自動再試行します／ローカルは保存済）'; });
   }
   function schedulePush(){
     if(!ghConnected()||!ghGist) return;
@@ -4394,7 +4425,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     ghFetch('/gists/'+ghGist).then(function(r){ if(!r.ok){ if(force) saveInd.textContent='取得失敗（'+statusMsg(r.status)+'）'; return null; } return r.json(); }).then(function(gd){
       if(!gd) return;
       return readGistNamed(gd, cloudIdxFile()).then(function(idxRaw){
-        if(!idxRaw){ if(force) saveInd.textContent='この端末のデータはまだ未送信です'; return; }
+        if(!idxRaw){ if(force) saveInd.textContent='この端末のデータはまだ未送信です'; var lm=smGet(); readIndex().forEach(function(e){ if(!e.del){ lm[e.id]=lm[e.id]||{}; lm[e.id].dirty=1; } }); smSet(lm); if(!pushing) setTimeout(function(){ if(!pushing) doPush(0); }, 1500); return; }
         var parsed=null; try{ parsed=JSON.parse(idxRaw); }catch(e){}
         if(!parsed){ if(force) saveInd.textContent='クラウドデータが読めません'; return; }
         /* 旧形式（1ファイルに全部）→ そのまま取り込み＋新形式へ移行のため全再送信 */
@@ -4415,43 +4446,74 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
           if(typeof cloudPush==='function') cloudPush();
           return;
         }
-        /* 新形式 {v:2, index:[{id,name,updated,rev}]} */
-        var ridx=(parsed.index||[]);
-        if(Array.isArray(parsed.folders)){ try{ var lf=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); var merged=lf.slice(); parsed.folders.forEach(function(f){ if(f && merged.indexOf(f)<0) merged.push(f); }); localStorage.setItem('scn_folders::'+account, JSON.stringify(merged)); }catch(_){} }
-        var localIdx=readIndex(); var localRev={}; localIdx.forEach(function(e){ localRev[e.id]=(e.rev!=null?e.rev:0); });
-        var idxMap={}; localIdx.forEach(function(e){ idxMap[e.id]=e; });
-        ridx.forEach(function(e){ if(!(e.id in idxMap)) idxMap[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,del:e.del?1:undefined,folder:e.folder||''}; });
-        var curDeleted=false;
-        var toFetch=[]; ridx.forEach(function(e){
-          var lr=(e.id===state.id)?(state.rev||0):(localRev[e.id]!=null?localRev[e.id]:-1);
-          if(e.del){ /* 削除マーク：リモートが新しければローカルも削除 */
-            if((e.rev||0) > lr && !(e.id===state.id && dirtyDocs[e.id] && !force)){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} try{ delete dirtyDocs[e.id]; }catch(_){} idxMap[e.id]={id:e.id,name:e.name||'',updated:e.updated||0,rev:e.rev||0,del:1}; if(e.id===state.id) curDeleted=true; }
-            return;
-          }
-          if(force && e.id===state.id) toFetch.push(e);
-          else if((e.rev||0) > lr || lr===-1) toFetch.push(e);
-        });
-        var writeIdx=function(){ var arr=Object.keys(idxMap).map(function(k){return idxMap[k];}); writeIndex(arr); try{ idb.set('scn_index', JSON.stringify(arr)).catch(function(){}); }catch(_){} };
-        if(!toFetch.length){ writeIdx(); if(curDeleted){ var vis0=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis0[0]) openDoc(vis0[0].id); else newDoc('無題のシナリオ'); if(force) saveInd.textContent='削除を反映 '+now(); return; } if(force) saveInd.textContent='同期済み（最新） '+now(); return; }
-        return Promise.all(toFetch.map(function(e){ return readGistNamed(gd, cloudDocFile(e.id)).then(function(dj){ return {id:e.id, dj:dj}; }); })).then(function(list){
-          var curChanged=false, forcedRemote=false, keptLocal=false;
-          list.forEach(function(x){
-            if(!x.dj) return; var dd=null; try{ dd=JSON.parse(x.dj); }catch(e){} if(!dd) return;
-            var isCur=(x.id===state.id), accept=false;
-            if(isCur && force){ var lj=''; try{ lj=localStorage.getItem(K_DOC(x.id))||''; }catch(_){} if(x.dj!==lj){ accept=true; forcedRemote=true; } }
-            else { var lr=isCur?(state.rev||0):(localRev[x.id]!=null?localRev[x.id]:-1); if((dd.rev||0) > lr || lr===-1) accept=true; if(accept && isCur && dirtyDocs[x.id]){ accept=false; keptLocal=true; } }
-            if(accept){ try{ localStorage.setItem(K_DOC(x.id), x.dj); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(x.id), x.dj).catch(function(){}); }catch(_){} idxMap[x.id]={id:x.id,name:(dd.name||''),updated:(dd.updated||0),rev:(dd.rev||0),folder:(dd.folder||'')}; if(isCur) curChanged=true; }
-          });
-          writeIdx();
-          if(curDeleted){ var vis1=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis1[0]) openDoc(vis1[0].id); else newDoc('無題のシナリオ'); if(force) saveInd.textContent='削除を反映 '+now(); return; }
-          if(keptLocal) saveInd.textContent='他の端末で更新された版があります（この端末の編集を優先しています）';
-          if(!saveTimer && curChanged){ keepUndoBeforeReplace(); if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } saveInd.textContent=(forcedRemote?'クラウド版を取得 ':'最新を取得 ')+now(); }
-          else if(force){ saveInd.textContent='同期済み '+now(); }
-        });
+        /* 新形式 {v:2, index:[{id,name,updated,rev,ver}]}：シナリオごとに「最後に合わせた版(base)」と比べる */
+        return syncFromCloud(gd, parsed, force);
       });
     }).catch(function(){ if(force) saveInd.textContent='取得に失敗しました（通信エラー）'; });
   }
   document.addEventListener('click',function(e){ var cp=e.target.closest&&e.target.closest('.npc-copy'); if(!cp) return; e.preventDefault(); e.stopPropagation(); var t=''; try{ t=decodeURIComponent(cp.getAttribute('data-cp')||''); }catch(_){ t=cp.getAttribute('data-cp')||''; } var done=function(){ if(!cp.classList.contains('copied')) cp.setAttribute('data-oic',cp.innerHTML); cp.classList.add('copied'); cp.innerHTML=CHECK_ICON; clearTimeout(cp._ct); cp._ct=setTimeout(function(){ cp.innerHTML=cp.getAttribute('data-oic')||''; cp.classList.remove('copied'); },1300); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,function(){}); } else { var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} document.body.removeChild(ta); done(); } }, true);
+  function syncFromCloud(gd, parsed, force){
+    var ridx=(parsed.index||[]);
+    if(Array.isArray(parsed.folders)){ try{ var lf=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); var mf=lf.slice(); parsed.folders.forEach(function(f){ if(f && mf.indexOf(f)<0) mf.push(f); }); localStorage.setItem('scn_folders::'+account, JSON.stringify(mf)); }catch(_){} }
+    var meta=smGet(), localIdx=readIndex(), idxMap={}; localIdx.forEach(function(e){ idxMap[e.id]=e; });
+    var take=[], conflicts=[], curDeleted=false, seen={};
+    ridx.forEach(function(e){
+      if(!e||!e.id) return; seen[e.id]=1;
+      var rv=remoteVerOf(e), m=meta[e.id], le=idxMap[e.id], lExists=!!(le&&!le.del);
+      if(e.id===state.id && (saveTimer||dirtyDocs[e.id])){ m=m||{}; m=Object.assign({},m,{dirty:1}); } /* 開いていて保存待ち・編集中なら編集ありとみなす */
+      if(e.del){
+        if(m&&m.dirty&&lExists) return; /* この端末で編集中：残して送り直す */
+        if(lExists){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} if(e.id===state.id) curDeleted=true; }
+        idxMap[e.id]={id:e.id,name:e.name||'',updated:e.updated||0,rev:e.rev||0,del:1}; meta[e.id]={base:rv,dirty:0}; delete dirtyDocs[e.id]; return;
+      }
+      if(!lExists){ take.push(e); return; }
+      if(!m||m.base===undefined){ /* 初回（旧方式からの移行） */
+        var lr=localDocRev(e.id);
+        if((e.rev||0)===lr){ meta[e.id]={base:rv,dirty:(m&&m.dirty)?1:0}; }
+        else if((e.rev||0)>lr && !dirtyDocs[e.id] && !(m&&m.dirty)) take.push(e);
+        else conflicts.push(e);
+        return;
+      }
+      if(m.base===rv) return;            /* クラウドは前回から変わっていない */
+      if(!m.dirty) take.push(e);         /* この端末は未編集 → クラウド版を取り込む */
+      else conflicts.push(e);            /* 両方で編集 → 確認 */
+    });
+    /* クラウドに無い端末のシナリオは送る対象にする */
+    localIdx.forEach(function(e){ if(!seen[e.id] && !e.del){ meta[e.id]=meta[e.id]||{}; meta[e.id].dirty=1; } });
+    smSet(meta);
+    var writeIdx=function(){ var arr=Object.keys(idxMap).map(function(k){return idxMap[k];}); writeIndex(arr); try{ idb.set('scn_index', JSON.stringify(arr)).catch(function(){}); }catch(_){} };
+    var curChanged=false;
+    var apply=function(e, dj){
+      var dd=null; try{ dd=JSON.parse(dj); }catch(_){} if(!dd) return;
+      try{ localStorage.setItem(K_DOC(e.id), dj); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), dj).catch(function(){}); }catch(_){}
+      idxMap[e.id]={id:e.id,name:(dd.name||''),updated:(dd.updated||0),rev:(dd.rev||0),folder:(dd.folder||'')};
+      var mm=smGet(); mm[e.id]={base:remoteVerOf(e),dirty:0}; smSet(mm); delete dirtyDocs[e.id];
+      if(e.id===state.id) curChanged=true;
+    };
+    var fetchAll=function(list){ return Promise.all(list.map(function(e){ return readGistNamed(gd, cloudDocFile(e.id)).then(function(dj){ return {e:e,dj:dj}; }); })); };
+    return fetchAll(take).then(function(got){
+      got.forEach(function(x){ if(x.dj) apply(x.e, x.dj); });
+      return fetchAll(conflicts);
+    }).then(function(got){
+      got.forEach(function(x){
+        if(!x.dj) return;
+        var nm=(idxMap[x.e.id]&&idxMap[x.e.id].name)||x.e.name||'無題';
+        var useCloud=confirm('「'+nm+'」は、この端末とほかの端末の両方で編集されています。\n\nOK：クラウドの版を取り込む（この端末の版は控えとして残します）\nキャンセル：この端末の版でクラウドを上書きする');
+        if(useCloud){
+          try{ var mine=(x.e.id===state.id)?JSON.stringify(state):localStorage.getItem(K_DOC(x.e.id)); if(mine) localStorage.setItem('scn_conflict_backup::'+account+'::'+x.e.id, mine); }catch(_){}
+          apply(x.e, x.dj);
+        } else {
+          var mm=smGet(); mm[x.e.id]={base:remoteVerOf(x.e),dirty:1}; smSet(mm);
+        }
+      });
+      writeIdx();
+      if(curDeleted){ var vis=Object.keys(idxMap).map(function(k){return idxMap[k];}).filter(function(x){return !x.del;}); if(vis[0]) openDoc(vis[0].id); else newDoc('無題のシナリオ'); saveInd.textContent='削除を反映 '+now(); return; }
+      if(curChanged){ keepUndoBeforeReplace(); if(load()){ if(typeof normBreaks==='function') normBreaks(); applyingSnap=true; render(); applyOutline(); updateDocName(); lastSnap=snapshot(); applyingSnap=false; } saveInd.textContent='最新を取得 '+now(); }
+      else if(force) saveInd.textContent='同期済み '+now();
+      if(typeof renderFileList==='function'){ try{ renderFileList(); }catch(_){} }
+      if(smDirtyIds().length && !pushing) setTimeout(function(){ if(!pushing) doPush(0); }, 1500);
+    });
+  }
   function ghRefresh(){ ghPull(true); }
   function ghDiag(){
     if(!ghConnected()){ alert('GitHub連携していません（ID＋トークンを設定してください）'); return; }
@@ -4512,7 +4574,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   setInterval(function(){
     if(!ghConnected()) return;
     ghPull(false);
-    if(dirtyDocs && Object.keys(dirtyDocs).length){ if(!ghGist){ try{ ghGist=localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){} } if(ghGist) setTimeout(function(){ if(!pushing) doPush(0); }, 3000); }
+    if((dirtyDocs && Object.keys(dirtyDocs).length) || smDirtyIds().length){ if(!ghGist){ try{ ghGist=localStorage.getItem('scn_gh_gist_shared')||''; }catch(e){} } if(ghGist) setTimeout(function(){ if(!pushing) doPush(0); }, 3000); }
   }, 30000);
 
   /* ---- 初期化 ---- */
