@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>タブ・キャラクター・シーンの設定</title>
+<style>
+  html,body{height:100%}
+  body{margin:0;display:flex;flex-direction:column;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;font-size:13px;color:#2b2622;background:#f5f3ef}
+  .tabbar{flex:none;display:flex;gap:4px;padding:10px 14px 0;border-bottom:1px solid #d8d1c8;background:#fff}
+  .tabbar button{border:0;border-bottom:3px solid transparent;background:transparent;border-radius:0;padding:8px 14px;font-weight:700;color:#8a8178;cursor:pointer;font:inherit;font-weight:700}
+  .tabbar button.on{color:#2b2622;border-bottom-color:#2a9d74}
+  .pane{flex:1;overflow:auto;padding:14px 18px;display:none}
+  .pane.on{display:block}
+  p{color:#6b625a;line-height:1.6;margin:0 0 10px;font-size:12px}
+  .row{display:flex;gap:6px;margin:0 0 6px}
+  .row input{flex:1;height:30px;border:1px solid #cfc8bf;border-radius:7px;padding:0 9px;font:inherit;background:#fff}
+  button{font:inherit;border:1px solid #cfc8bf;background:#fff;border-radius:7px;padding:5px 12px;cursor:pointer}
+  .del{padding:0 9px;color:#8a8178}
+  .foot{flex:none;display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #d8d1c8;background:#fff}
+  .save{background:#2a9d74;border-color:#2a9d74;color:#fff;font-weight:700}
+</style>
+</head>
+<body>
+<div class="tabbar">
+  <button data-tab="tabs" class="on">💬 タブ</button>
+  <button data-tab="chars">👤 キャラクター</button>
+  <button data-tab="scenes">🎬 シーン</button>
+</div>
+<div class="pane on" data-pane="tabs">
+  <p>ココフォリアのチャットタブ名です。自動で読み込めない場合に追加してください。ココフォリア側と<b>完全に同じ</b>名前にしてください。</p>
+  <div id="tabs"></div>
+  <button data-add="tabs">＋ タブを追加</button>
+</div>
+<div class="pane" data-pane="chars">
+  <p>送信者として使うキャラクター名です。送信時、ココフォリアの名前欄にこの名前が入ります。</p>
+  <div id="chars"></div>
+  <button data-add="chars">＋ キャラクターを追加</button>
+</div>
+<div class="pane" data-pane="scenes">
+  <p>本文コピーの「🎬」で「/scene シーン名」を送信します。ココフォリア側のシーン名と<b>完全に同じ</b>名前にしてください。</p>
+  <div id="scenes"></div>
+  <button data-add="scenes">＋ シーンを追加</button>
+</div>
+<div class="foot"><button id="cancel">キャンセル</button><button class="save" id="save">保存</button></div>
+<script>
+  const PH = { tabs: 'タブ名（例：情報、雑談、KPC）', chars: 'キャラクター名（例：煙々羅、NPC花子）', scenes: 'シーン名（例：導入、書斎、戦闘）' };
+  function show(t) {
+    document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('on', b.getAttribute('data-tab') === t));
+    document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.getAttribute('data-pane') === t));
+  }
+  document.querySelectorAll('.tabbar button').forEach((b) => { b.onclick = () => show(b.getAttribute('data-tab')); });
+  function row(kind, v) {
+    const box = document.getElementById(kind);
+    const d = document.createElement('div'); d.className = 'row';
+    const i = document.createElement('input'); i.value = v || ''; i.placeholder = PH[kind];
+    const x = document.createElement('button'); x.className = 'del'; x.textContent = '🗑'; x.onclick = () => d.remove();
+    d.appendChild(i); d.appendChild(x); box.appendChild(d); return i;
+  }
+  shellApi.getTabs().then((v) => {
+    v = v || {};
+    ['tabs', 'chars', 'scenes'].forEach((k) => ((v[k] && v[k].length) ? v[k] : ['']).forEach((t) => row(k, t)));
+    const h = (location.hash || '').slice(1);
+    if (h === 'chars' || h === 'scenes') show(h);
+  });
+  document.querySelectorAll('[data-add]').forEach((b) => { b.onclick = () => row(b.getAttribute('data-add'), '').focus(); });
+  document.getElementById('cancel').onclick = () => window.close();
+  const vals = (id) => Array.from(document.querySelectorAll('#' + id + ' input')).map((i) => i.value);
+  document.getElementById('save').onclick = () => shellApi.setTabs({ tabs: vals('tabs'), chars: vals('chars'), scenes: vals('scenes') });
+</script>
+</body>
+</html>
