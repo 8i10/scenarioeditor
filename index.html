@@ -757,6 +757,7 @@
       <div class="hm-sec">アカウント（GitHub同期）</div>
       <div class="hm-row"><span id="acctLabel">未接続</span><span style="display:flex;gap:6px"><button class="hb2" id="btnSync" title="他端末の変更を取得" style="display:none">🔄 同期</button><button class="hb2" id="btnAuth">GitHub連携</button></span></div>
       <button class="hm-item" id="btnDiag">同期の詳細（診断）</button>
+      <button class="hm-item" id="btnHistRestore">🕘 クラウドの履歴からシナリオを復元</button>
       <div class="hm-sec">バージョン</div>
       <div class="hm-row"><span id="appVer" style="color:var(--muted);font-size:12px">—</span></div>
     </div>
@@ -4470,6 +4471,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       if(e.id===state.id && (saveTimer||dirtyDocs[e.id])){ m=m||{}; m=Object.assign({},m,{dirty:1}); } /* 開いていて保存待ち・編集中なら編集ありとみなす */
       if(e.del){
         if(m&&m.dirty&&lExists) return; /* この端末で編集中：残して送り直す */
+        /* 削除の印が「前回合わせた後に付いたもの」か（初回は版番号がこの端末より新しいとき）だけ削除する。古い削除の印では消さない */
+        if(lExists){ var newDel=(m&&m.base!==undefined)?(m.base!==rv):((e.rev||0)>localDocRev(e.id)); if(!newDel){ meta[e.id]={base:(m&&m.base!==undefined)?m.base:rv,dirty:1}; return; } }
         if(lExists){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} if(e.id===state.id) curDeleted=true; }
         idxMap[e.id]={id:e.id,name:e.name||'',updated:e.updated||0,rev:e.rev||0,del:1}; meta[e.id]={base:rv,dirty:0}; delete dirtyDocs[e.id]; return;
       }
@@ -4557,6 +4560,67 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(gid) run(gid); else findSharedGist().then(function(g){ if(g){ ghGist=g; run(g); } else { alert('同期先Gistが見つかりません'); saveInd.textContent='診断完了'; } });
   }
   (function(){ var b=document.getElementById('btnDiag'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); ghDiag(); }; })();
+  (function(){ var b=document.getElementById('btnHistRestore'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); openHistRestore(); }; })();
+  /* ---- クラウド（Gist）の更新履歴から、消えた・古くなったシナリオを取り戻す ---- */
+  function openHistRestore(){
+    if(!ghConnected()){ alert('GitHub連携していないため、クラウドの履歴はありません。'); return; }
+    if(!ghGist){ try{ ghGist=localStorage.getItem('scn_gh_gist_shared')||''; }catch(_){} }
+    if(!ghGist){ alert('同期先（Gist）が見つかりません。'); return; }
+    var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
+    ov.innerHTML='<div class="dlg" style="max-width:560px"><div class="dlg-h">クラウドの履歴から復元</div><div class="dlg-b"><div class="fhint" id="hrMsg">クラウドの更新履歴を読み込んでいます…</div><div id="hrList" style="margin-top:8px"></div></div><div class="dlg-f"><button class="hb2" id="hrClose">閉じる</button></div></div>';
+    document.body.appendChild(ov);
+    var msg=ov.querySelector('#hrMsg'), list=ov.querySelector('#hrList'), closed=false;
+    ov.addEventListener('click',function(e){ if(e.target===ov||e.target.id==='hrClose'){ closed=true; ov.remove(); } });
+    var found={}; /* id -> [{at, json, name, rev, pages}]（新しい順、内容が同じものは除く） */
+    var prefix='user-'+ghId()+'__';
+    var addDoc=function(id, j, at){ if(!id||!j) return; var d=null; try{ d=JSON.parse(j); }catch(_){ return; } if(!d||!(d.pages||d.blocks)) return; var arr=found[id]||(found[id]=[]); if(arr.some(function(x){ return x.json===j; })) return; if(arr.length>=8) return; arr.push({at:at,json:j,name:d.name||'無題',rev:d.rev||0}); };
+    var readFile=function(f){ if(!f) return Promise.resolve(null); if(f.truncated&&f.raw_url) return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.ok?r.text():null; }).catch(function(){ return null; }); return Promise.resolve(f.content!=null?f.content:null); };
+    var render=function(done){
+      var local={}; readIndex().forEach(function(e){ if(!e.del) local[e.id]=e; });
+      var ids=Object.keys(found).sort(function(a,b){ var la=!local[a], lb=!local[b]; if(la!==lb) return la?-1:1; return (found[b][0].at||'').localeCompare(found[a][0].at||''); });
+      list.innerHTML=ids.length?ids.map(function(id){ var arr=found[id]; var miss=!local[id];
+        return '<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 8px">'
+          +'<div style="font-weight:700">'+esc(arr[0].name)+(miss?' <span style="color:#d33;font-size:11px">（この端末にありません）</span>':'')+'</div>'
+          +arr.map(function(v,k){ return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px"><span style="flex:1;color:var(--muted)">'+esc(v.at?new Date(v.at).toLocaleString('ja-JP'):'')+'（版 '+v.rev+'）</span><button class="hb2 hr-do" data-id="'+id+'" data-k="'+k+'">この版を復元</button></div>'; }).join('')
+          +'</div>'; }).join(''):'<div class="fhint">見つかりませんでした。</div>';
+      msg.textContent=done?('履歴の読み込みが終わりました。復元したい版を選んでください（各シナリオ新しい順に最大8件）。'):msg.textContent;
+    };
+    list.addEventListener('click',function(e){
+      var bt=e.target.closest('.hr-do'); if(!bt) return;
+      var id=bt.getAttribute('data-id'), v=found[id][+bt.getAttribute('data-k')]; if(!v) return;
+      var idx=readIndex(), ent=null; idx.forEach(function(x){ if(x.id===id) ent=x; });
+      if(ent&&!ent.del&&!confirm('「'+(ent.name||v.name)+'」はこの端末にあります。選んだ版で置き換えますか？\n（今の内容は取り消し履歴と控えに残します）')) return;
+      try{ var cur=(state.id===id)?JSON.stringify(state):localStorage.getItem(K_DOC(id)); if(cur) localStorage.setItem('scn_conflict_backup::'+account+'::'+id, cur); }catch(_){}
+      var d=JSON.parse(v.json); d.id=id; d.rev=Math.max(d.rev||0,(ent&&ent.rev)||0)+1; d.updated=Date.now(); var j=JSON.stringify(d);
+      try{ localStorage.setItem(K_DOC(id), j); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(id), j).catch(function(){}); }catch(_){}
+      var had=false; idx=idx.map(function(x){ if(x.id===id){ had=true; return {id:id,name:d.name||'無題',updated:d.updated,rev:d.rev,folder:d.folder||''}; } return x; });
+      if(!had) idx.push({id:id,name:d.name||'無題',updated:d.updated,rev:d.rev,folder:d.folder||''});
+      writeIndex(idx); try{ idb.set('scn_index', JSON.stringify(idx)).catch(function(){}); }catch(_){}
+      smMark(id); dirtyDocs[id]=1;
+      if(state.id===id){ keepUndoBeforeReplace(); }
+      openDoc(id); try{ renderFileList(); }catch(_){}
+      alert('「'+(d.name||'無題')+'」を復元しました。クラウドにも自動同期で送られます。');
+      render(true);
+    });
+    ghFetch('/gists/'+ghGist+'/commits?per_page=100').then(function(r){ if(!r.ok) throw new Error('履歴を取得できませんでした（'+statusMsg(r.status)+'）'); return r.json(); }).then(function(commits){
+      commits=Array.isArray(commits)?commits:[]; var i=0;
+      var next=function(){
+        if(closed) return;
+        if(i>=commits.length){ render(true); return; }
+        var c=commits[i++]; msg.textContent='クラウドの更新履歴を読み込んでいます…（'+i+'／'+commits.length+'）';
+        return ghFetch('/gists/'+ghGist+'/'+c.version).then(function(r){ return r.ok?r.json():null; }).then(function(gd){
+          if(!gd||!gd.files) return;
+          var names=Object.keys(gd.files);
+          return Promise.all(names.map(function(nm){
+            if(nm.indexOf(prefix)===0) return readFile(gd.files[nm]).then(function(j){ addDoc(nm.slice(prefix.length).replace(/\.json$/,''), j, c.committed_at); });
+            if(nm===cloudIdxFile()) return readFile(gd.files[nm]).then(function(j){ var p=null; try{ p=JSON.parse(j); }catch(_){} if(p&&p.docs) Object.keys(p.docs).forEach(function(id){ try{ addDoc(id, JSON.stringify(p.docs[id]), c.committed_at); }catch(_){} }); });
+            return null;
+          }));
+        }).then(function(){ if(i%5===0) render(false); return next(); });
+      };
+      return next();
+    }).catch(function(err){ msg.textContent=(err&&err.message)||'履歴を取得できませんでした。'; });
+  }
   var loginOvl=document.getElementById('loginOvl');
   document.getElementById('btnAuth').onclick=function(){
     hmenu.classList.remove('show');
