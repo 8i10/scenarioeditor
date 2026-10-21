@@ -4330,8 +4330,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
           var vers={};
           list.forEach(function(x){
             var le=lmap[x.id]; var ver=newVer(); vers[x.id]=ver;
-            if(le&&le.del){ outIdx[x.id]={id:x.id,name:le.name||'',updated:le.updated||Date.now(),rev:le.rev||0,del:1,ver:ver}; files[cloudDocFile(x.id)]=null; return; }
-            if(!x.j) return;
+            if(le&&le.del){ outIdx[x.id]={id:x.id,name:le.name||'',updated:le.updated||Date.now(),rev:le.rev||0,del:1,ver:ver}; if(gd&&gd.files&&gd.files[cloudDocFile(x.id)]) files[cloudDocFile(x.id)]=null; return; } /* 無いファイルの削除を送るとGitHubが受け付けない（422） */
+            if(!x.j||!String(x.j).trim()){ delete vers[x.id]; return; } /* 空の内容はGitHubが受け付けない */
             var d=null; try{ d=JSON.parse(x.j); }catch(_){}
             outIdx[x.id]={id:x.id,name:(d&&d.name)||(le&&le.name)||'',updated:(d&&d.updated)||(le&&le.updated)||0,rev:(d&&d.rev)||0,folder:(d&&d.folder)||(le&&le.folder)||'',ver:ver};
             files[cloudDocFile(x.id)]={content:x.j};
@@ -4339,15 +4339,33 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
           if(rmap && Object.keys(rmap).length===0){ /* クラウドが空・旧形式：端末の全シナリオを索引に載せる */ localIdx.forEach(function(e){ if(!outIdx[e.id] && !e.del){ var v=newVer(); vers[e.id]=vers[e.id]||v; outIdx[e.id]={id:e.id,name:e.name,updated:e.updated||0,rev:e.rev||0,folder:e.folder||'',ver:v}; } }); }
           var folders=[]; try{ folders=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); }catch(_){}
           if(parsed&&Array.isArray(parsed.folders)) parsed.folders.forEach(function(f){ if(f&&folders.indexOf(f)<0) folders.push(f); });
-          files[cloudIdxFile()]={content:JSON.stringify({v:2,index:Object.keys(outIdx).map(function(k){ return outIdx[k]; }),folders:folders})};
-          return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:files})}).then(function(rr){
-            if(!rr.ok){ if(rr.status===403||rr.status===429){ backoffUntil=Date.now()+60000; } fail('同期失敗（'+statusMsg(rr.status)+'／ローカルは保存済）'); return; }
+          /* シナリオ1件ずつ送る（大きなシナリオが混ざっても他は送れるように。失敗したシナリオと理由を表示） */
+          var idxNow={}; ridx.forEach(function(e){ if(e&&e.id) idxNow[e.id]=e; });
+          Object.keys(outIdx).forEach(function(k){ if(!vers[k]) idxNow[k]=outIdx[k]; });
+          var idxContent=function(){ return JSON.stringify({v:2,index:Object.keys(idxNow).map(function(k){ return idxNow[k]; }),folders:folders}); };
+          var order=Object.keys(vers), okIds=[], errs=[], stop=false;
+          var step=function(i){
+            if(i>=order.length||stop) return Promise.resolve();
+            var id=order[i], fn=cloudDocFile(id), f={};
+            if(fn in files) f[fn]=files[fn];
+            var prev=idxNow[id]; idxNow[id]=outIdx[id];
+            f[cloudIdxFile()]={content:idxContent()};
+            return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:f})}).then(function(rr){
+              if(rr.ok){ okIds.push(id); return; }
+              if(prev) idxNow[id]=prev; else delete idxNow[id];
+              if(rr.status===403||rr.status===429){ backoffUntil=Date.now()+60000; stop=true; }
+              var nm=(outIdx[id]&&outIdx[id].name)||'無題', kb=(f[fn]&&f[fn].content)?Math.round(f[fn].content.length/1024):0;
+              return rr.json().catch(function(){ return null; }).then(function(j){ var why=j?((j.message||'')+(j.errors&&j.errors.length?('：'+j.errors.map(function(x){ return x.message||x.code||''; }).join('、')):'')):''; errs.push('「'+nm+'」'+statusMsg(rr.status)+(why?'（'+why+'）':'')+(kb?' '+kb+'KB':'')); });
+            }).catch(function(){ if(prev) idxNow[id]=prev; else delete idxNow[id]; errs.push('「'+((outIdx[id]&&outIdx[id].name)||'無題')+'」通信エラー'); }).then(function(){ return step(i+1); });
+          };
+          return step(0).then(function(){
             var m2=smGet();
-            list.forEach(function(x){ if(!vers[x.id]) return; var stillSame=(localDocRev(x.id)===x.rev); m2[x.id]={base:vers[x.id],dirty:stillSame?0:1}; if(stillSame) delete dirtyDocs[x.id]; });
-            Object.keys(vers).forEach(function(id){ if(!m2[id]) m2[id]={base:vers[id],dirty:0}; });
+            list.forEach(function(x){ if(okIds.indexOf(x.id)<0||!vers[x.id]) return; var stillSame=(localDocRev(x.id)===x.rev); m2[x.id]={base:vers[x.id],dirty:stillSame?0:1}; if(stillSame) delete dirtyDocs[x.id]; });
+            okIds.forEach(function(id){ if(!m2[id]) m2[id]={base:vers[id],dirty:0}; });
             smSet(m2);
-            lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){}
-            pushing=false; saveInd.textContent='同期済 '+now();
+            pushing=false;
+            if(errs.length){ saveInd.textContent='同期失敗：'+errs.join(' ／ ')+'（ローカルは保存済）'; try{ console.warn('sync errors', errs); }catch(_){} }
+            else { lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){} saveInd.textContent='同期済 '+now(); }
             if(blocked.length) ghPull(true);
           });
         });
