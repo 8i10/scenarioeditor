@@ -221,8 +221,8 @@
   .block[data-type="dd1"],.block[data-type="dd2"],.block[data-type="dd3"]{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
   .block[data-type="dd1"]>.be,.block[data-type="dd2"]>.be,.block[data-type="dd3"]>.be{flex:0 1 auto;min-width:2em}
   .dd-sel{font:inherit;font-size:.95em;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);min-width:9em;max-width:100%;cursor:pointer}
-  /* 区切り線のすぐ下の見出し3～5は上の余白を詰める（線が見出しから離れすぎないように） */
-  .block[data-type="divider"]+.block[data-type="h3"]>.be,.block[data-type="divider"]+.block[data-type="h4"]>.be,.block[data-type="divider"]+.block[data-type="h5"]>.be{margin-top:4px}
+  /* 区切り線のすぐ下の見出しは上の余白を詰める（線が見出しから離れすぎないように） */
+  .block[data-type="divider"]+.block[data-type="h1"]>.be,.block[data-type="divider"]+.block[data-type="h2"]>.be,.block[data-type="divider"]+.block[data-type="h3"]>.be,.block[data-type="divider"]+.block[data-type="h4"]>.be,.block[data-type="divider"]+.block[data-type="h5"]>.be{margin-top:4px}
   .block[data-type="divider"] hr{border:0;border-top:1px solid var(--line);margin:0}
 
   /* container (toggle / toggle-heading / callout) */
