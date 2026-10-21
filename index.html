@@ -4476,6 +4476,11 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         if(lExists){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} if(e.id===state.id) curDeleted=true; }
         idxMap[e.id]={id:e.id,name:e.name||'',updated:e.updated||0,rev:e.rev||0,del:1}; meta[e.id]={base:rv,dirty:0}; delete dirtyDocs[e.id]; return;
       }
+      /* この端末で削除して、まだクラウドに送っていない：取り込み直さず削除を送る（前回合わせた後に他の端末で編集されていたら確認） */
+      if(le&&le.del&&m&&m.dirty){
+        if(m.base===undefined||m.base===rv||confirm('「'+(e.name||'無題')+'」は、この端末で削除しましたが、ほかの端末で更新されています。\n\nOK：削除する\nキャンセル：削除をやめて、クラウドの版を取り込む')){ meta[e.id]={base:rv,dirty:1}; return; }
+        delete le.del; meta[e.id]={base:undefined,dirty:0}; take.push(e); return;
+      }
       if(!lExists){ take.push(e); return; }
       if(!m||m.base===undefined){ /* 初回（旧方式からの移行） */
         var lr=localDocRev(e.id);
