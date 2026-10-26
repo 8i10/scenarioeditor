@@ -4299,8 +4299,14 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function readGistNamed(gd,name){ var f=gd&&gd.files&&gd.files[name]; if(!f) return Promise.resolve(null); if(f.truncated&&f.raw_url){ return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.ok?r.text():null; }).catch(function(){ return null; }); } return Promise.resolve(f.content!=null?f.content:null); }
   var PUSH_DEBOUNCE=2000, MIN_PUSH_GAP=5000;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
+  /* GitHubの回数制限：応答の待ち時間に従って同期を止める。送れない状態での取得→送信の繰り返しも防ぐ */
+  var lastBlockPull=0;
+  function rateWait(r){ var ra=parseInt((r.headers&&r.headers.get&&r.headers.get('retry-after'))||'',10), rs=parseInt((r.headers&&r.headers.get&&r.headers.get('x-ratelimit-reset'))||'',10); var w=!isNaN(ra)?ra*1000:(!isNaN(rs)?Math.max(0,rs*1000-Date.now()):0); return Math.min(Math.max(w||60000,30000),3600000); }
+  function rateStop(r){ backoffUntil=Date.now()+rateWait(r); saveInd.textContent='GitHubの回数制限のため同期を一時停止中（約'+Math.max(1,Math.round((backoffUntil-Date.now())/60000))+'分後に自動再開／ローカルは保存済）'; }
+  function pullAfterBlock(){ if(Date.now()-lastBlockPull<60000) return; lastBlockPull=Date.now(); ghPull(true); }
+  function docHash(j){ try{ var o=JSON.parse(j); delete o.updated; delete o.rev; delete o.curPage; j=JSON.stringify(o); }catch(_){} var h=5381; for(var i=0;i<j.length;i++){ h=((h<<5)+h+j.charCodeAt(i))|0; } return 'h'+(h>>>0).toString(36)+'_'+j.length; }
   function doPush(retry){
-    if(pushing) return; pushing=true;
+    if(pushing||Date.now()<backoffUntil) return; pushing=true;
     var ids=smDirtyIds(); if(state.id && dirtyDocs[state.id] && ids.indexOf(state.id)<0) ids.push(state.id);
     if(!ids.length){ pushing=false; return; }
     var fail=function(msg){ pushing=false; saveInd.textContent=msg; };
@@ -4316,7 +4322,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
           });
         });
       }
-      if(r.status===403 || r.status===429){ backoffUntil=Date.now()+60000; fail('同期を一時停止中（レート制限・自動再開します／ローカルは保存済）'); return; }
+      if(r.status===403 || r.status===429){ pushing=false; rateStop(r); return; }
       if(!r.ok){ fail('同期失敗（'+statusMsg(r.status)+'／ローカルは保存済）'); return; }
       return r.json().then(function(gd){ return parseCloudIndex(gd).then(function(parsed){
         var ridx=(parsed&&!parsed.docs&&Array.isArray(parsed.index))?parsed.index:[]; /* 旧形式（全部入り）の索引は新形式に置き換える */
@@ -4324,8 +4330,10 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         var meta=smGet(), localIdx=readIndex(), lmap={}; localIdx.forEach(function(e){ lmap[e.id]=e; });
         var send=[], blocked=[];
         ids.forEach(function(id){ var e=rmap[id], m=meta[id]||{}; if(e && remoteVerOf(e)!==m.base) blocked.push(id); else send.push(id); });
-        if(!send.length){ pushing=false; if(blocked.length) ghPull(true); return; }
-        return Promise.all(send.map(function(id){ return getDocJson(id).then(function(j){ return {id:id,j:j,rev:localDocRev(id)}; }); })).then(function(list){
+        if(!send.length){ pushing=false; if(blocked.length) pullAfterBlock(); return; }
+        return Promise.all(send.map(function(id){ return getDocJson(id).then(function(j){ return {id:id,j:j,rev:localDocRev(id)}; }); })).then(function(list0){
+          var list=list0.filter(function(x){ var m=meta[x.id]||{}, e=rmap[x.id], le=lmap[x.id]; if(le&&le.del) return true; if(!x.j||!e||e.del||m.base===undefined||m.base!==remoteVerOf(e)) return true; x.h=docHash(x.j); if(m.h&&m.h===x.h){ var mm=smGet(); if(mm[x.id]){ mm[x.id].dirty=0; smSet(mm); } delete dirtyDocs[x.id]; return false; } return true; });
+          if(!list.length){ pushing=false; return; }
           var files={}, outIdx={}; ridx.forEach(function(e){ if(e&&e.id) outIdx[e.id]=e; });
           var vers={};
           list.forEach(function(x){
@@ -4353,20 +4361,21 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
             return ghFetch('/gists/'+ghGist,{method:'PATCH',body:JSON.stringify({files:f})}).then(function(rr){
               if(rr.ok){ okIds.push(id); return; }
               if(prev) idxNow[id]=prev; else delete idxNow[id];
-              if(rr.status===403||rr.status===429){ backoffUntil=Date.now()+60000; stop=true; }
+              if(rr.status===403||rr.status===429){ rateStop(rr); stop=true; return; }
               var nm=(outIdx[id]&&outIdx[id].name)||'無題', kb=(f[fn]&&f[fn].content)?Math.round(f[fn].content.length/1024):0;
               return rr.json().catch(function(){ return null; }).then(function(j){ var why=j?((j.message||'')+(j.errors&&j.errors.length?('：'+j.errors.map(function(x){ return x.message||x.code||''; }).join('、')):'')):''; errs.push('「'+nm+'」'+statusMsg(rr.status)+(why?'（'+why+'）':'')+(kb?' '+kb+'KB':'')); });
             }).catch(function(){ if(prev) idxNow[id]=prev; else delete idxNow[id]; errs.push('「'+((outIdx[id]&&outIdx[id].name)||'無題')+'」通信エラー'); }).then(function(){ return step(i+1); });
           };
           return step(0).then(function(){
             var m2=smGet();
-            list.forEach(function(x){ if(okIds.indexOf(x.id)<0||!vers[x.id]) return; var stillSame=(localDocRev(x.id)===x.rev); m2[x.id]={base:vers[x.id],dirty:stillSame?0:1}; if(stillSame) delete dirtyDocs[x.id]; });
+            list.forEach(function(x){ if(okIds.indexOf(x.id)<0||!vers[x.id]) return; var stillSame=(localDocRev(x.id)===x.rev); m2[x.id]={base:vers[x.id],dirty:stillSame?0:1,h:x.j?docHash(x.j):undefined}; if(stillSame) delete dirtyDocs[x.id]; });
             okIds.forEach(function(id){ if(!m2[id]) m2[id]={base:vers[id],dirty:0}; });
             smSet(m2);
             pushing=false;
-            if(errs.length){ saveInd.textContent='同期失敗：'+errs.join(' ／ ')+'（ローカルは保存済）'; try{ console.warn('sync errors', errs); }catch(_){} }
+            if(Date.now()<backoffUntil){ /* 回数制限の表示を残す */ }
+            else if(errs.length){ saveInd.textContent='同期失敗：'+errs.join(' ／ ')+'（ローカルは保存済）'; try{ console.warn('sync errors', errs); }catch(_){} }
             else { lastPushAt=Date.now(); backoffMs=0; backoffUntil=0; try{localStorage.setItem('scn_perdoc_migrated','1');}catch(_){} saveInd.textContent='同期済 '+now(); }
-            if(blocked.length) ghPull(true);
+            if(blocked.length) pullAfterBlock();
           });
         });
       }); });
@@ -4437,6 +4446,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function ghPull(force){
     if(!ghConnected()){ if(force) saveInd.textContent='未連携（同期オフ）'; return; }
     var nowMs=Date.now();
+    if(nowMs<backoffUntil){ if(force) saveInd.textContent='GitHubの回数制限のため同期を一時停止中（約'+Math.max(1,Math.round((backoffUntil-nowMs)/60000))+'分後に自動再開）'; return; }
     if(!force && (nowMs-lastPullAt < 4000)) return; /* 8秒以内の連続取得は間引き（レート制限回避） */
     if(!ghGist){ ghGist=(function(){try{return localStorage.getItem('scn_gh_gist_shared')||'';}catch(e){return '';}})(); }
     if(!ghGist){
@@ -4448,7 +4458,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     }
     if((pushTimer||pushing) && !force){ return; } /* 未送信のローカル編集がある間は取得しない（巻き戻り防止／送信を優先） */
     lastPullAt=nowMs;
-    ghFetch('/gists/'+ghGist).then(function(r){ if(!r.ok){ if(force) saveInd.textContent='取得失敗（'+statusMsg(r.status)+'）'; return null; } return r.json(); }).then(function(gd){
+    ghFetch('/gists/'+ghGist).then(function(r){ if(!r.ok){ if(r.status===403||r.status===429){ rateStop(r); return null; } if(force) saveInd.textContent='取得失敗（'+statusMsg(r.status)+'）'; return null; } return r.json(); }).then(function(gd){
       if(!gd) return;
       return readGistNamed(gd, cloudIdxFile()).then(function(idxRaw){
         if(!idxRaw){ if(force) saveInd.textContent='この端末のデータはまだ未送信です'; var lm=smGet(); readIndex().forEach(function(e){ if(!e.del){ lm[e.id]=lm[e.id]||{}; lm[e.id].dirty=1; } }); smSet(lm); if(!pushing) setTimeout(function(){ if(!pushing) doPush(0); }, 1500); return; }
@@ -4488,7 +4498,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       var rv=remoteVerOf(e), m=meta[e.id], le=idxMap[e.id], lExists=!!(le&&!le.del);
       if(e.id===state.id && (saveTimer||dirtyDocs[e.id])){ m=m||{}; m=Object.assign({},m,{dirty:1}); } /* 開いていて保存待ち・編集中なら編集ありとみなす */
       if(e.del){
-        if(m&&m.dirty&&lExists) return; /* この端末で編集中：残して送り直す */
+        if(m&&m.dirty&&lExists){ meta[e.id]={base:rv,dirty:1,h:m.h}; return; } /* この端末で編集中：残して送り直す（基準を合わせて送れるように） */
         /* 削除の印が「前回合わせた後に付いたもの」か（初回は版番号がこの端末より新しいとき）だけ削除する。古い削除の印では消さない */
         if(lExists){ var newDel=(m&&m.base!==undefined)?(m.base!==rv):((e.rev||0)>localDocRev(e.id)); if(!newDel){ meta[e.id]={base:(m&&m.base!==undefined)?m.base:rv,dirty:1}; return; } }
         if(lExists){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} try{ if(idb&&idb.set) idb.set(K_DOC(e.id), null).catch(function(){}); }catch(_){} if(e.id===state.id) curDeleted=true; }
