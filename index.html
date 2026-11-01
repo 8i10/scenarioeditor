@@ -218,6 +218,15 @@
   .block[data-type="todo"].done>.tick::after{content:"";position:absolute;left:50%;top:45%;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:translate(-50%,-50%) rotate(45deg);box-sizing:content-box}
   .block[data-type="todo"].done>.be{color:var(--muted);text-decoration:line-through}
   .block[data-type="divider"]{padding:9px 0}
+  /* 検索と置換 */
+  ::highlight(scn-find){background:#ffe36e;color:inherit}
+  ::highlight(scn-find-cur){background:#ff9f1c;color:#000}
+  .find-bar{position:fixed;z-index:360;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;width:300px;font-size:12px;color:var(--text)}
+  .find-bar .fr{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .find-bar input{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font:inherit}
+  .find-bar button{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:12px;white-space:nowrap}
+  .find-bar .fcnt{min-width:46px;text-align:right;color:var(--muted)}
+  .find-bar .fx{border:0;background:none;font-size:14px;padding:0 4px}
   .block[data-type="dd1"],.block[data-type="dd2"],.block[data-type="dd3"]{display:flex!important;align-items:center;gap:8px;flex-wrap:wrap}
   .block[data-type="dd1"]>.be,.block[data-type="dd2"]>.be,.block[data-type="dd3"]>.be{flex:0 1 auto;min-width:2em}
   .dd-sel{font:inherit;font-size:.95em;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);min-width:9em;max-width:100%;cursor:pointer}
@@ -886,6 +895,7 @@
         <button class="fb" id="btnColLine" title="二段組の中線 表示/非表示"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="12" rx="1"/><rect x="11.5" y="4" width="5.5" height="12" rx="1"/><line x1="10" y1="3" x2="10" y2="17" stroke-dasharray="2 2"/></svg></button>
         <button class="fb" id="btnFrameOut" title="枠ごと左へ戻す（カーソルのある枠。枠の外では行）"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/><polyline points="6,7.5 3.5,10 6,12.5"/></svg></button>
         <button class="fb" id="btnFrameIn" title="枠ごと右へずらす（カーソルのある枠。枠の外では行）"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/><polyline points="3.5,7.5 6,10 3.5,12.5"/></svg></button>
+        <button class="fb" id="btnFind" title="検索と置換"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5"/><line x1="12.3" y1="12.3" x2="17" y2="17"/></svg></button>
       </span></div>
       </div>
     </div>
@@ -1546,7 +1556,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   (0,eval)(BGCENTER_SRC);
   function bgCenterSoon(){ if(bgCenterSoon.t) cancelAnimationFrame(bgCenterSoon.t); bgCenterSoon.t=requestAnimationFrame(function(){ bgCenterSoon.t=0; window.__bgCenter(doc); }); }
   try{ if(document.fonts){ document.fonts.addEventListener('loadingdone', bgCenterSoon); document.fonts.ready.then(bgCenterSoon); } }catch(_){}
-  function render(){ bgCenterSoon(); var _sy=window.scrollY; doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); applyColLine(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); if(Math.abs(window.scrollY-_sy)>2) window.scrollTo(0,_sy); }
+  function render(){ bgCenterSoon(); if(typeof findBar!=='undefined'&&findBar) setTimeout(function(){ if(findBar) collectFind(); },0); var _sy=window.scrollY; doc.innerHTML=''; state.blocks.forEach(function(b){ doc.appendChild(blockEl(b)); }); applyTheme(); applyFs(); applyFont(); applyPageLines(); applyColLine(); renderOutline(); if(typeof hideImgRz==='function') hideImgRz(); if(Math.abs(window.scrollY-_sy)>2) window.scrollTo(0,_sy); }
   /* 見出しなしカード：見出し欄にある文字は中身の1行目へ移す */
   function headlessCard(b){ b.children=b.children||[]; if(b.html&&plainText(b.html)){ var t=b.html; if(b.children.length===1&&!plainText(b.children[0].html||'')) b.children[0].html=t; else b.children.unshift(newBlock('p',t)); } b.html=''; if(!b.children.length) b.children.push(newBlock('p','')); }
   function reType(b){
@@ -2241,6 +2251,59 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var w=doc.querySelector('.block[data-id="'+t.id+'"]'); if(w) w.style.marginLeft=(t.indent?t.indent*24:0)+'px';
     persist();
   }
+  /* ---- 検索と置換（表示中のページ／編集中のデータが対象） ---- */
+  var findBar=null, findHits=[], findIdx=-1, findTimer=0;
+  function findText(){ return findBar?findBar.querySelector('#findQ').value:''; }
+  function collectFind(){
+    findHits=[]; var q=findText(); if(q){ var ql=q.toLowerCase();
+      var tw=document.createTreeWalker(doc,NodeFilter.SHOW_TEXT,{acceptNode:function(n){ var p=n.parentNode; if(!p||!p.closest) return NodeFilter.FILTER_REJECT; var be=p.closest('.be'); if(!be||!doc.contains(be)) return NodeFilter.FILTER_REJECT; if(p.closest('[contenteditable="false"]')&&!p.closest('[contenteditable="false"]').contains(be)) return NodeFilter.FILTER_REJECT; return NodeFilter.FILTER_ACCEPT; }});
+      var n; while((n=tw.nextNode())){ var t=n.data.toLowerCase(), k=0; while((k=t.indexOf(ql,k))>=0){ var r=document.createRange(); r.setStart(n,k); r.setEnd(n,k+q.length); findHits.push(r); k+=q.length; } }
+    }
+    if(findIdx>=findHits.length) findIdx=findHits.length-1;
+    paintFind();
+  }
+  function paintFind(){
+    try{ if(window.CSS&&CSS.highlights&&window.Highlight){ CSS.highlights.delete('scn-find'); CSS.highlights.delete('scn-find-cur'); if(findBar&&findHits.length){ CSS.highlights.set('scn-find', new Highlight(...findHits)); if(findHits[findIdx]) CSS.highlights.set('scn-find-cur', new Highlight(findHits[findIdx])); } } }catch(_){}
+    if(findBar) findBar.querySelector('.fcnt').textContent=findHits.length?((findIdx>=0?(findIdx+1):0)+'／'+findHits.length):(findText()?'0件':'');
+  }
+  function gotoFind(dir){
+    if(!findHits.length){ collectFind(); if(!findHits.length) return; }
+    findIdx=(findIdx+dir+findHits.length)%findHits.length; paintFind();
+    var r=findHits[findIdx]; var bl=r.startContainer.parentNode&&r.startContainer.parentNode.closest('.block'); if(bl){ var tg=bl; while(tg&&tg.parentNode&&tg.parentNode.closest){ var tb=tg.parentNode.closest('.block.collapsed'); if(!tb) break; tb.classList.remove('collapsed'); var tc=ctx(tb.dataset.id); if(tc) tc.b.collapsed=false; tg=tb; } }
+    var rc=r.getBoundingClientRect(), top=(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'),10)||92)+20;
+    if(rc.top<top||rc.bottom>window.innerHeight-40) window.scrollBy(0, rc.top-top-(window.innerHeight-top)/3);
+  }
+  function syncBeOf(node){ var p=node&&(node.nodeType===3?node.parentNode:node); var be=p&&p.closest&&p.closest('.be'); if(!be) return; var c=ctx(be.dataset.id); if(c) c.b.html=sanitize(be.innerHTML); }
+  function replaceFind(all){
+    var rep=findBar.querySelector('#findR').value;
+    if(!findHits.length){ collectFind(); if(!findHits.length) return; }
+    if(all){
+      var n=findHits.length;
+      for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; r.deleteContents(); if(rep) r.insertNode(document.createTextNode(rep)); syncBeOf(sc); }
+      findIdx=-1; persist(); collectFind(); findBar.querySelector('.fcnt').textContent=n+'件置換';
+      return;
+    }
+    if(findIdx<0){ gotoFind(1); return; }
+    var r1=findHits[findIdx], sc1=r1.startContainer; r1.deleteContents(); if(rep) r1.insertNode(document.createTextNode(rep)); syncBeOf(sc1); persist();
+    var keep=findIdx; collectFind(); if(findHits.length){ findIdx=Math.min(keep,findHits.length-1)-1; gotoFind(1); }
+  }
+  function closeFindBar(){ if(!findBar) return; findBar.remove(); findBar=null; findHits=[]; findIdx=-1; paintFind(); var b=document.getElementById('btnFind'); if(b) b.classList.remove('on'); }
+  function toggleFindBar(btn){
+    if(findBar){ closeFindBar(); return; }
+    findBar=document.createElement('div'); findBar.className='find-bar';
+    findBar.innerHTML='<div class="fr"><input id="findQ" placeholder="検索する文字"><span class="fcnt"></span><button class="fx" id="findX" title="閉じる">✕</button></div>'
+      +'<div class="fr"><input id="findR" placeholder="置換後の文字"></div>'
+      +'<div class="fr" style="margin:0;justify-content:flex-end"><button id="findPrev" title="前へ（Shift+Enter）">▲ 前</button><button id="findNext" title="次へ（Enter）">▼ 次</button><button id="findRep">置換</button><button id="findAll">すべて置換</button></div>';
+    document.body.appendChild(findBar);
+    var rc=btn.getBoundingClientRect(); findBar.style.top=(rc.bottom+6)+'px'; findBar.style.left=Math.max(8,Math.min(rc.left-120, document.documentElement.clientWidth-310))+'px';
+    btn.classList.add('on');
+    var q=findBar.querySelector('#findQ'); var sel=window.getSelection(); var st=sel&&!sel.isCollapsed?String(sel):''; if(st&&st.length<60&&st.indexOf('\n')<0) q.value=st;
+    q.focus(); q.select(); findIdx=-1; collectFind();
+    q.addEventListener('input',function(){ findIdx=-1; collectFind(); if(findHits.length) gotoFind(1); });
+    findBar.addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); closeFindBar(); return; } if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); if(e.target.id==='findR') replaceFind(false); else gotoFind(e.shiftKey?-1:1); } });
+    findBar.addEventListener('click',function(e){ var id=e.target.id; if(id==='findX') closeFindBar(); else if(id==='findNext') gotoFind(1); else if(id==='findPrev') gotoFind(-1); else if(id==='findRep') replaceFind(false); else if(id==='findAll') replaceFind(true); });
+  }
+  doc.addEventListener('input',function(){ if(!findBar) return; clearTimeout(findTimer); findTimer=setTimeout(function(){ collectFind(); },250); });
   function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
   function stepFontSize(dir){
     focusDoc(); restoreSel();
@@ -2416,6 +2479,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(pa) pa.querySelectorAll('button[data-align]').forEach(function(b){ b.onmousedown=function(e){e.preventDefault();}; b.onclick=function(){ setBlockAlign(b.dataset.align); }; });
     var clb=document.getElementById('btnColLine');
     if(clb){ clb.onmousedown=function(e){e.preventDefault();}; clb.onclick=function(){ state.colline=!(state.colline!==false); applyColLine(); persist(); }; }
+    var fdb=document.getElementById('btnFind'); if(fdb){ fdb.onmousedown=function(e){e.preventDefault();}; fdb.onclick=function(){ toggleFindBar(fdb); }; }
     [['btnFrameIn',1],['btnFrameOut',-1]].forEach(function(x){ var fb=document.getElementById(x[0]); if(fb){ fb.onmousedown=function(e){e.preventDefault();}; fb.onclick=function(){ frameIndent(x[1]); }; } });
     updateUndoBtns();
     var bl=document.getElementById('btnHlink');
