@@ -1133,6 +1133,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function updateUndoBtns(){ var u=document.getElementById('btnUndo'),r=document.getElementById('btnRedo'); if(u)u.disabled=!undoStack.length; if(r)r.disabled=!redoStack.length; }
 
   function persist(){
+    if(bootPending) return; /* 起動時の読み込み中は保存しない */
     syncNpcRich();
     scheduleUndo();
     if(!state.id) state.id=docId();
@@ -1225,7 +1226,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(e){}
     if(raw && applyDoc(raw)) return;
     try{ if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v&&applyDoc(v)){ } else if(v){ alert('この作品のデータを開けませんでした（破損の可能性）。'); } else { alert('この作品の本体データが端末にありません。「同期し直し」で取得してから開いてください。'); } }).catch(function(){ alert('データの読み込みに失敗しました。'); }); return; } }catch(e){}
-    if(!raw) alert('この作品の本体データが見つかりません。「同期し直し」をお試しください。');
+    if(!raw && !(idb&&idb.get)) alert('この作品の本体データが見つかりません。「同期し直し」をお試しください。');
   }
   function exportDoc(id, kind){
     var run=function(){ if(kind==='html') exportHTML(); else if(kind==='pdfbk') exportPDFText(); else if(kind==='pdf') exportPDF(); };
@@ -3369,6 +3370,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       else if(b.type==='cbox2'||b.type==='cbox3'){ var oo=opaqueColor(b.boxc||boxDefault(b.type)); boxStyle=' style="border-color:'+oo+'"'; lblStyle=' style="background:'+oo+';color:#fff;border-color:'+oo+'"'; }
       else if(b.type==='npc'){ if(b.boxc){ var on=opaqueColor(b.boxc); boxStyle=' style="border-color:'+on+'"'; lblStyle=' style="background:'+on+';color:#fff"'; } }
       else if(isCard(b.type)){ boxStyle=' style="--cc:'+opaqueColor(b.boxc||boxDefault(b.type))+(isBgCard(b.type)?cardVars(b):'')+'"'; }
+      /* 枠の色を指定した枠・カードでも、インデントを残す */
+      if(b.indent && boxStyle!==style){ boxStyle=boxStyle?boxStyle.replace(' style="',' style="margin-left:'+(b.indent*24)+'px;'):(' style="margin-left:'+(b.indent*24)+'px"'); }
       var boxCopy=(b.type==='kp')?'':('<button class="npc-copy box-copy" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>');
       /* NPCセリフ枠：見出しなし（セリフだけ）のコピーボタンも付ける */
       if(b.type==='npc') boxCopy+='<button class="npc-copy box-copy box-copy-nh" data-cp="'+encodeURIComponent((b.children||[]).map(blockCopyText).filter(Boolean).join('\n'))+'" title="内容だけコピー（見出しなし）">'+COPY_ICON+'<span class="bc-t">見出しなし</span></button>';
@@ -4682,7 +4685,10 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   }, 30000);
 
   /* ---- 初期化 ---- */
-  if(!load()){
+  /* 大きなシナリオは localStorage に入りきらず IndexedDB にだけ保存されていることがある。
+     起動時に localStorage で開けなくても、IndexedDB を探してから（何も無いときだけ）サンプルを作る */
+  var bootPending=false;
+  function makeSample(){
     var sk=newBlock('skill','＜目星＞');
     sk.children=[ newBlock('toggle','成功情報'), newBlock('toggle','失敗情報') ];
     sk.children[0].children=[ newBlock('p','成功時の描写をここに。') ];
@@ -4701,7 +4707,18 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       sk, kp, sec,
       newBlock('p','')
     ];
-    persist();
+  }
+  if(!load()){
+    bootPending=true;
+    state=normalizeState({name:'読み込み中…',pages:[{id:pageId(),name:'ページ1',blocks:[newBlock('p','')]}]}); state.id=null;
+    (function(){
+      var finish=function(o,id){ bootPending=false; if(o){ state=normalizeState(o); state.id=id; try{ localStorage.setItem(K_CUR(),id); }catch(_){} } else { makeSample(); persist(); } render(); applyOutline(); updateDocName(); try{ buildFontSelect(); applyTheme(); applyFs(); applyFont(); }catch(_){} lastSnap=snapshot(); };
+      var tryIds=function(ids){ if(!ids.length) return Promise.resolve(null); var id=ids[0]; return (idb&&idb.get?idb.get(K_DOC(id)):Promise.resolve(null)).then(function(v){ var o=null; try{ o=v?JSON.parse(v):null; }catch(_){} if(o&&(o.pages||o.blocks)) return {o:o,id:id}; return tryIds(ids.slice(1)); }).catch(function(){ return tryIds(ids.slice(1)); }); };
+      var idsFrom=function(idx){ var cur=null; try{ cur=localStorage.getItem(K_CUR()); }catch(_){} var ids=(idx||[]).filter(function(e){ return e&&!e.del; }).map(function(e){ return e.id; }); if(cur&&ids.indexOf(cur)>=0){ ids.splice(ids.indexOf(cur),1); ids.unshift(cur); } return ids; };
+      var idx=readIndex();
+      var p=idx.some(function(e){ return !e.del; }) ? Promise.resolve(idx) : (idb&&idb.get?idb.get('scn_index').then(function(j){ var a=null; try{ a=JSON.parse(j||'null'); }catch(_){} if(Array.isArray(a)&&a.length){ writeIndex(a); return a; } return []; }).catch(function(){ return []; }):Promise.resolve([]));
+      p.then(function(ix){ return tryIds(idsFrom(ix)); }).then(function(r){ finish(r&&r.o, r&&r.id); });
+    })();
   }
   buildPalettes(); buildFontSelect(); try{ ensureWebFonts(JSON.stringify(state.pages||[])+JSON.stringify(state.materials||[])); }catch(_){}
   document.addEventListener('keydown',function(e){
