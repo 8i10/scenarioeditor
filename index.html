@@ -2904,6 +2904,27 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         if(done){ var keep=info.list.map(function(be){ return be.dataset.id; }); keep.forEach(function(id){ var cc=ctx(id); if(cc&&!isCtn(cc.b.type)) reType(cc.b); }); var le=doc.querySelector('.block[data-id="'+keep[keep.length-1]+'"] .be'); if(le) setCaretEnd(le); persist(); return; }
       }
     }
+    /* 複数行を選択して枠（情報枠・カード・トグルなど）を選んだとき：1行目を枠の見出しに、残りの行を枠の中に入れる（見出しなしカードは全行を中へ） */
+    if(isCtn(type)&&type!=='columns'&&type!=='col'){
+      var inf=selectionBes();
+      if(inf){
+        var ids=[], seen={}; inf.list.forEach(function(be){ if(be.classList.contains('lbl')) return; var id=be.dataset.id; if(!seen[id]){ seen[id]=1; ids.push(id); } });
+        var cs=ids.map(function(id){ return ctx(id); }).filter(function(cc){ return cc&&!isCtn(cc.b.type); });
+        if(cs.length>=2 && cs.every(function(cc){ return cc.arr===cs[0].arr; })){
+          inf.list.forEach(function(be){ var cc=ctx(be.dataset.id); if(cc) cc.b.html=sanitize(be.innerHTML); });
+          cs.sort(function(x,y){ return x.i-y.i; });
+          var arr=cs[0].arr, at=cs[0].i, blocks=cs.map(function(cc){ return cc.b; });
+          for(var k=cs.length-1;k>=0;k--) arr.splice(cs[k].i,1);
+          var box=newBlock(type,'');
+          if(type==='ccard0'){ box.html=''; box.children=blocks; }
+          else { var first=blocks.shift(); box.html=first.html||defLabel(type); box.children=blocks.length?blocks:[newBlock('p','')]; }
+          arr.splice(at,0,box);
+          render();
+          var lb=box.children[box.children.length-1]; var lbe=lb&&doc.querySelector('.block[data-id="'+lb.id+'"] .be'); if(lbe) setCaretEnd(lbe);
+          persist(); return;
+        }
+      }
+    }
     var c=focusedId?ctx(focusedId):null;
     if(!c){ var bs=state.blocks; if(!bs.length){ bs.push(newBlock('p','')); render(); } c=ctx(state.blocks[state.blocks.length-1].id); }
     if(!c) return;
