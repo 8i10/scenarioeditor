@@ -226,6 +226,14 @@
   .find-bar input{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font:inherit}
   .find-bar .fscope button{flex:1;padding:0 4px;font-size:11.5px}
   .find-bar .fscope button.on{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700}
+  .sd-box{border:1px solid var(--line);border-radius:8px;margin-top:8px;max-height:62vh;overflow:auto;font-size:12.5px;line-height:1.6;background:var(--bg)}
+  .sd-l{display:flex;gap:8px;align-items:flex-start;padding:1px 8px}
+  .sd-n{flex:none;width:34px;text-align:right;color:var(--muted);font-family:monospace}
+  .sd-t{flex:1;white-space:pre-wrap;word-break:break-word}
+  .sd-del{background:rgba(207,34,46,.10)} .sd-del .sd-n{color:#cf222e;font-weight:700}
+  .sd-add{background:rgba(26,127,55,.12)} .sd-add .sd-n{color:#1a7f37;font-weight:700}
+  .sd-gap{color:var(--muted);text-align:center;padding:2px;font-size:11px;background:var(--card)}
+  .sd-find{flex:none;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:5px;font-size:10.5px;padding:0 6px;cursor:pointer}
   .find-bar select{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:12px}
   .find-bar textarea{flex:1;min-width:0;height:26px;min-height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:4px 7px;font:inherit;resize:none;line-height:1.4;box-sizing:border-box}
   .find-bar button{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:12px;white-space:nowrap}
@@ -4543,9 +4551,56 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       return chain.then(function(){ return worker.terminate(); }).then(function(){ return texts; });
     });
   }
+  /* 読み込み：同じ原文を前に読み込んだページがあれば、追加するか前回との変更点を比較するかを選ぶ */
   function addImportedPage(name,blocks){
     if(!blocks.length){ alert('読み込める文字がありませんでした。'); return; }
-    var np={ id:pageId(), name:name||'読み込み', blocks:blocks };
+    var text=blocksToText(blocks), pages=state.pages||[];
+    var match=pages.filter(function(p){ return p.src&&p.src.name===name; })[0]||pages.filter(function(p){ return p.name===name; })[0]||null;
+    if(!match&&!pages.some(function(p){ return p.src; })){ addImportedPage0(name,blocks,text); return; }
+    var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
+    var opts=pages.map(function(p){ return '<option value="'+p.id+'"'+(match&&match.id===p.id?' selected':'')+'>'+esc(p.name||'ページ')+(p.src?'（前回読み込んだ原文と比較）':'（今の本文と比較）')+'</option>'; }).join('');
+    ov.innerHTML='<div class="dlg" style="max-width:480px"><div class="dlg-h">「'+esc(name)+'」を読み込みました</div><div class="dlg-b"><div class="fhint">'+(match?'前に読み込んだ「'+esc(match.name)+'」と同じ原文のようです。':'')+'変更点を比較するか、新しいページとして追加するかを選んでください。</div>'
+      +'<div class="frow" style="margin-top:10px;gap:6px;flex-wrap:wrap"><select id="impCmpSel" style="flex:1;min-width:180px;height:30px">'+opts+'</select><button class="hb2" id="impCmp">変更点を比較</button></div></div>'
+      +'<div class="dlg-f"><button class="hb2" id="impCancel">キャンセル</button> <button class="hb2" id="impAdd">新しいページとして追加</button></div></div>';
+    document.body.appendChild(ov);
+    var close=function(){ ov.remove(); };
+    ov.addEventListener('click',function(e){ var id=e.target.id; if(e.target===ov||id==='impCancel') close(); else if(id==='impAdd'){ close(); addImportedPage0(name,blocks,text); } else if(id==='impCmp'){ var pid=ov.querySelector('#impCmpSel').value; close(); showSrcDiff(pid,name,blocks,text); } });
+  }
+  /* 行単位の差分（Myers法） */
+  function lineDiff(a,b){
+    var N=a.length, M=b.length, MAX=N+M, V={1:0}, trace=[];
+    for(var d=0; d<=MAX; d++){ trace.push(Object.assign({},V)); for(var k=-d;k<=d;k+=2){ var x=(k===-d||(k!==d&&V[k-1]<V[k+1]))?V[k+1]:V[k-1]+1; var y=x-k; while(x<N&&y<M&&a[x]===b[y]){ x++; y++; } V[k]=x; if(x>=N&&y>=M){ trace.push(Object.assign({},V)); return back(trace,d); } } }
+    function back(tr,D){ var ops=[], x=N, y=M; for(var d=D; d>0; d--){ var v=tr[d], k=x-y; var pk=(k===-d||(k!==d&&v[k-1]<v[k+1]))?k+1:k-1; var px=v[pk], py=px-pk; while(x>px&&y>py){ ops.push({t:'=',a:x-1,b:y-1}); x--; y--; } if(d>0){ if(x===px) ops.push({t:'+',b:y-1}); else ops.push({t:'-',a:x-1}); } x=px; y=py; } while(x>0&&y>0){ ops.push({t:'=',a:x-1,b:y-1}); x--; y--; } return ops.reverse(); }
+    return [];
+  }
+  function showSrcDiff(pid,name,blocks,text){
+    var pg=(state.pages||[]).filter(function(p){ return p.id===pid; })[0]; if(!pg) return;
+    var oldT=pg.src?pg.src.text:blocksToText(pg.blocks);
+    var norm=function(t){ return String(t||'').replace(/\r/g,'').split('\n').map(function(l){ return l.replace(/[\s\u3000]+$/,''); }); };
+    var A=norm(oldT), B=norm(text), ops=lineDiff(A,B);
+    var add=0, del=0; ops.forEach(function(o){ if(o.t==='+') add++; else if(o.t==='-') del++; });
+    /* 変更のある箇所だけを前後2行つきで表示 */
+    var show=ops.map(function(){ return false; }); ops.forEach(function(o,i){ if(o.t!=='='){ for(var j=Math.max(0,i-2); j<=Math.min(ops.length-1,i+2); j++) show[j]=true; } });
+    var rows='', gap=false;
+    ops.forEach(function(o,i){ if(!show[i]){ if(!gap){ rows+='<div class="sd-gap">…</div>'; gap=true; } return; } gap=false;
+      if(o.t==='=') rows+='<div class="sd-l"><span class="sd-n">'+(o.b+1)+'</span><span class="sd-t">'+esc(B[o.b])+'</span></div>';
+      else if(o.t==='-') rows+='<div class="sd-l sd-del"><span class="sd-n">−</span><span class="sd-t">'+esc(A[o.a])+'</span>'+(A[o.a].trim()?'<button class="sd-find" data-q="'+esc(A[o.a].trim().slice(0,40))+'" title="この行を本文で探す">本文で探す</button>':'')+'</div>';
+      else rows+='<div class="sd-l sd-add"><span class="sd-n">＋</span><span class="sd-t">'+esc(B[o.b])+'</span></div>'; });
+    var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
+    ov.innerHTML='<div class="dlg" style="max-width:860px;width:96vw"><div class="dlg-h">変更点の比較：「'+esc(pg.name)+'」'+(pg.src?'（前回読み込んだ原文'+(pg.src.at?' '+new Date(pg.src.at).toLocaleString('ja-JP'):'')+'）':'（今の本文）')+' → 「'+esc(name)+'」</div>'
+      +'<div class="dlg-b"><div class="fhint">追加 '+add+'行 ／ 削除 '+del+'行'+(!add&&!del?'　— 違いはありません。':'')+'　（<span style="color:#1a7f37">＋ 新しい原文で増えた行</span>　<span style="color:#cf222e">− 無くなった・変わった行</span>）</div><div class="sd-box">'+(rows||'<div class="sd-gap">違いはありません。</div>')+'</div></div>'
+      +'<div class="dlg-f"><button class="hb2" id="sdClose">閉じる</button> <button class="hb2" id="sdBase" title="次回は今回の原文と比べます（本文は変わりません）">今回の原文を次の比較の基準にする</button> <button class="hb2" id="sdAdd">新しいページとしても追加</button></div></div>';
+    document.body.appendChild(ov);
+    var close=function(){ ov.remove(); };
+    ov.addEventListener('click',function(e){ var id=e.target.id;
+      if(e.target===ov||id==='sdClose'){ close(); return; }
+      if(id==='sdBase'){ pg.src={name:name,text:text,at:Date.now()}; persist(); e.target.textContent='基準にしました'; e.target.disabled=true; return; }
+      if(id==='sdAdd'){ close(); addImportedPage0(name,blocks,text); return; }
+      var fb=e.target.closest('.sd-find'); if(fb){ var q=fb.getAttribute('data-q'); close(); if(pg.id!==state.curPage||editTarget){ if(editTarget) detachEntryEdit(); switchPage(pg.id); } if(!findBar){ var bf=document.getElementById('btnFind'); if(bf) toggleFindBar(bf); } if(findBar){ findScope='page'; [].forEach.call(findBar.querySelectorAll('.fsb'),function(x){ x.classList.toggle('on',x.getAttribute('data-fs')==='page'); }); var qi=findBar.querySelector('#findQ'); qi.value=q; findIdx=-1; collectFind(); if(findHits.length) gotoFind(1); else findBar.querySelector('.fcnt').textContent='本文に見つかりません'; } }
+    });
+  }
+  function addImportedPage0(name,blocks,text){
+    var np={ id:pageId(), name:name||'読み込み', blocks:blocks, src:{name:name,text:text,at:Date.now()} };
     beforePageChange(); detachEntryEdit();
     state.pages.splice(curPageIdx()+1,0,np); state.curPage=np.id; olOpen[np.id]=true;
     render(); renderOutline(); afterPageChange(); persist(); window.scrollTo(0,0);
