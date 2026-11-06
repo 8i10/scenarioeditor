@@ -224,6 +224,7 @@
   .find-bar{position:fixed;z-index:360;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;width:300px;font-size:12px;color:var(--text)}
   .find-bar .fr{display:flex;gap:6px;align-items:center;margin-bottom:6px}
   .find-bar input{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font:inherit}
+  .find-bar textarea{flex:1;min-width:0;height:26px;min-height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:4px 7px;font:inherit;resize:none;line-height:1.4;box-sizing:border-box}
   .find-bar button{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:12px;white-space:nowrap}
   .find-bar .fcnt{min-width:46px;text-align:right;color:var(--muted)}
   .find-bar .fx{border:0;background:none;font-size:14px;padding:0 4px}
@@ -493,6 +494,16 @@
   .conv-item{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-width:0}
   .conv-item label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;font-family:monospace;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .conv-item .conv-del{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
+  .conv-item .conv-grip{flex:none;color:var(--muted);cursor:grab;font-size:11px;letter-spacing:-3px;padding-right:2px;-webkit-user-select:none;user-select:none}
+  .conv-item .conv-br{flex:none;font-family:monospace;font-weight:700;font-size:13px}
+  .conv-item{gap:2px!important;padding:6px 6px!important}
+  .conv-item .conv-on{margin:0 4px 0 2px}
+  .conv-item .conv-k{flex:none;min-width:1.5em;max-width:60%;border:0;border-bottom:1px dashed transparent;background:transparent;color:var(--text);font-family:monospace;font-weight:700;font-size:13px;padding:0}
+  .conv-item .conv-k:hover,.conv-item .conv-k:focus{border-bottom-color:var(--muted);outline:none}
+  .conv-item .conv-mv[data-d="-1"]{margin-left:auto}
+  .conv-item .conv-mv{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:9px;padding:0 1px}
+  .conv-item .conv-mv:disabled{opacity:.25;cursor:default}
+  .conv-item.dragging{opacity:.4}
   /* プルダウン・アイテム情報の入力欄も、他のデータ項目と同じ書体・大きさに */
   #itemList input,#itemList textarea,#itemList select,#itemList label,#ddList textarea{font-family:inherit!important;font-size:13px!important}
   .conv-new{height:32px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 9px;font-family:inherit;font-size:13px;width:200px}
@@ -2548,25 +2559,28 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(rc.top<top||rc.bottom>window.innerHeight-40) window.scrollBy(0, rc.top-top-(window.innerHeight-top)/3);
   }
   function syncBeOf(node){ var p=node&&(node.nodeType===3?node.parentNode:node); var be=p&&p.closest&&p.closest('.be'); if(!be) return; var c=ctx(be.dataset.id); if(c) c.b.html=sanitize(be.innerHTML); }
+  /* 置換後の文字：改行（Shift+Enter・「改行」ボタン・\n）は行内の改行にする */
+  function repFrag(t){ var f=document.createDocumentFragment(); String(t).replace(/\r/g,'').split(/\n|\\n/).forEach(function(part,i){ if(i) f.appendChild(document.createElement('br')); if(part) f.appendChild(document.createTextNode(part)); }); return f; }
   function replaceFind(all){
     var rep=findBar.querySelector('#findR').value;
     if(!findHits.length){ collectFind(); if(!findHits.length) return; }
     if(all){
       var n=findHits.length;
-      for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; r.deleteContents(); if(rep) r.insertNode(document.createTextNode(rep)); syncBeOf(sc); }
+      for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; var be0=sc.parentNode&&sc.parentNode.closest&&sc.parentNode.closest('.be'); r.deleteContents(); if(rep) r.insertNode(repFrag(rep)); syncBeOf(be0||sc); }
       findIdx=-1; persist(); collectFind(); findBar.querySelector('.fcnt').textContent=n+'件置換';
       return;
     }
     if(findIdx<0){ gotoFind(1); return; }
-    var r1=findHits[findIdx], sc1=r1.startContainer; r1.deleteContents(); if(rep) r1.insertNode(document.createTextNode(rep)); syncBeOf(sc1); persist();
+    var r1=findHits[findIdx], sc1=r1.startContainer; var be1=sc1.parentNode&&sc1.parentNode.closest&&sc1.parentNode.closest('.be'); r1.deleteContents(); if(rep) r1.insertNode(repFrag(rep)); syncBeOf(be1||sc1); persist();
     var keep=findIdx; collectFind(); if(findHits.length){ findIdx=Math.min(keep,findHits.length-1)-1; gotoFind(1); }
   }
+  function growFindR(){ var fr=findBar&&findBar.querySelector('#findR'); if(!fr) return; fr.style.height='auto'; fr.style.height=Math.min(120,fr.scrollHeight+2)+'px'; }
   function closeFindBar(){ if(!findBar) return; findBar.remove(); findBar=null; findHits=[]; findIdx=-1; paintFind(); var b=document.getElementById('btnFind'); if(b) b.classList.remove('on'); }
   function toggleFindBar(btn){
     if(findBar){ closeFindBar(); return; }
     findBar=document.createElement('div'); findBar.className='find-bar';
     findBar.innerHTML='<div class="fr"><input id="findQ" placeholder="検索する文字"><span class="fcnt"></span><button class="fx" id="findX" title="閉じる">✕</button></div>'
-      +'<div class="fr"><input id="findR" placeholder="置換後の文字"></div>'
+      +'<div class="fr"><textarea id="findR" rows="1" placeholder="置換後の文字（Shift+Enterで改行）"></textarea><button id="findNL" title="カーソル位置に改行を入れる">↵ 改行</button></div>'
       +'<div class="fr" style="margin:0;justify-content:flex-end"><button id="findPrev" title="前へ（Shift+Enter）">▲ 前</button><button id="findNext" title="次へ（Enter）">▼ 次</button><button id="findRep">置換</button><button id="findAll">すべて置換</button></div>';
     document.body.appendChild(findBar);
     var rc=btn.getBoundingClientRect(); findBar.style.top=(rc.bottom+6)+'px'; findBar.style.left=Math.max(8,Math.min(rc.left-120, document.documentElement.clientWidth-310))+'px';
@@ -2574,8 +2588,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var q=findBar.querySelector('#findQ'); var sel=window.getSelection(); var st=sel&&!sel.isCollapsed?String(sel):''; if(st&&st.length<60&&st.indexOf('\n')<0) q.value=st;
     q.focus(); q.select(); findIdx=-1; collectFind();
     q.addEventListener('input',function(){ findIdx=-1; collectFind(); if(findHits.length) gotoFind(1); });
-    findBar.addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); closeFindBar(); return; } if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); if(e.target.id==='findR') replaceFind(false); else gotoFind(e.shiftKey?-1:1); } });
-    findBar.addEventListener('click',function(e){ var id=e.target.id; if(id==='findX') closeFindBar(); else if(id==='findNext') gotoFind(1); else if(id==='findPrev') gotoFind(-1); else if(id==='findRep') replaceFind(false); else if(id==='findAll') replaceFind(true); });
+    findBar.querySelector('#findR').addEventListener('input',growFindR);
+    findBar.addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); closeFindBar(); return; } if(e.key==='Enter'&&!e.isComposing){ if(e.target.id==='findR'&&e.shiftKey){ setTimeout(function(){ growFindR(); },0); return; } e.preventDefault(); if(e.target.id==='findR') replaceFind(false); else gotoFind(e.shiftKey?-1:1); } });
+    findBar.addEventListener('click',function(e){ var id=e.target.id; if(id==='findX') closeFindBar(); else if(id==='findNext') gotoFind(1); else if(id==='findPrev') gotoFind(-1); else if(id==='findNL'){ var fr=findBar.querySelector('#findR'); var a0=fr.selectionStart||0, b0=fr.selectionEnd||0; fr.value=fr.value.slice(0,a0)+'\n'+fr.value.slice(b0); fr.focus(); fr.selectionStart=fr.selectionEnd=a0+1; growFindR(); } else if(id==='findRep') replaceFind(false); else if(id==='findAll') replaceFind(true); });
   }
   doc.addEventListener('input',function(){ if(!findBar) return; clearTimeout(findTimer); findTimer=setTimeout(function(){ collectFind(); },250); });
   function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
@@ -3287,16 +3302,30 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     el.innerHTML=[0,1,2].map(function(i){ var d=(state.pulldowns||[])[i]||{items:[]}; return '<div class="dd-set" style="margin:10px 0 14px"><div style="font-weight:700;margin-bottom:4px">プルダウン'+(i+1)+'</div><textarea class="dd-items" data-i="'+i+'" rows="5" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text)" placeholder="選択肢を1行に1つ入力">'+esc((d.items||[]).join('\n'))+'</textarea></div>'; }).join('');
   }
   if(matOvl) matOvl.addEventListener('input',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('dd-items')) return; var i=+t.getAttribute('data-i'); state.pulldowns=state.pulldowns||[]; state.pulldowns[i]={items:t.value.split(/\r?\n/)}; refreshDdSelects(); persist(); });
+  /* 変換：名前の変更（重複・空欄は元に戻す）とドラッグでの並べ替え */
+  if(matOvl){
+    matOvl.addEventListener('change',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('conv-k')) return; var ks=state.convKeys||[]; var i=+t.getAttribute('data-i'); var c=ks[i]; if(!c) return; var k=String(t.value||'').replace(/[{}｛｝\s]/g,'').trim(); if(!k){ t.value=c.k; return; } if(k!==c.k && ks.some(function(x,j){ return j!==i&&x.k===k; })){ alert('「{'+k+'}」は既にあります。'); t.value=c.k; return; } c.k=k; t.value=k; persist(); });
+    matOvl.addEventListener('keydown',function(e){ if(e.target.classList&&e.target.classList.contains('conv-k')&&e.key==='Enter'){ e.preventDefault(); e.target.blur(); } });
+    var convDrag=null;
+    matOvl.addEventListener('dragstart',function(e){ var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; if(e.target.classList&&e.target.classList.contains('conv-k')){ e.preventDefault(); return; } convDrag=+it.getAttribute('data-i'); try{ e.dataTransfer.setData('text/plain','conv'); e.dataTransfer.effectAllowed='move'; }catch(_){} it.classList.add('dragging'); });
+    matOvl.addEventListener('dragover',function(e){ if(convDrag==null) return; var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; e.preventDefault(); });
+    matOvl.addEventListener('drop',function(e){ if(convDrag==null) return; var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; e.preventDefault(); var ks=state.convKeys||[]; var to=+it.getAttribute('data-i'); var mv=ks.splice(convDrag,1)[0]; ks.splice(to,0,mv); convDrag=null; renderConvList(); persist(); });
+    matOvl.addEventListener('dragend',function(){ convDrag=null; [].forEach.call(document.querySelectorAll('.conv-item.dragging'),function(x){ x.classList.remove('dragging'); }); });
+  }
+  function convKW(k){ var w=0; String(k||'').split('').forEach(function(ch){ w+=/[\x20-\x7e]/.test(ch)?1:2; }); return 'calc('+Math.max(2,w)+'ch + 4px)'; }
+  if(matOvl) matOvl.addEventListener('input',function(e){ var t=e.target; if(t.classList&&t.classList.contains('conv-k')) t.style.width=convKW(t.value); });
   function renderConvList(){
     var el=document.getElementById('convList'); if(!el) return;
     var ks=state.convKeys||(state.convKeys=[]);
-    el.innerHTML=ks.map(function(c,i){ return '<div class="conv-item"><label title="「変換」タブに表示"><input type="checkbox" class="conv-on" data-i="'+i+'"'+(c.on?' checked':'')+'>{'+esc(c.k)+'}</label><button class="conv-del" data-i="'+i+'" title="削除">✕</button></div>'; }).join('');
+    el.innerHTML=ks.map(function(c,i){ return '<div class="conv-item" draggable="true" data-i="'+i+'"><span class="conv-grip" title="ドラッグで並べ替え">⋮⋮</span><input type="checkbox" class="conv-on" data-i="'+i+'" title="「変換」タブに表示"'+(c.on?' checked':'')+'><span class="conv-br">{</span><input class="conv-k" data-i="'+i+'" value="'+esc(c.k)+'" title="クリックして名前を変更" maxlength="20" style="width:'+convKW(c.k)+'"><span class="conv-br">}</span>'
+      +'<button class="conv-mv" data-i="'+i+'" data-d="-1" title="前へ"'+(i===0?' disabled':'')+'>◀</button><button class="conv-mv" data-i="'+i+'" data-d="1" title="後ろへ"'+(i===ks.length-1?' disabled':'')+'>▶</button><button class="conv-del" data-i="'+i+'" title="削除">✕</button></div>'; }).join('');
   }
   if(matOvl){
     matOvl.addEventListener('change',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('conv-on')) return; var c=(state.convKeys||[])[+t.getAttribute('data-i')]; if(c){ c.on=t.checked; persist(); } });
     matOvl.addEventListener('click',function(e){
       var ks=state.convKeys||(state.convKeys=[]);
       var d=e.target.closest('.conv-del'); if(d){ ks.splice(+d.getAttribute('data-i'),1); renderConvList(); persist(); return; }
+      var mv=e.target.closest('.conv-mv'); if(mv){ var mi=+mv.getAttribute('data-i'), mj=mi+(+mv.getAttribute('data-d')); if(mj<0||mj>=ks.length) return; var tmp=ks[mi]; ks[mi]=ks[mj]; ks[mj]=tmp; renderConvList(); persist(); return; }
       if(e.target.id==='convAdd'){ var inp=document.getElementById('convNew'); var k=((inp&&inp.value)||'').replace(/[{}\s]/g,'').trim(); if(!k){ if(inp) inp.focus(); return; } if(ks.some(function(c){ return c.k===k; })){ alert('「{'+k+'}」は既にあります。'); return; } ks.push({k:k,on:true}); inp.value=''; renderConvList(); persist(); return; }
     });
     matOvl.addEventListener('keydown',function(e){ if(e.target.id==='convNew'&&e.key==='Enter'){ e.preventDefault(); var b=document.getElementById('convAdd'); if(b) b.click(); } });
