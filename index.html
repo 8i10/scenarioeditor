@@ -388,6 +388,7 @@
   .menu .ic{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;font-size:12px;color:var(--accent2);font-family:"Shippori Mincho B1",serif}
   .menu .nm{font-size:13px}
   .menu .dv{height:1px;background:var(--line);margin:5px 2px}
+  .rb-sep{height:1px;background:var(--line);margin:6px 4px}
 
   /* ── しおり（左サイドバー・開閉可） ── */
   .outline{position:fixed;top:var(--topbar-h,92px);left:0;width:236px;height:calc(100vh - var(--topbar-h,92px));overflow:hidden;background:var(--card);
@@ -1216,23 +1217,23 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
-    {t:'explore', ic:'■', nm:'■探索箇所＜＞',           ph:'場所', cat:'イベント・リスト'},
-    {t:'act',     ic:'■', nm:'■行動可能＜＞',           ph:'行動'},
+    {t:'explore', ic:'■', nm:'■探索箇所',               ph:'場所', cat:'イベント'},
     {t:'exb',     ic:'［', nm:'［探索箇所］',             ph:'○○／○○'},
+    {t:'act',     ic:'■', nm:'■行動可能',               ph:'行動'},
     {t:'actb',    ic:'［', nm:'［行動可能］',             ph:'○○／○○'},
-    {t:'view',    ic:'■', nm:'■閲覧可能＜＞',           ph:'閲覧'},
+    {t:'view',    ic:'■', nm:'■閲覧可能',               ph:'閲覧'},
     {t:'viewb',   ic:'［', nm:'［閲覧可能］',             ph:'○○／○○'},
-    {t:'choice',  ic:'［', nm:'［選択肢］',               ph:'選択肢の文（見出しリンクで飛び先を指定）'},
-    {t:'trig',    ic:'［', nm:'［発言トリガー］',         ph:'合言葉（／で区切って複数。見出しリンクで飛び先を指定）'},
-    {t:'get',     ic:'［', nm:'［入手］',                 ph:'入手するアイテム・情報の名前（／で複数）'},
-    {t:'use',     ic:'［', nm:'［アイテム使用］',         ph:'ここで使うアイテム名（見出しリンクで飛び先を指定）'},
+    {t:'choice',  ic:'［', nm:'［選択肢］',               ph:'選択肢の文（見出しリンクで飛び先を指定）', sep:1},
+    {t:'get',     ic:'！', nm:'！入手',                   ph:'入手するアイテム・情報の名前（／で複数）'},
+    {t:'trig',    ic:'！', nm:'！発言トリガー',           ph:'合言葉（／で区切って複数。見出しリンクで飛び先を指定）'},
+    {t:'use',     ic:'！', nm:'！使用アイテム',           ph:'ここで使うアイテム名（見出しリンクで飛び先を指定）'},
     {t:'back',    ic:'［', nm:'［戻る］',                 ph:'ボタンの文（見出しリンクで戻り先。なしなら直前の選択肢へ）'},
-    {t:'ev',      ic:'！', nm:'！イベント（下線）',      ph:'イベント'},
+    {t:'ev',      ic:'！', nm:'！下線',                   ph:'イベント', cat:'リスト'},
+    {t:'nv',      ic:'∇', nm:'▽下線',                   ph:'項目'},
     {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
-    {t:'evr',     ic:'！', nm:'！イベント（行下線）',    ph:'イベント'},
-    {t:'nv',      ic:'∇', nm:'∇（下線）',              ph:'項目'},
-    {t:'nvr',     ic:'∇', nm:'∇（行下線）',            ph:'項目'},
-    {t:'bullet',  ic:'•',  nm:'箇条書き',              ph:'リスト'},
+    {t:'evr',     ic:'！', nm:'！行下線',                 ph:'イベント'},
+    {t:'nvr',     ic:'∇', nm:'▽行下線',                 ph:'項目'},
+    {t:'bullet',  ic:'•',  nm:'・箇条書き',             ph:'リスト'},
     {t:'todo',    ic:'☑', nm:'チェックリスト',        ph:'To-do'},
     {t:'toggle',  ic:'▸',  nm:'トグル',               ph:'トグル', cat:'トグル', ctn:1},
     {t:'th1',     ic:'▸1', nm:'トグル見出し1',         ph:'トグル見出し1', ctn:1},
@@ -2085,7 +2086,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   var menuMode='slash', menuTargetId=null;
   function buildMenuItems(filter){
     var f=(filter||'').toLowerCase(), h='';
-    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント・リスト':1,'その他':1};
+    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント':1,'リスト':1,'その他':1};
     var lastCat=null, groups=[], byCat={};
     TYPES.forEach(function(x){
       if(x.cat) lastCat=x.cat;
@@ -2094,7 +2095,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       if(!byCat[cat]){ byCat[cat]={cat:cat,items:[]}; groups.push(byCat[cat]); }
       byCat[cat].items.push(x);
     });
-    var item=function(x){ return '<button data-t="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
+    var item=function(x){ return (x.sep&&!f?'<div class="dv"></div>':'')+'<button data-t="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
     var imgBtn='<button data-img="1"><span class="ic">🖼</span><span class="nm">画像を挿入</span></button>';
     var col2Btn='<button data-col2="1"><span class="ic"><svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="6" height="12" rx="1"/><rect x="11" y="4" width="6" height="12" rx="1"/></svg></span><span class="nm">2段組</span></button>';
     var canExtra=(menuMode==='slash'||menuMode==='block');
@@ -2842,10 +2843,10 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   var rbar=document.getElementById('rightBar'); var rbTemp=false;
   function rightBarInnerHTML(){
     var h='<div class="rb-ttl">挿入メニュー<button class="rb-x" id="rbX" title="閉じる">×</button></div>';
-    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント・リスト':1,'その他':1};
+    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント':1,'リスト':1,'その他':1};
     var lastCat=null, groups=[], byCat={};
     TYPES.forEach(function(x){ if(x.cat) lastCat=x.cat; var cat=lastCat||'基本'; if(x.hidden||x.t==='col'||x.t==='columns') return; if(!byCat[cat]){ byCat[cat]={cat:cat,items:[]}; groups.push(byCat[cat]); } byCat[cat].items.push(x); });
-    var item=function(x){ return '<button class="rb-item" data-rt="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
+    var item=function(x){ return (x.sep?'<div class="rb-sep"></div>':'')+'<button class="rb-item" data-rt="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
     groups.forEach(function(g){
       if(ACC[g.cat]){ h+='<div class="macc"><div class="macc-h" data-acc="1"><span class="tw">▸</span>'+g.cat+'</div><div class="macc-body">'+g.items.map(item).join('')+'</div></div>'; }
       else { if(g.cat!=='基本') h+='<div class="rb-cat">'+g.cat+'</div>'; h+=g.items.map(item).join(''); }
