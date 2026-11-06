@@ -224,6 +224,7 @@
   .find-bar{position:fixed;z-index:360;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;width:300px;font-size:12px;color:var(--text)}
   .find-bar .fr{display:flex;gap:6px;align-items:center;margin-bottom:6px}
   .find-bar input{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font:inherit}
+  .find-bar textarea{flex:1;min-width:0;height:26px;min-height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:4px 7px;font:inherit;resize:none;line-height:1.4;box-sizing:border-box}
   .find-bar button{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:12px;white-space:nowrap}
   .find-bar .fcnt{min-width:46px;text-align:right;color:var(--muted)}
   .find-bar .fx{border:0;background:none;font-size:14px;padding:0 4px}
@@ -2558,25 +2559,28 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(rc.top<top||rc.bottom>window.innerHeight-40) window.scrollBy(0, rc.top-top-(window.innerHeight-top)/3);
   }
   function syncBeOf(node){ var p=node&&(node.nodeType===3?node.parentNode:node); var be=p&&p.closest&&p.closest('.be'); if(!be) return; var c=ctx(be.dataset.id); if(c) c.b.html=sanitize(be.innerHTML); }
+  /* 置換後の文字：改行（Shift+Enter・「改行」ボタン・\n）は行内の改行にする */
+  function repFrag(t){ var f=document.createDocumentFragment(); String(t).replace(/\r/g,'').split(/\n|\\n/).forEach(function(part,i){ if(i) f.appendChild(document.createElement('br')); if(part) f.appendChild(document.createTextNode(part)); }); return f; }
   function replaceFind(all){
     var rep=findBar.querySelector('#findR').value;
     if(!findHits.length){ collectFind(); if(!findHits.length) return; }
     if(all){
       var n=findHits.length;
-      for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; r.deleteContents(); if(rep) r.insertNode(document.createTextNode(rep)); syncBeOf(sc); }
+      for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; var be0=sc.parentNode&&sc.parentNode.closest&&sc.parentNode.closest('.be'); r.deleteContents(); if(rep) r.insertNode(repFrag(rep)); syncBeOf(be0||sc); }
       findIdx=-1; persist(); collectFind(); findBar.querySelector('.fcnt').textContent=n+'件置換';
       return;
     }
     if(findIdx<0){ gotoFind(1); return; }
-    var r1=findHits[findIdx], sc1=r1.startContainer; r1.deleteContents(); if(rep) r1.insertNode(document.createTextNode(rep)); syncBeOf(sc1); persist();
+    var r1=findHits[findIdx], sc1=r1.startContainer; var be1=sc1.parentNode&&sc1.parentNode.closest&&sc1.parentNode.closest('.be'); r1.deleteContents(); if(rep) r1.insertNode(repFrag(rep)); syncBeOf(be1||sc1); persist();
     var keep=findIdx; collectFind(); if(findHits.length){ findIdx=Math.min(keep,findHits.length-1)-1; gotoFind(1); }
   }
+  function growFindR(){ var fr=findBar&&findBar.querySelector('#findR'); if(!fr) return; fr.style.height='auto'; fr.style.height=Math.min(120,fr.scrollHeight+2)+'px'; }
   function closeFindBar(){ if(!findBar) return; findBar.remove(); findBar=null; findHits=[]; findIdx=-1; paintFind(); var b=document.getElementById('btnFind'); if(b) b.classList.remove('on'); }
   function toggleFindBar(btn){
     if(findBar){ closeFindBar(); return; }
     findBar=document.createElement('div'); findBar.className='find-bar';
     findBar.innerHTML='<div class="fr"><input id="findQ" placeholder="検索する文字"><span class="fcnt"></span><button class="fx" id="findX" title="閉じる">✕</button></div>'
-      +'<div class="fr"><input id="findR" placeholder="置換後の文字"></div>'
+      +'<div class="fr"><textarea id="findR" rows="1" placeholder="置換後の文字（Shift+Enterで改行）"></textarea><button id="findNL" title="カーソル位置に改行を入れる">↵ 改行</button></div>'
       +'<div class="fr" style="margin:0;justify-content:flex-end"><button id="findPrev" title="前へ（Shift+Enter）">▲ 前</button><button id="findNext" title="次へ（Enter）">▼ 次</button><button id="findRep">置換</button><button id="findAll">すべて置換</button></div>';
     document.body.appendChild(findBar);
     var rc=btn.getBoundingClientRect(); findBar.style.top=(rc.bottom+6)+'px'; findBar.style.left=Math.max(8,Math.min(rc.left-120, document.documentElement.clientWidth-310))+'px';
@@ -2584,8 +2588,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var q=findBar.querySelector('#findQ'); var sel=window.getSelection(); var st=sel&&!sel.isCollapsed?String(sel):''; if(st&&st.length<60&&st.indexOf('\n')<0) q.value=st;
     q.focus(); q.select(); findIdx=-1; collectFind();
     q.addEventListener('input',function(){ findIdx=-1; collectFind(); if(findHits.length) gotoFind(1); });
-    findBar.addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); closeFindBar(); return; } if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); if(e.target.id==='findR') replaceFind(false); else gotoFind(e.shiftKey?-1:1); } });
-    findBar.addEventListener('click',function(e){ var id=e.target.id; if(id==='findX') closeFindBar(); else if(id==='findNext') gotoFind(1); else if(id==='findPrev') gotoFind(-1); else if(id==='findRep') replaceFind(false); else if(id==='findAll') replaceFind(true); });
+    findBar.querySelector('#findR').addEventListener('input',growFindR);
+    findBar.addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); closeFindBar(); return; } if(e.key==='Enter'&&!e.isComposing){ if(e.target.id==='findR'&&e.shiftKey){ setTimeout(function(){ growFindR(); },0); return; } e.preventDefault(); if(e.target.id==='findR') replaceFind(false); else gotoFind(e.shiftKey?-1:1); } });
+    findBar.addEventListener('click',function(e){ var id=e.target.id; if(id==='findX') closeFindBar(); else if(id==='findNext') gotoFind(1); else if(id==='findPrev') gotoFind(-1); else if(id==='findNL'){ var fr=findBar.querySelector('#findR'); var a0=fr.selectionStart||0, b0=fr.selectionEnd||0; fr.value=fr.value.slice(0,a0)+'\n'+fr.value.slice(b0); fr.focus(); fr.selectionStart=fr.selectionEnd=a0+1; growFindR(); } else if(id==='findRep') replaceFind(false); else if(id==='findAll') replaceFind(true); });
   }
   doc.addEventListener('input',function(){ if(!findBar) return; clearTimeout(findTimer); findTimer=setTimeout(function(){ collectFind(); },250); });
   function indentBlocks(dir){ var ids=selectedBlockIds(); if(!ids.length) return; ids.forEach(function(id){ var ci=ctx(id); if(!ci) return; ci.b.indent=Math.max(0,Math.min(8,(ci.b.indent||0)+dir)); var w=doc.querySelector('.block[data-id="'+id+'"]'); if(w) w.style.marginLeft=(ci.b.indent?ci.b.indent*24:0)+'px'; }); persist(); }
