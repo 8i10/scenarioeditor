@@ -224,6 +224,7 @@
   .find-bar{position:fixed;z-index:360;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;width:300px;font-size:12px;color:var(--text)}
   .find-bar .fr{display:flex;gap:6px;align-items:center;margin-bottom:6px}
   .find-bar input{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 7px;font:inherit}
+  .find-bar select{flex:1;min-width:0;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:12px}
   .find-bar textarea{flex:1;min-width:0;height:26px;min-height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:4px 7px;font:inherit;resize:none;line-height:1.4;box-sizing:border-box}
   .find-bar button{height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;cursor:pointer;font-size:12px;white-space:nowrap}
   .find-bar .fcnt{min-width:46px;text-align:right;color:var(--muted)}
@@ -1230,7 +1231,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'skcard',  ic:'技', nm:'技能（カード）',          ph:'＜技能＞', ctn:1, dl:'＜＞'},
     {t:'skcard2', ic:'※', nm:'技能（※あり・カード）',   ph:'＜技能＞', ctn:1, dl:'＜＞　※'},
     {t:'npc',     ic:'💬', nm:'NPC台詞',                ph:'セリフ', ctn:1, dl:'NPC'},
-    {t:'explore', ic:'■', nm:'■探索箇所',               ph:'場所', cat:'イベント'},
+    {t:'explore', ic:'■', nm:'■探索箇所',               ph:'場所', cat:'イベント・リスト'},
     {t:'exb',     ic:'［', nm:'［探索箇所］',             ph:'○○／○○'},
     {t:'act',     ic:'■', nm:'■行動可能',               ph:'行動'},
     {t:'actb',    ic:'［', nm:'［行動可能］',             ph:'○○／○○'},
@@ -1241,7 +1242,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'trig',    ic:'！', nm:'！発言トリガー',           ph:'合言葉（／で区切って複数。見出しリンクで飛び先を指定）'},
     {t:'use',     ic:'！', nm:'！使用アイテム',           ph:'ここで使うアイテム名（見出しリンクで飛び先を指定）'},
     {t:'back',    ic:'［', nm:'［戻る］',                 ph:'ボタンの文（見出しリンクで戻り先。なしなら直前の選択肢へ）'},
-    {t:'ev',      ic:'！', nm:'！下線',                   ph:'イベント', cat:'リスト'},
+    {t:'ev',      ic:'！', nm:'！下線',                   ph:'イベント', sep:1},
     {t:'nv',      ic:'∇', nm:'▽下線',                   ph:'項目'},
     {t:'q',       ic:'Q', nm:'Q.質問',                  ph:'質問'},
     {t:'evr',     ic:'！', nm:'！行下線',                 ph:'イベント'},
@@ -2099,7 +2100,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   var menuMode='slash', menuTargetId=null;
   function buildMenuItems(filter){
     var f=(filter||'').toLowerCase(), h='';
-    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント':1,'リスト':1,'その他':1};
+    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント・リスト':1,'その他':1};
     var lastCat=null, groups=[], byCat={};
     TYPES.forEach(function(x){
       if(x.cat) lastCat=x.cat;
@@ -2561,17 +2562,23 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function syncBeOf(node){ var p=node&&(node.nodeType===3?node.parentNode:node); var be=p&&p.closest&&p.closest('.be'); if(!be) return; var c=ctx(be.dataset.id); if(c) c.b.html=sanitize(be.innerHTML); }
   /* 置換後の文字：改行（Shift+Enter・「改行」ボタン・\n）は行内の改行にする */
   function repFrag(t){ var f=document.createDocumentFragment(); String(t).replace(/\r/g,'').split(/\n|\\n/).forEach(function(part,i){ if(i) f.appendChild(document.createElement('br')); if(part) f.appendChild(document.createTextNode(part)); }); return f; }
+  /* 置換した行の種類（右メニューの項目）を変える */
+  function findTypeOptions(){ var groups=[], cur={cat:'',items:[]}; groups.push(cur); TYPES.forEach(function(x){ if(x.cat){ cur={cat:x.cat,items:[]}; groups.push(cur); } if(x.hidden||isCtn(x.t)) return; cur.items.push(x); });
+    var opt=function(x){ return '<option value="'+x.t+'">'+esc(x.nm)+'</option>'; };
+    return '<option value="">行の種類：変更しない</option>'+groups.filter(function(g){ return g.items.length; }).map(function(g){ return g.cat?('<optgroup label="'+esc(g.cat)+'">'+g.items.map(opt).join('')+'</optgroup>'):g.items.map(opt).join(''); }).join(''); }
+  function findRetype(ids){ var t=findBar&&findBar.querySelector('#findType').value; if(!t) return; var any=false; ids.forEach(function(id){ var c=ctx(id); if(!c||isCtn(c.b.type)||c.b.type===t) return; c.b.type=t; any=true; }); if(any) render(); }
+  function hitBlockId(r){ var n=r.startContainer; var p=n&&(n.nodeType===3?n.parentNode:n); var be=p&&p.closest&&p.closest('.be'); return be?be.dataset.id:null; }
   function replaceFind(all){
     var rep=findBar.querySelector('#findR').value;
     if(!findHits.length){ collectFind(); if(!findHits.length) return; }
     if(all){
-      var n=findHits.length;
+      var n=findHits.length, rids=[]; findHits.forEach(function(h){ var id=hitBlockId(h); if(id&&rids.indexOf(id)<0) rids.push(id); });
       for(var i=findHits.length-1;i>=0;i--){ var r=findHits[i], sc=r.startContainer; var be0=sc.parentNode&&sc.parentNode.closest&&sc.parentNode.closest('.be'); r.deleteContents(); if(rep) r.insertNode(repFrag(rep)); syncBeOf(be0||sc); }
-      findIdx=-1; persist(); collectFind(); findBar.querySelector('.fcnt').textContent=n+'件置換';
+      findIdx=-1; findRetype(rids); persist(); collectFind(); findBar.querySelector('.fcnt').textContent=n+'件置換';
       return;
     }
     if(findIdx<0){ gotoFind(1); return; }
-    var r1=findHits[findIdx], sc1=r1.startContainer; var be1=sc1.parentNode&&sc1.parentNode.closest&&sc1.parentNode.closest('.be'); r1.deleteContents(); if(rep) r1.insertNode(repFrag(rep)); syncBeOf(be1||sc1); persist();
+    var r1=findHits[findIdx], rid1=hitBlockId(r1), sc1=r1.startContainer; var be1=sc1.parentNode&&sc1.parentNode.closest&&sc1.parentNode.closest('.be'); r1.deleteContents(); if(rep) r1.insertNode(repFrag(rep)); syncBeOf(be1||sc1); if(rid1) findRetype([rid1]); persist();
     var keep=findIdx; collectFind(); if(findHits.length){ findIdx=Math.min(keep,findHits.length-1)-1; gotoFind(1); }
   }
   function growFindR(){ var fr=findBar&&findBar.querySelector('#findR'); if(!fr) return; fr.style.height='auto'; fr.style.height=Math.min(120,fr.scrollHeight+2)+'px'; }
@@ -2581,6 +2588,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     findBar=document.createElement('div'); findBar.className='find-bar';
     findBar.innerHTML='<div class="fr"><input id="findQ" placeholder="検索する文字"><span class="fcnt"></span><button class="fx" id="findX" title="閉じる">✕</button></div>'
       +'<div class="fr"><textarea id="findR" rows="1" placeholder="置換後の文字（Shift+Enterで改行）"></textarea><button id="findNL" title="カーソル位置に改行を入れる">↵ 改行</button></div>'
+      +'<div class="fr"><select id="findType" title="置換した行を、右メニューの種類に変える">'+findTypeOptions()+'</select></div>'
       +'<div class="fr" style="margin:0;justify-content:flex-end"><button id="findPrev" title="前へ（Shift+Enter）">▲ 前</button><button id="findNext" title="次へ（Enter）">▼ 次</button><button id="findRep">置換</button><button id="findAll">すべて置換</button></div>';
     document.body.appendChild(findBar);
     var rc=btn.getBoundingClientRect(); findBar.style.top=(rc.bottom+6)+'px'; findBar.style.left=Math.max(8,Math.min(rc.left-120, document.documentElement.clientWidth-310))+'px';
@@ -2860,7 +2868,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   var rbar=document.getElementById('rightBar'); var rbTemp=false;
   function rightBarInnerHTML(){
     var h='<div class="rb-ttl">挿入メニュー<button class="rb-x" id="rbX" title="閉じる">×</button></div>';
-    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント':1,'リスト':1,'その他':1};
+    var ACC={'見出し':1,'トグル':1,'情報枠':1,'イベント・リスト':1,'その他':1};
     var lastCat=null, groups=[], byCat={};
     TYPES.forEach(function(x){ if(x.cat) lastCat=x.cat; var cat=lastCat||'基本'; if(x.hidden||x.t==='col'||x.t==='columns') return; if(!byCat[cat]){ byCat[cat]={cat:cat,items:[]}; groups.push(byCat[cat]); } byCat[cat].items.push(x); });
     var item=function(x){ return (x.sep?'<div class="rb-sep"></div>':'')+'<button class="rb-item" data-rt="'+x.t+'"><span class="ic">'+x.ic+'</span><span class="nm">'+x.nm+'</span></button>'; };
