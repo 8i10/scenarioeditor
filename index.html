@@ -493,6 +493,8 @@
   .conv-item{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-width:0}
   .conv-item label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;font-family:monospace;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .conv-item .conv-del{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
+  /* プルダウン・アイテム情報の入力欄も、他のデータ項目と同じ書体・大きさに */
+  #itemList input,#itemList textarea,#itemList select,#itemList label,#ddList textarea{font-family:inherit!important;font-size:13px!important}
   .conv-new{height:32px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 9px;font-family:inherit;font-size:13px;width:200px}
   .send-cfg{display:flex;flex-wrap:wrap;gap:10px 16px;margin:10px 0 0}
   .send-cfg label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
