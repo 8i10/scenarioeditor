@@ -493,6 +493,16 @@
   .conv-item{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-width:0}
   .conv-item label{display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;font-family:monospace;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .conv-item .conv-del{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
+  .conv-item .conv-grip{flex:none;color:var(--muted);cursor:grab;font-size:11px;letter-spacing:-3px;padding-right:2px;-webkit-user-select:none;user-select:none}
+  .conv-item .conv-br{flex:none;font-family:monospace;font-weight:700;font-size:13px}
+  .conv-item{gap:2px!important;padding:6px 6px!important}
+  .conv-item .conv-on{margin:0 4px 0 2px}
+  .conv-item .conv-k{flex:none;min-width:1.5em;max-width:60%;border:0;border-bottom:1px dashed transparent;background:transparent;color:var(--text);font-family:monospace;font-weight:700;font-size:13px;padding:0}
+  .conv-item .conv-k:hover,.conv-item .conv-k:focus{border-bottom-color:var(--muted);outline:none}
+  .conv-item .conv-mv[data-d="-1"]{margin-left:auto}
+  .conv-item .conv-mv{flex:none;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:9px;padding:0 1px}
+  .conv-item .conv-mv:disabled{opacity:.25;cursor:default}
+  .conv-item.dragging{opacity:.4}
   /* プルダウン・アイテム情報の入力欄も、他のデータ項目と同じ書体・大きさに */
   #itemList input,#itemList textarea,#itemList select,#itemList label,#ddList textarea{font-family:inherit!important;font-size:13px!important}
   .conv-new{height:32px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 9px;font-family:inherit;font-size:13px;width:200px}
@@ -3287,16 +3297,30 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     el.innerHTML=[0,1,2].map(function(i){ var d=(state.pulldowns||[])[i]||{items:[]}; return '<div class="dd-set" style="margin:10px 0 14px"><div style="font-weight:700;margin-bottom:4px">プルダウン'+(i+1)+'</div><textarea class="dd-items" data-i="'+i+'" rows="5" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text)" placeholder="選択肢を1行に1つ入力">'+esc((d.items||[]).join('\n'))+'</textarea></div>'; }).join('');
   }
   if(matOvl) matOvl.addEventListener('input',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('dd-items')) return; var i=+t.getAttribute('data-i'); state.pulldowns=state.pulldowns||[]; state.pulldowns[i]={items:t.value.split(/\r?\n/)}; refreshDdSelects(); persist(); });
+  /* 変換：名前の変更（重複・空欄は元に戻す）とドラッグでの並べ替え */
+  if(matOvl){
+    matOvl.addEventListener('change',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('conv-k')) return; var ks=state.convKeys||[]; var i=+t.getAttribute('data-i'); var c=ks[i]; if(!c) return; var k=String(t.value||'').replace(/[{}｛｝\s]/g,'').trim(); if(!k){ t.value=c.k; return; } if(k!==c.k && ks.some(function(x,j){ return j!==i&&x.k===k; })){ alert('「{'+k+'}」は既にあります。'); t.value=c.k; return; } c.k=k; t.value=k; persist(); });
+    matOvl.addEventListener('keydown',function(e){ if(e.target.classList&&e.target.classList.contains('conv-k')&&e.key==='Enter'){ e.preventDefault(); e.target.blur(); } });
+    var convDrag=null;
+    matOvl.addEventListener('dragstart',function(e){ var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; if(e.target.classList&&e.target.classList.contains('conv-k')){ e.preventDefault(); return; } convDrag=+it.getAttribute('data-i'); try{ e.dataTransfer.setData('text/plain','conv'); e.dataTransfer.effectAllowed='move'; }catch(_){} it.classList.add('dragging'); });
+    matOvl.addEventListener('dragover',function(e){ if(convDrag==null) return; var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; e.preventDefault(); });
+    matOvl.addEventListener('drop',function(e){ if(convDrag==null) return; var it=e.target.closest&&e.target.closest('.conv-item'); if(!it) return; e.preventDefault(); var ks=state.convKeys||[]; var to=+it.getAttribute('data-i'); var mv=ks.splice(convDrag,1)[0]; ks.splice(to,0,mv); convDrag=null; renderConvList(); persist(); });
+    matOvl.addEventListener('dragend',function(){ convDrag=null; [].forEach.call(document.querySelectorAll('.conv-item.dragging'),function(x){ x.classList.remove('dragging'); }); });
+  }
+  function convKW(k){ var w=0; String(k||'').split('').forEach(function(ch){ w+=/[\x20-\x7e]/.test(ch)?1:2; }); return 'calc('+Math.max(2,w)+'ch + 4px)'; }
+  if(matOvl) matOvl.addEventListener('input',function(e){ var t=e.target; if(t.classList&&t.classList.contains('conv-k')) t.style.width=convKW(t.value); });
   function renderConvList(){
     var el=document.getElementById('convList'); if(!el) return;
     var ks=state.convKeys||(state.convKeys=[]);
-    el.innerHTML=ks.map(function(c,i){ return '<div class="conv-item"><label title="「変換」タブに表示"><input type="checkbox" class="conv-on" data-i="'+i+'"'+(c.on?' checked':'')+'>{'+esc(c.k)+'}</label><button class="conv-del" data-i="'+i+'" title="削除">✕</button></div>'; }).join('');
+    el.innerHTML=ks.map(function(c,i){ return '<div class="conv-item" draggable="true" data-i="'+i+'"><span class="conv-grip" title="ドラッグで並べ替え">⋮⋮</span><input type="checkbox" class="conv-on" data-i="'+i+'" title="「変換」タブに表示"'+(c.on?' checked':'')+'><span class="conv-br">{</span><input class="conv-k" data-i="'+i+'" value="'+esc(c.k)+'" title="クリックして名前を変更" maxlength="20" style="width:'+convKW(c.k)+'"><span class="conv-br">}</span>'
+      +'<button class="conv-mv" data-i="'+i+'" data-d="-1" title="前へ"'+(i===0?' disabled':'')+'>◀</button><button class="conv-mv" data-i="'+i+'" data-d="1" title="後ろへ"'+(i===ks.length-1?' disabled':'')+'>▶</button><button class="conv-del" data-i="'+i+'" title="削除">✕</button></div>'; }).join('');
   }
   if(matOvl){
     matOvl.addEventListener('change',function(e){ var t=e.target; if(!t.classList||!t.classList.contains('conv-on')) return; var c=(state.convKeys||[])[+t.getAttribute('data-i')]; if(c){ c.on=t.checked; persist(); } });
     matOvl.addEventListener('click',function(e){
       var ks=state.convKeys||(state.convKeys=[]);
       var d=e.target.closest('.conv-del'); if(d){ ks.splice(+d.getAttribute('data-i'),1); renderConvList(); persist(); return; }
+      var mv=e.target.closest('.conv-mv'); if(mv){ var mi=+mv.getAttribute('data-i'), mj=mi+(+mv.getAttribute('data-d')); if(mj<0||mj>=ks.length) return; var tmp=ks[mi]; ks[mi]=ks[mj]; ks[mj]=tmp; renderConvList(); persist(); return; }
       if(e.target.id==='convAdd'){ var inp=document.getElementById('convNew'); var k=((inp&&inp.value)||'').replace(/[{}\s]/g,'').trim(); if(!k){ if(inp) inp.focus(); return; } if(ks.some(function(c){ return c.k===k; })){ alert('「{'+k+'}」は既にあります。'); return; } ks.push({k:k,on:true}); inp.value=''; renderConvList(); persist(); return; }
     });
     matOvl.addEventListener('keydown',function(e){ if(e.target.id==='convNew'&&e.key==='Enter'){ e.preventDefault(); var b=document.getElementById('convAdd'); if(b) b.click(); } });
