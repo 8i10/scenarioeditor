@@ -741,6 +741,7 @@
     <div class="hmenu" id="hmenu">
       <div class="hm-sec">出力</div>
       <button class="hm-item" id="btnHtml">HTMLで保存</button>
+      <button class="hm-item" id="btnNovel">ノベルゲーム形式で保存（KPレス）</button>
       <button class="hm-item" id="btnPdfBk">PDFで保存（しおり付き・文字選択可）</button>
       <button class="hm-item" id="btnPdf">PDFで保存（印刷・軽量／文字のみ）</button>
       <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
@@ -915,6 +916,203 @@
 <div id="selReg" style="display:none"><button class="selreg-btn" id="selRegMat" title="選択範囲をデータに登録">📚 データに登録</button><button class="selreg-btn" id="selRegEvt" title="選択範囲をイベント・質問に登録">💡 イベント・質問に登録</button></div>
 <div class="menu" id="menu"></div>
 
+<script type="text/plain" id="novelCss">html,body{margin:0;height:100%;background:#0d0d12;color:#eee;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;overflow:hidden;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button{font:inherit;cursor:pointer}
+#nvStage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding-bottom:230px;background:radial-gradient(ellipse at 50% 35%,#2b2834 0%,#14131a 55%,#0b0b0f 100%)}
+#nvImg{max-width:min(900px,92vw);max-height:calc(100vh - 300px);object-fit:contain;border-radius:6px;box-shadow:0 12px 48px rgba(0,0,0,.7);display:none;animation:nvfade .5s}
+.nv-title{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);width:92vw;text-align:center;font-family:"Shippori Mincho B1","Yu Mincho",serif;font-weight:800;letter-spacing:.14em;text-shadow:0 2px 14px #000;animation:nvfade .7s;pointer-events:none}
+.nv-title.lv0,.nv-title.lv1{font-size:clamp(24px,4.6vw,46px)}
+.nv-title.lv2{font-size:clamp(20px,3.6vw,36px)}
+.nv-title.lv3,.nv-title.lv4,.nv-title.lv5{font-size:clamp(18px,3vw,30px)}
+.nv-title:after{content:"";display:block;width:min(320px,50vw);height:1px;margin:18px auto 0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent)}
+#nvWin{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);width:min(980px,95vw);min-height:150px;background:rgba(9,9,14,.84);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:28px 30px 22px;cursor:pointer;-webkit-user-select:text;user-select:text;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#nvWin.dim{opacity:.55}
+#nvName{position:absolute;top:-17px;left:22px;background:linear-gradient(#4a4262,#2f2a40);border:1px solid rgba(255,255,255,.25);padding:4px 18px;border-radius:8px;font-weight:700;letter-spacing:.06em;font-size:15px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nvText{font-size:clamp(15px,2.1vw,18px);line-height:1.95;min-height:3.9em;word-break:break-word}
+#nvText img{max-width:100%}
+#nvText b,#nvText strong{font-weight:800}
+#nvText a{color:inherit}
+#nvNext{position:absolute;right:18px;bottom:10px;font-size:13px;opacity:.65;animation:nvblink 1.2s infinite}
+#nvCheck{display:none;margin-top:12px;gap:8px;align-items:center;flex-wrap:wrap}
+#nvCheck input{width:84px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;padding:0 10px;font:inherit;font-size:16px}
+.nv-btn{height:36px;border-radius:9px;border:1px solid rgba(255,255,255,.35);background:linear-gradient(#5a4f7a,#3a3352);color:#fff;padding:0 16px;font-weight:700;letter-spacing:.04em}
+.nv-btn:hover{filter:brightness(1.15)}
+.nv-btn.sub{background:rgba(255,255,255,.08);font-weight:500}
+#nvChoice{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);display:none;flex-direction:column;gap:12px;width:min(600px,90vw);z-index:5}
+#nvChoice button{padding:14px 18px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(20,18,30,.9);color:#fff;font-size:16px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.45);animation:nvfade .4s}
+#nvChoice button:hover{background:rgba(70,60,100,.95)}
+#nvBar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(980px,95vw);display:flex;gap:8px}
+#nvBar input{flex:1;min-width:0;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;padding:0 14px;font:inherit;font-size:15px}
+#nvBar input::placeholder{color:rgba(255,255,255,.45)}
+#nvTop{position:fixed;top:10px;right:10px;display:flex;gap:6px;z-index:8}
+#nvTop button{height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(15,15,22,.75);color:#ddd;padding:0 12px;font-size:13px}
+#nvFeed{position:fixed;left:12px;top:10px;width:min(420px,60vw);display:flex;flex-direction:column;gap:4px;z-index:4;pointer-events:none}
+#nvFeed div{background:rgba(10,10,16,.78);border-left:3px solid #888;border-radius:6px;padding:5px 10px;font-size:13px;line-height:1.5;animation:nvfade .3s;word-break:break-word}
+#nvFeed div.old{opacity:.55}
+.nv-ovl{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.nv-ovl.show{display:flex}
+.nv-dlg{background:#18171f;border:1px solid rgba(255,255,255,.18);border-radius:14px;width:min(640px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.nv-dlg h2{margin:0;padding:16px 20px;font-size:17px;border-bottom:1px solid rgba(255,255,255,.12);font-family:"Shippori Mincho B1",serif}
+.nv-dlg .bd{padding:16px 20px;overflow:auto}
+.nv-dlg .ft{padding:12px 20px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.nv-row{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+.nv-row label{min-width:90px;font-size:13px;color:#bbb}
+.nv-row input,.nv-row select{flex:1;min-width:140px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;padding:0 10px;font:inherit}
+.nv-row select option{color:#000}
+.nv-hint{font-size:12px;color:#999;line-height:1.7}
+#nvBackList p{margin:0 0 8px;font-size:14px;line-height:1.7;word-break:break-word}
+#nvBackList .bn{font-weight:700;margin-right:6px}
+#nvStartTitle{font-family:"Shippori Mincho B1",serif;font-size:clamp(20px,4vw,30px);font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 18px}
+@keyframes nvfade{from{opacity:0}to{opacity:1}}
+@keyframes nvblink{0%,100%{opacity:.15}50%{opacity:.75}}
+@media (max-width:600px){#nvWin{padding:24px 18px 18px;bottom:64px}#nvStage{padding-bottom:220px}}
+</script>
+<script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div>
+<div id="nvTitle" class="nv-title" style="display:none"></div>
+<div id="nvFeed"></div>
+<div id="nvTop"><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button></div>
+<div id="nvChoice"></div>
+<div id="nvWin"><div id="nvName" style="display:none"></div><div id="nvText"></div>
+  <div id="nvCheck"><span>技能値</span><input id="nvChkVal" inputmode="numeric"><button class="nv-btn" id="nvChkGo">判定する（CCB）</button><button class="nv-btn sub" id="nvChkSkip">判定せずに進む</button></div>
+  <div id="nvNext">▼</div></div>
+<form id="nvBar" autocomplete="off"><input id="nvIn" placeholder="発言・ダイス（例：CCB<=70　1d100　2d6+3　1d3）"><button class="nv-btn" type="submit">送信</button></form>
+<div class="nv-ovl" id="nvBack"><div class="nv-dlg"><h2>バックログ</h2><div class="bd"><div id="nvBackList"></div></div><div class="ft"><button class="nv-btn sub" id="nvBackClose">閉じる</button></div></div></div>
+<div class="nv-ovl" id="nvStart"><div class="nv-dlg"><h2>はじめる</h2><div class="bd">
+  <div id="nvStartTitle"></div>
+  <div class="nv-row"><label>探索者</label><select id="nvPcSel"></select></div>
+  <div class="nv-row"><label>名前</label><input id="nvPcName" placeholder="探索者の名前"></div>
+  <div class="nv-row"><label>文字色</label><input id="nvPcColor" type="color" value="#e6e6e6" style="flex:0 0 60px;padding:2px"></div>
+  <div class="nv-row"><label>語り手の名前</label><input id="nvNarr" value="KP"></div>
+  <div class="nv-hint">クリック／Enterで文章が進みます。技能判定は技能値を確認して「判定する」を押してください。下の欄から発言やダイス（CCB&lt;=70、1d100、2d6+3 など）を送れます。進行状況はこの端末に保存され、続きから遊べます。</div>
+</div><div class="ft"><button class="nv-btn sub" id="nvResume" style="display:none">続きから</button><button class="nv-btn" id="nvBegin">最初から始める</button></div></div></div>
+</script>
+<script type="text/plain" id="novelJs">(function(){
+"use strict";
+var D=JSON.parse(document.getElementById("novel-data").textContent);
+var S=D.steps||[], KEY="novel:"+D.key;
+var st={pos:-1,q:[],cur:null,log:[],pc:null,narr:"KP",started:false,done:false};
+try{var sv=JSON.parse(localStorage.getItem(KEY)||"null");if(sv&&typeof sv.pos==="number")for(var k in sv)st[k]=sv[k];}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+function $(id){return document.getElementById(id);}
+var win=$("nvWin"),nameEl=$("nvName"),textEl=$("nvText"),choiceEl=$("nvChoice"),titleEl=$("nvTitle"),imgEl=$("nvImg"),chk=$("nvCheck"),chkIn=$("nvChkVal"),nextEl=$("nvNext");
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function pcName(){return (st.pc&&st.pc.name)||"PC";}
+function pcColor(){return (st.pc&&st.pc.color)||"#e6e6e6";}
+function conv(h){return String(h||"").replace(/[{｛]\s*(PC|ＰＣ)\s*[}｝]/g,esc(pcName()));}
+function txt(h){var d=document.createElement("div");d.innerHTML=String(h||"").replace(/<br\s*\/?>/gi,"\n");return (d.textContent||"").replace(/​/g,"").replace(/\s+$/,"");}
+function addLog(n,t,c,tab){if(!String(t||"").trim())return;st.log.push({n:n,t:t,c:c||"#888888",tab:tab||"main"});}
+var busy=null;
+function show(step,noLog){
+  st.cur=step;choiceEl.style.display="none";choiceEl.innerHTML="";titleEl.style.display="none";chk.style.display="none";busy=null;win.classList.remove("dim");nextEl.style.display="";
+  if(!step){st.done=true;nameEl.style.display="none";textEl.innerHTML="― おわり ―<br><span style=\"font-size:.85em;opacity:.75\">右上の「ログ出力」でプレイログを保存できます。</span>";nextEl.style.display="none";save();return;}
+  if(step.img){imgEl.src=step.img;imgEl.style.display="block";st.img=step.img;}
+  if(step.k==="title"){titleEl.innerHTML=conv(step.html);titleEl.className="nv-title lv"+(step.lv||1);titleEl.style.display="";nameEl.style.display="none";textEl.innerHTML="";win.classList.add("dim");if(!noLog)addLog(st.narr,"【"+txt(conv(step.html))+"】","#888888");save();return;}
+  if(step.k==="choice"){busy="choice";nameEl.style.display="none";textEl.innerHTML="どうする？";nextEl.style.display="none";choiceEl.style.display="flex";choiceEl.innerHTML=step.items.map(function(it,i){return "<button data-i=\""+i+"\">"+conv(it.html)+"</button>";}).join("");save();return;}
+  if(step.k==="check"){busy="check";nameEl.style.display="none";textEl.innerHTML="《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=skillVal(step.skill);chkIn.value=v==null?"":v;chk.style.display="flex";if(!noLog)addLog(st.narr,"《"+step.skill+"》の判定","#888888");save();return;}
+  var nm=step.k==="say"?(step.name||""):"";nameEl.textContent=nm;nameEl.style.display=nm?"":"none";textEl.innerHTML=conv(step.html);
+  if(!noLog)addLog(nm||st.narr,txt(conv(step.html)),step.k==="say"?(step.color||"#888888"):"#888888");
+  save();
+}
+function next(){
+  if(busy||!st.started)return;
+  if(st.q.length){show(st.q.shift());return;}
+  if(st.pos>=S.length)return;
+  st.pos++;show(S[st.pos]);
+}
+/* ---- 技能値 ---- */
+var ALIAS={"アイデア":"idea","幸運":"luck","知識":"know","SAN":"san","正気度":"san","SANチェック":"san"};
+function skillVal(name){
+  var pc=st.pc;if(!pc)return null;name=String(name||"").trim();
+  if(ALIAS[name]&&pc[ALIAS[name]]!=null&&pc[ALIAS[name]]!=="")return pc[ALIAS[name]];
+  var sk=pc.skills||[],i;
+  for(i=0;i<sk.length;i++)if(sk[i].name===name&&sk[i].val!=="")return sk[i].val;
+  for(i=0;i<sk.length;i++)if(sk[i].name&&(sk[i].name.indexOf(name)>=0||name.indexOf(sk[i].name)>=0)&&sk[i].val!=="")return sk[i].val;
+  return null;
+}
+/* ---- ダイス ---- */
+function hw(s){return String(s).replace(/[！-～]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);}).replace(/　/g," ").replace(/≦/g,"<=").replace(/≧/g,">=");}
+function d(n){return Math.floor(Math.random()*n)+1;}
+function ccJudge(r,v,ccb){
+  var sp=Math.floor(v/5);
+  if(ccb){if(r<=5&&r<=v)return r<=sp?"決定的成功/スペシャル":"決定的成功";if(r>=96&&r>v)return "致命的失敗";}
+  else{if(r===1)return "決定的成功";if(r===100)return "致命的失敗";}
+  if(r<=v)return r<=sp?"スペシャル":"成功";
+  return "失敗";
+}
+function roll(cmd){
+  var t=hw(cmd).trim(),m;
+  if((m=t.match(/^(CCB|CC)\s*<=\s*(\d+)(.*)$/i))){var v=+m[2],r=d(100);return {text:m[1].toUpperCase()+"<="+v+(m[3]?" "+m[3].trim():"")+" (1D100<="+v+") ＞ "+r+" ＞ "+ccJudge(r,v,m[1].toUpperCase()==="CCB"),ok:r<=v};}
+  if((m=t.match(/^(\d*)D(\d+)((?:\s*[+\-]\s*\d+(?:D\d+)?)*)\s*(?:(<=|>=|<|>|=)\s*(\d+))?(.*)$/i))){
+    var n=+(m[1]||1),f=+m[2];if(n<1||n>100||f<1||f>1000)return null;
+    var rs=[],sum=0,i;for(i=0;i<n;i++){var x=d(f);rs.push(x);sum+=x;}
+    var mods=(m[3]||"").replace(/\s+/g,""),extra=0,mtxt="";
+    (mods.match(/[+\-]\d+(?:D\d+)?/gi)||[]).forEach(function(p){var sg=p[0]==="-"?-1:1,b=p.slice(1),dm=b.match(/^(\d+)D(\d+)$/i);if(dm){var s2=0,a=[];for(var j=0;j<+dm[1];j++){var y=d(+dm[2]);a.push(y);s2+=y;}extra+=sg*s2;mtxt+=p[0]+s2+"["+a.join(",")+"]";}else{extra+=sg*(+b);mtxt+=p;}});
+    var tot=sum+extra,res=tot+"",ok=null;
+    if(m[4]){var c=+m[5],o=m[4];ok=o==="<="?tot<=c:o===">="?tot>=c:o==="<"?tot<c:o===">"?tot>c:tot===c;res+=" ＞ "+(ok?"成功":"失敗");}
+    var head=(n+"D"+f+mods.toUpperCase()+(m[4]?m[4]+m[5]:""));
+    return {text:t.replace(/\s+$/,"")+" ("+head+") ＞ "+sum+(n>1?"["+rs.join(",")+"]":"")+mtxt+(mtxt||n>1?" ＞ "+tot:"")+(m[4]?" ＞ "+(ok?"成功":"失敗"):""),ok:ok};
+  }
+  return null;
+}
+/* ---- 発言・ダイス入力 ---- */
+var feed=$("nvFeed");
+function feedAdd(n,t,c){var el=document.createElement("div");el.style.borderLeftColor=c||"#888";el.innerHTML="<b>"+esc(n)+"</b>："+esc(t).replace(/\n/g,"<br>");feed.appendChild(el);while(feed.children.length>4)feed.removeChild(feed.firstChild);[].forEach.call(feed.children,function(x,i){x.classList.toggle("old",i<feed.children.length-1);});clearTimeout(feed._t);feed._t=setTimeout(function(){feed.innerHTML="";},12000);}
+$("nvBar").addEventListener("submit",function(e){e.preventDefault();var inp=$("nvIn"),v=inp.value;if(!v.trim())return;var r=roll(v);var t=r?r.text:v;addLog(pcName(),t,pcColor());feedAdd(pcName(),t,pcColor());inp.value="";save();});
+/* ---- 技能判定 ---- */
+$("nvChkGo").addEventListener("click",function(e){
+  e.stopPropagation();var step=st.cur;if(!step||step.k!=="check")return;
+  var v=parseInt(hw(chkIn.value),10);if(isNaN(v)){chkIn.focus();return;}
+  var r=roll("CCB<="+v+" 【"+step.skill+"】");addLog(pcName(),r.text,pcColor());feedAdd(pcName(),r.text,pcColor());
+  var add=(step.other||[]).slice();
+  if((step.succ&&step.succ.length)||(step.fail&&step.fail.length))add=add.concat(r.ok?step.succ:step.fail);
+  else if(!r.ok)add=[{k:"line",html:"（何も得られなかった）"}];
+  st.q=add.concat(st.q);busy=null;chk.style.display="none";nextEl.style.display="";
+  textEl.innerHTML="《"+esc(step.skill)+"》 "+esc(r.text.replace(/^.*?＞\s*/,"")).replace(/＞/g,"→");st.cur={k:"line",html:textEl.innerHTML};save();
+});
+$("nvChkSkip").addEventListener("click",function(e){e.stopPropagation();var step=st.cur;st.q=((step&&step.other)||[]).concat((step&&step.succ)||[]).concat(st.q);busy=null;chk.style.display="none";nextEl.style.display="";textEl.innerHTML="（判定を省略しました）";st.cur={k:"line",html:textEl.innerHTML};save();});
+chk.addEventListener("click",function(e){e.stopPropagation();});
+/* ---- 選択肢 ---- */
+choiceEl.addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;var step=st.cur;if(!step||step.k!=="choice")return;
+  var it=step.items[+b.getAttribute("data-i")];addLog(pcName(),"▶ "+txt(conv(it.html)),pcColor());
+  busy=null;st.q=[];
+  if(typeof it.to==="number"&&it.to>=0){st.pos=it.to;show(S[st.pos]);}else next();
+});
+/* ---- 送り ---- */
+win.addEventListener("click",function(e){if(window.getSelection&&String(window.getSelection()).length)return;next();});
+$("nvStage").addEventListener("click",next);
+document.addEventListener("keydown",function(e){
+  var tg=e.target;if(tg&&(tg.tagName==="INPUT"||tg.tagName==="TEXTAREA"||tg.tagName==="SELECT"))return;
+  if(document.querySelector(".nv-ovl.show"))return;
+  if(e.key==="Enter"||e.key===" "||e.key==="ArrowRight"){e.preventDefault();next();}
+});
+/* ---- バックログ ---- */
+function openBack(){var h=st.log.map(function(l){return "<p><span class=\"bn\" style=\"color:"+esc(l.c)+"\">"+esc(l.n)+"</span>"+esc(l.t).replace(/\n/g,"<br>")+"</p>";}).join("")||"<p class=\"nv-hint\">まだログがありません。</p>";$("nvBackList").innerHTML=h;$("nvBack").classList.add("show");var bd=$("nvBackList").parentNode;bd.scrollTop=bd.scrollHeight;}
+$("nvBtnBack").onclick=openBack;$("nvBackClose").onclick=function(){$("nvBack").classList.remove("show");};
+/* ---- ログ出力（ココフォリア形式） ---- */
+function logHTML(){
+  var b=st.log.map(function(l){return "<p style=\"color:"+esc(l.c)+";\">\n  <span> ["+esc(l.tab)+"]</span>\n  <span>"+esc(l.n)+"</span> :\n  <span>\n    "+esc(l.t).replace(/\n/g,"<br>\n")+"\n  </span>\n</p>\n";}).join("\n");
+  return "<!DOCTYPE html>\n<html lang=\"ja\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>"+esc(D.title)+" - ログ</title>\n  </head>\n  <body>\n"+b+"\n  </body>\n</html>\n";
+}
+$("nvBtnLog").onclick=function(){var bl=new Blob([logHTML()],{type:"text/html"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download=(D.title||"scenario")+"_"+pcName()+"_log.html";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);};
+/* ---- 開始・設定 ---- */
+var pcs=D.pcs||[];
+function fillStart(){
+  $("nvStartTitle").textContent=D.title||"";
+  var sel=$("nvPcSel");sel.innerHTML="<option value=\"\">（名前を入力して遊ぶ）</option>"+pcs.map(function(p,i){return "<option value=\""+i+"\">"+esc(p.name)+"</option>";}).join("");
+  if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";}
+  $("nvNarr").value=st.narr||"KP";
+  $("nvResume").style.display=st.started?"":"none";
+}
+$("nvPcSel").addEventListener("change",function(){var p=pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
+function readPc(){var i=$("nvPcSel").value,base=i!==""?JSON.parse(JSON.stringify(pcs[+i])):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
+$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.pc=readPc();st.narr=$("nvNarr").value.trim()||"KP";st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvResume").onclick=function(){st.pc=Object.assign(st.pc||{},readPc());st.narr=$("nvNarr").value.trim()||"KP";$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
+$("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
+fillStart();$("nvStart").classList.add("show");
+})();
+</script>
 <script>
 /* 再読み込み（F5）でブラウザが前回のスクロール位置を復元すると、本文の描画前の位置がずれて途中に飛ぶため、常に先頭から表示する */
 try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(_){}
@@ -3920,6 +4118,44 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var m=text.match(/<script id="scn-enc"[^>]*data-k="([0-9a-f]+)"[^>]*>([\s\S]*?)<\/script>/); if(!m) return text;
     try{ var k=m[1], kb=[]; for(var i=0;i<k.length;i+=2) kb.push(parseInt(k.substr(i,2),16)); var d=atob(m[2].replace(/\s/g,'')), u=new Uint8Array(d.length); for(var j=0;j<d.length;j++) u[j]=d.charCodeAt(j)^kb[j%kb.length]; return new TextDecoder().decode(u); }catch(_){ return text; }
   }
+  /* ---- ノベルゲーム形式（KPレス）で書き出し：本文を1行ずつのステップに変換して、遊べるHTMLにする ---- */
+  function novelSteps(){
+    var steps=[], head={}, HLV={title:1,h1:1,h2:2,h3:3,h4:4,h5:5,th1:1,th2:2,th3:3,th4:4,th5:5};
+    var PFX={ev:['！',''],evr:['！',''],nv:['∇',''],nvr:['∇',''],q:['Q.',''],bullet:['・',''],explore:['■探索箇所＜','＞'],act:['■行動可能＜','＞'],view:['■閲覧可能＜','＞'],exb:['［探索箇所］',''],actb:['［行動可能］',''],viewb:['［閲覧可能］','']};
+    function lines(html,arr,extra){ String(html||'').split(/<br\s*\/?>/i).forEach(function(h){ var img=(h.match(/<img[^>]+src="([^"]+)"/i)||[])[1]; var t=plainText(h).replace(/\u200B/g,''); if(!t.trim()&&!img) return; var o={k:'line',html:h.replace(/<img[^>]*>/gi,'').trim()}; if(img) o.img=img; if(extra) for(var k in extra) o[k]=extra[k]; if(!t.trim()) o.html=''; arr.push(o); }); }
+    function walk(list,arr,top){ (list||[]).forEach(function(b){ var t=b.type;
+      if(HLV[t]){ if(top) head[b.id]=arr.length; if(plainText(b.html)) arr.push({k:'title',lv:HLV[t],html:b.html||''}); walk(b.children,arr,top); return; }
+      if(t==='divider'||t==='npcref'||t==='kp'||t==='dd1'||t==='dd2'||t==='dd3') return;
+      if(t==='columns'||t==='col'){ walk(b.children,arr,top); return; }
+      if(t==='npc'){ var nm=plainText(b.html)||'NPC', col=b.boxc?opaqueColor(b.boxc):''; (b.children||[]).forEach(function(c){ if(isCtn(c.type)) walk([c],arr,top); else lines(c.html,arr,{k:'say',name:nm,color:col}); }); return; }
+      if(t==='skill'||t==='skill2'||t==='skcard'||t==='skcard2'){ var sk=((t==='skill2'||t==='skcard2')?skill2NameOf(b.html):skillNameOf(b.html))||plainText(b.html).replace(/[＜＞<>]/g,''); var ck={k:'check',skill:sk,succ:[],fail:[],other:[]};
+        (b.children||[]).forEach(function(c){ var lb=plainText(c.html); if(isCtn(c.type)&&/失敗/.test(lb)) walk(c.children,ck.fail,false); else if(isCtn(c.type)&&/成功/.test(lb)) walk(c.children,ck.succ,false); else walk([c],ck.other,false); });
+        if(!ck.succ.length&&!ck.fail.length){ ck.succ=ck.other; ck.other=[]; }
+        arr.push(ck); return; }
+      if(isCtn(t)){ var lb2=plainText(b.html); if(lb2&&t!=='ccard0') arr.push({k:'line',html:'<b>'+(b.html||'')+'</b>'}); walk(b.children,arr,top); return; }
+      if(/class="hlink"/.test(b.html||'')){ var to=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var item={html:(b.html||'').replace(/<a\b[^>]*>|<\/a>/gi,''),target:to}; var last=arr[arr.length-1]; if(last&&last.k==='choice') last.items.push(item); else arr.push({k:'choice',items:[item]}); return; }
+      var pf=PFX[t]; lines((pf?esc(pf[0]):'')+(b.html||'')+(pf?esc(pf[1]):''),arr);
+    }); }
+    var pages=state.pages||[];
+    pages.forEach(function(p){ if(pages.length>1&&p.name) steps.push({k:'title',lv:0,html:esc(p.name)}); walk(p.blocks,steps,true); });
+    (function fix(arr){ arr.forEach(function(s){ if(s.k==='choice') s.items.forEach(function(it){ it.to=(it.target&&head.hasOwnProperty(it.target))?head[it.target]:-1; delete it.target; }); if(s.k==='check'){ fix(s.succ); fix(s.fail); fix(s.other); } }); })(steps);
+    return steps;
+  }
+  function exportNovel(){
+    var steps=novelSteps();
+    if(!steps.length){ alert('書き出す本文がありません。'); return; }
+    var pcs=(state.pcs||[]).filter(function(p){ return p&&p.name; }).map(function(p){ return {name:p.name,color:p.color||'',skills:(p.skills||[]).map(function(x){ return {name:x.name,val:x.val}; }),idea:p.idea||'',luck:p.luck||'',know:p.know||'',san:p.san||''}; });
+    var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs};
+    var tpl=function(id){ var e=document.getElementById(id); return e?e.textContent:''; };
+    var html='<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name||'シナリオ')+'</title>'
+      +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
+      +'<style>'+tpl('novelCss')+'</style></head><body>'+tpl('novelBody')
+      +'<'+'script id="novel-data" type="application/json">'+JSON.stringify(data).replace(/</g,'\\u003c')+'<\/script>'
+      +'<'+'script>'+tpl('novelJs')+'<\/script></body></html>';
+    var blob=new Blob([encodeViewerHTML(html)],{type:'text/html'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'_ノベル.html'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000);
+  }
+  (function(){ var b=document.getElementById('btnNovel'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); exportNovel(); }; })();
   function importScenarioHTML(text){
     text=decodeViewerHTML(text);
     var m=text.match(/<script id="scn-data"[^>]*>([\s\S]*?)<\/script>/);
