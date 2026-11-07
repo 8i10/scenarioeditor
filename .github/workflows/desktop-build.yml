@@ -1,0 +1,81 @@
+name: desktop-build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/desktop-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  # バージョン番号を読み取り、そのバージョンのリリースがまだ無ければ作成する
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      publish: ${{ steps.rel.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ver
+        run: echo "version=$(node -p "require('./desktop/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: rel
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VER: ${{ steps.ver.outputs.version }}
+        run: |
+          if gh release view "v$VER" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$VER は公開済みのため、リリースは作成しません"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            gh release create "v$VER" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "シナリオ送信ビューア $VER" \
+              --notes "シナリオ送信ビューア $VER（Windows: .exe / Mac: .dmg）"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            files: |
+              desktop/dist/*.exe
+          - os: macos-latest
+            target: mac
+            files: |
+              desktop/dist/*.dmg
+              desktop/dist/*.zip
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - name: Build (リリースへ公開)
+        if: needs.prepare.outputs.publish == 'true'
+        run: npm run release:${{ matrix.target }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build (公開なし)
+        if: needs.prepare.outputs.publish != 'true'
+        run: npm run dist:${{ matrix.target }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scenario-sender-${{ matrix.os }} ${{ needs.prepare.outputs.version }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
