@@ -1233,7 +1233,7 @@ function invAdd(n){if(st.inv.indexOf(n)>=0)return false;st.inv.push(n);var it=it
 function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offsetWidth;h.classList.add("flash");}
 function invRender(){
   var box=$("nvInv");box.classList.toggle("open",!!st.invOpen);$("nvInvCnt").textContent=(st.inv.length?st.inv.length+" ":"")+(st.invOpen?"▾":"▸");
-  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\"><summary><span>"+esc(i.name)+"</span>"+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">使用</button>":"")+"</summary>"+(function(){var ef=[];if(+i.mpPlus)ef.push("MP＋"+i.mpPlus);if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(+i.armorPool)ef.push("装甲（消費）"+poolLeft(i.name)+"/"+i.armorPool);if(i.ignoreArmor)ef.push("装甲無視");return (i.desc||ef.length)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>":"";})()+"</details>";}).join("");};
+  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\"><summary><span>"+esc(i.name)+"</span>"+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">使用</button>":"")+"</summary>"+(function(){var ef=[];if(+i.mpPlus)ef.push("MP＋"+i.mpPlus);if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(+i.armorPool)ef.push("装甲（消費）"+poolLeft(i.name)+"/"+i.armorPool);if(i.ignoreArmor)ef.push("装甲無視"+(+i.ignoreN>0?"（"+i.ignoreN+"まで）":""));return (i.desc||ef.length)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>":"";})()+"</details>";}).join("");};
   $("nvInvBody").innerHTML=(sec("item","アイテム")+sec("info","情報"))||"<div class=\"nv-hint\" style=\"padding:8px 4px\">まだ何も持っていません。</div>";
 }
 $("nvInvHead").addEventListener("click",function(){st.invOpen=!st.invOpen;invRender();save();});
@@ -1331,12 +1331,12 @@ function pcTurn(){
   showCmd("コマンド",its);save();
 }
 function pcDone(msg){hideCmd();busy=null;st.battle.phase="msg";nextEl.style.display="";textEl.innerHTML=msg;st.cur={k:"line",html:msg};addLog(st.narr,txt(msg),"#888888");battleBar();save();}
-function pcAttacks(){var out=[];st.inv.forEach(function(n){var it=itemDef(n);if(it.wDmg)out.push({name:n,skill:it.wSkill||n,dmg:it.wDmg,ignore:!!it.ignoreArmor});});
+function pcAttacks(){var out=[];st.inv.forEach(function(n){var it=itemDef(n);if(it.wDmg)out.push({name:n,skill:it.wSkill||n,dmg:it.wDmg,ignore:!!it.ignoreArmor,ignoreN:+it.ignoreN||0});});
   (st.pc&&st.pc.attacks||[]).forEach(function(a){out.push({name:a.name,skill:a.name,rate:a.rate,dmg:a.dmg,ignore:false});});
   if(!out.length){var dbt=String((st.pc&&st.pc.db)||"").replace(/\s/g,"").toUpperCase();dbt=(!dbt||/^±?0$/.test(dbt))?"":(dbt[0]==="-"?dbt:"+"+dbt.replace(/^\+/,""));out.push({name:"こぶし",skill:"こぶし",dmg:"1D3"+dbt,ignore:false});out.push({name:"キック",skill:"キック",dmg:"1D6"+dbt,ignore:false});}
   return out;}
 function pcDbTerm(){var d=String((st.pc&&st.pc.db)||"").replace(/\s/g,"").toUpperCase();return (!d||/^±?0$/.test(d))?"":(d[0]==="-"?d:"+"+d.replace(/^\+/,""));}
-function cmdAttack(){var as=pcAttacks();showCmd("攻撃方法",as.map(function(a){var v=a.rate!=null?a.rate:skillVal(a.skill);return {html:esc(a.name)+"<small>"+(v!=null?v+"%":"技能値?")+"・"+esc(a.dmg.replace(/\+?DB/i,"+DB"))+(a.ignore?"・装甲無視":"")+"</small>",fn:function(){pickTarget(a);}};}).concat([{html:"もどる",cls:"back",fn:pcTurn}]));}
+function cmdAttack(){var as=pcAttacks();showCmd("攻撃方法",as.map(function(a){var v=a.rate!=null?a.rate:skillVal(a.skill);return {html:esc(a.name)+"<small>"+(v!=null?v+"%":"技能値?")+"・"+esc(a.dmg.replace(/\+?DB/i,"+DB"))+(a.ignore?"・装甲無視"+(a.ignoreN>0?"（"+a.ignoreN+"まで）":""):"")+"</small>",fn:function(){pickTarget(a);}};}).concat([{html:"もどる",cls:"back",fn:pcTurn}]));}
 function pickTarget(a){var alive=st.battle.en.map(function(e,i){return {e:e,i:i};}).filter(function(x){return !x.e.down;});if(alive.length===1){doAttack(a,alive[0].i);return;}showCmd("だれを攻撃する？",alive.map(function(x){return {html:esc(x.e.name),fn:function(){doAttack(a,x.i);}};}).concat([{html:"もどる",cls:"back",fn:cmdAttack}]));}
 function doAttack(a,ti){
   var e=st.battle.en[ti];var v=a.rate!=null?a.rate:skillVal(a.skill);if(v==null){var iv=prompt("《"+a.skill+"》の技能値を入力してください","50");if(iv==null)return;v=num(iv);}
@@ -1344,8 +1344,8 @@ function doAttack(a,ti){
   if(!r.ok){pcDone("《"+esc(a.name)+"》 "+esc(r.text.split("＞").pop().trim())+"　攻撃は外れた。");return;}
   if(e.dodge!=null){var dr=roll("CCB<="+e.dodge+" 【回避】");addLog(e.name,dr.text,e.color);feedAdd(e.name,dr.text,e.color,null,false);if(dr.ok){pcDone(esc(e.name)+"は攻撃をかわした！");return;}}
   var dm=String(a.dmg).replace(/\s*\+?\s*DB/i,pcDbTerm());var d=roll(dm);var dmg=d?parseInt(String(d.text).split("＞").pop(),10):0;if(isNaN(dmg)||dmg<0)dmg=0;addLog(pcName(),"ダメージ "+(d?d.text:dm),pcColor());
-  var cut=(!a.ignore&&e.armor>0)?Math.min(e.armor,dmg):0;var left=dmg-cut;e.hp-=left;var down=e.hp<=0;if(down)e.down=true;
-  pcDone("《"+esc(a.name)+"》命中！ ダメージ "+dmg+(a.ignore&&e.armor?"（装甲無視）":cut?"（装甲で"+cut+"軽減）":"")+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
+  /* 装甲無視：最大値があればその分だけ無視（0・空欄はすべて無視） */var ign=a.ignore?(a.ignoreN>0?Math.min(a.ignoreN,e.armor):e.armor):0;var eff=Math.max(0,e.armor-ign);var cut=eff>0?Math.min(eff,dmg):0;var left=dmg-cut;e.hp-=left;var down=e.hp<=0;if(down)e.down=true;
+  pcDone("《"+esc(a.name)+"》命中！ ダメージ "+dmg+((ign?"（装甲無視"+(eff?"："+ign+"無視":"")+(cut?"、装甲で"+cut+"軽減":"")+"）":(cut?"（装甲で"+cut+"軽減）":"")))+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
 }
 function cmdItem(){var its=st.inv.map(itemDef).filter(function(i){return i.kind!=="info";});if(!its.length){showCmd("アイテム",[{html:"使えるアイテムがありません",cls:"back",fn:pcTurn}]);return;}
   showCmd("アイテム",its.map(function(i){return {html:esc(i.name),fn:function(){hideCmd();var msg=i.useText||"何も起こらなかった。";addLog(pcName(),"『"+i.name+"』を使用した",pcColor());pcDone("『"+esc(i.name)+"』を使った。<br>"+esc(msg));}};}).concat([{html:"もどる",cls:"back",fn:pcTurn}]));}
@@ -3593,7 +3593,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<div class="it-fx"><span class="it-fl">武器として使う：</span>'
       +'<label>技能<input class="it-in it-w" data-i="'+i+'" data-k="wSkill" placeholder="例：ナイフ" value="'+esc(it.wSkill||'')+'"></label>'
       +'<label>ダメージ<input class="it-in it-w" data-i="'+i+'" data-k="wDmg" placeholder="例：1D4+2+DB" value="'+esc(it.wDmg||'')+'"></label>'
-      +'<label><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視</label></div>')
+      +'<label><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視</label>'
+      +'<label title="0か空欄なら装甲をすべて無視">最大<input class="it-in it-n" data-i="'+i+'" data-k="ignoreN" inputmode="numeric" placeholder="全" value="'+esc(it.ignoreN||'')+'">まで</label></div>')
       +'</div>'; }).join(''):'<div class="fhint">まだありません。</div>';
   }
   if(matOvl){
@@ -4604,7 +4605,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     /* 戦闘用：NPCデータからHP・DEX・装甲・回避・攻撃（チャパレの命中とダメージ）を読む */
     var enemies={}; (state.npcs||[]).forEach(function(n){ if(!n||!String(n.name||'').trim()) return; var db=n.db||npcDb(n.str,n.siz)||''; var cp=parseBattlePalette(n.chat||n.skills||'',db);
       enemies[String(n.name).trim()]={hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
-    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,ignoreArmor:!!it.ignoreArmor,wSkill:it.wSkill||'',wDmg:it.wDmg||''}; });
+    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,ignoreArmor:!!it.ignoreArmor,ignoreN:+String(it.ignoreN||'').replace(/[^0-9]/g,'')||0,wSkill:it.wSkill||'',wDmg:it.wDmg||''}; });
     pcs.forEach(function(pc,ix){ var src=(state.pcs||[]).filter(function(p){ return p&&p.name; })[ix]; pc.attacks=parseBattlePalette((src&&src.commands)||'',pc.db||'').attacks; pc.commands=(src&&src.commands)||''; });
     var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items,enemies:enemies};
     var tpl=function(id){ var e=document.getElementById(id); return e?e.textContent:''; };
