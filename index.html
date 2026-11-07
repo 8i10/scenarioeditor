@@ -527,6 +527,12 @@
   .conv-item.dragging{opacity:.4}
   /* プルダウン・アイテム情報の入力欄も、他のデータ項目と同じ書体・大きさに */
   #itemList input,#itemList textarea,#itemList select,#itemList label,#ddList textarea{font-family:inherit!important;font-size:13px!important}
+  #itemList .it-fx{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12px}
+  #itemList .it-fx .it-fl{color:var(--muted);font-size:12px!important}
+  #itemList .it-fx label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  #itemList .it-fx input.it-n,#itemList .it-fx input.it-w{height:26px;box-sizing:border-box;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 6px}
+  #itemList .it-fx input.it-n{width:48px;text-align:center}
+  #itemList .it-fx input.it-w{width:110px}
   .conv-new{height:32px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--text);padding:0 9px;font-family:inherit;font-size:13px;width:200px}
   .send-cfg{display:flex;flex-wrap:wrap;gap:10px 16px;margin:10px 0 0}
   .send-cfg label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
@@ -3580,14 +3586,14 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<textarea class="it-in" data-i="'+i+'" data-k="desc" rows="2" placeholder="説明（持ち物を開いたときに表示）" style="'+ta+'">'+esc(it.desc||'')+'</textarea>'
       +(it.kind==='info'?'':'<textarea class="it-in" data-i="'+i+'" data-k="useText" rows="2" placeholder="その場で使ったときの文章（空欄なら「何も起こらなかった」）" style="'+ta+'">'+esc(it.useText||'')+'</textarea>'
       +'<label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="consume"'+(it.consume?' checked':'')+'> 使うと無くなる（［アイテム使用］で使ったとき）</label>'
-      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px"><span style="color:var(--muted)">持っている間の効果：</span>'
-      +'<label>MP ＋<input class="it-in" data-i="'+i+'" data-k="mpPlus" inputmode="numeric" value="'+esc(it.mpPlus||'')+'" style="width:44px;'+ta+'"></label>'
-      +'<label>装甲（固定）<input class="it-in" data-i="'+i+'" data-k="armorFix" inputmode="numeric" value="'+esc(it.armorFix||'')+'" style="width:44px;'+ta+'"></label>'
-      +'<label>装甲（消費）<input class="it-in" data-i="'+i+'" data-k="armorPool" inputmode="numeric" value="'+esc(it.armorPool||'')+'" style="width:44px;'+ta+'"></label>'
-      +'<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視（この武器の攻撃は相手の装甲を無視）</label></div>'
-      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px"><span style="color:var(--muted)">武器として使う：</span>'
-      +'<label>技能<input class="it-in" data-i="'+i+'" data-k="wSkill" placeholder="例：ナイフ" value="'+esc(it.wSkill||'')+'" style="width:90px;'+ta+'"></label>'
-      +'<label>ダメージ<input class="it-in" data-i="'+i+'" data-k="wDmg" placeholder="例：1D4+2+DB" value="'+esc(it.wDmg||'')+'" style="width:110px;'+ta+'"></label></div>')
+      +'<div class="it-fx"><span class="it-fl">持っている間の効果：</span>'
+      +'<label>MP＋<input class="it-in it-n" data-i="'+i+'" data-k="mpPlus" inputmode="numeric" value="'+esc(it.mpPlus||'')+'"></label>'
+      +'<label>装甲（固定）<input class="it-in it-n" data-i="'+i+'" data-k="armorFix" inputmode="numeric" value="'+esc(it.armorFix||'')+'"></label>'
+      +'<label>装甲（消費）<input class="it-in it-n" data-i="'+i+'" data-k="armorPool" inputmode="numeric" value="'+esc(it.armorPool||'')+'"></label></div>'
+      +'<div class="it-fx"><span class="it-fl">武器として使う：</span>'
+      +'<label>技能<input class="it-in it-w" data-i="'+i+'" data-k="wSkill" placeholder="例：ナイフ" value="'+esc(it.wSkill||'')+'"></label>'
+      +'<label>ダメージ<input class="it-in it-w" data-i="'+i+'" data-k="wDmg" placeholder="例：1D4+2+DB" value="'+esc(it.wDmg||'')+'"></label>'
+      +'<label><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視</label></div>')
       +'</div>'; }).join(''):'<div class="fhint">まだありません。</div>';
   }
   if(matOvl){
