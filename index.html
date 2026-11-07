@@ -4576,19 +4576,26 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function showSrcDiff(pid,name,blocks,text){
     var pg=(state.pages||[]).filter(function(p){ return p.id===pid; })[0]; if(!pg) return;
     var oldT=pg.src?pg.src.text:blocksToText(pg.blocks);
-    var norm=function(t){ return String(t||'').replace(/\r/g,'').split('\n').map(function(l){ return l.replace(/[\s\u3000]+$/,''); }); };
+    /* 文ごとに分ける（。！？で区切り、改行の位置の違いは無視） */
+    var norm=function(t){ var out=[], cur='', depth=0, OPEN='「『（(【', CLOSE='」』）)】';
+      var flush=function(){ if(cur.trim()) out.push(cur.trim()); cur=''; depth=0; };
+      String(t||'').replace(/\r/g,'').split('\n').forEach(function(line){ var l=line.replace(/^[\s\u3000]+|[\s\u3000]+$/g,''); if(!l){ flush(); return; }
+        for(var i=0;i<l.length;i++){ var ch=l[i]; cur+=ch; if(OPEN.indexOf(ch)>=0) depth++; else if(CLOSE.indexOf(ch)>=0){ if(depth>0) depth--; } else if(depth===0&&'。！？!?'.indexOf(ch)>=0){ flush(); } }
+        /* 句点で終わらない短い行（見出しなど）は1文として区切る。長い行は折り返しとみなして次の行とつなぐ */
+        if(cur.trim()&&depth===0&&l.length<20&&'がをにはでとのもへや、，'.indexOf(l[l.length-1])<0) flush(); });
+      flush(); return out; };
     var A=norm(oldT), B=norm(text), ops=lineDiff(A,B);
-    var add=0, del=0; ops.forEach(function(o){ if(o.t==='+') add++; else if(o.t==='-') del++; });
+    var add=0, del=0; ops.forEach(function(o){ if(o.t==='+') add++; else if(o.t==='-') del++; }); /* 文単位 */
     /* 変更のある箇所だけを前後2行つきで表示 */
     var show=ops.map(function(){ return false; }); ops.forEach(function(o,i){ if(o.t!=='='){ for(var j=Math.max(0,i-2); j<=Math.min(ops.length-1,i+2); j++) show[j]=true; } });
     var rows='', gap=false;
     ops.forEach(function(o,i){ if(!show[i]){ if(!gap){ rows+='<div class="sd-gap">…</div>'; gap=true; } return; } gap=false;
       if(o.t==='=') rows+='<div class="sd-l"><span class="sd-n">'+(o.b+1)+'</span><span class="sd-t">'+esc(B[o.b])+'</span></div>';
-      else if(o.t==='-') rows+='<div class="sd-l sd-del"><span class="sd-n">−</span><span class="sd-t">'+esc(A[o.a])+'</span>'+(A[o.a].trim()?'<button class="sd-find" data-q="'+esc(A[o.a].trim().slice(0,40))+'" title="この行を本文で探す">本文で探す</button>':'')+'</div>';
+      else if(o.t==='-') rows+='<div class="sd-l sd-del"><span class="sd-n">−</span><span class="sd-t">'+esc(A[o.a])+'</span>'+(A[o.a].trim()?'<button class="sd-find" data-q="'+esc(A[o.a].trim().replace(/^[「『（(【]/,'').slice(0,16))+'" title="この文を本文で探す">本文で探す</button>':'')+'</div>';
       else rows+='<div class="sd-l sd-add"><span class="sd-n">＋</span><span class="sd-t">'+esc(B[o.b])+'</span></div>'; });
     var ov=document.createElement('div'); ov.className='ovl show'; ov.style.zIndex='99999';
     ov.innerHTML='<div class="dlg" style="max-width:860px;width:96vw"><div class="dlg-h">変更点の比較：「'+esc(pg.name)+'」'+(pg.src?'（前回読み込んだ原文'+(pg.src.at?' '+new Date(pg.src.at).toLocaleString('ja-JP'):'')+'）':'（今の本文）')+' → 「'+esc(name)+'」</div>'
-      +'<div class="dlg-b"><div class="fhint">追加 '+add+'行 ／ 削除 '+del+'行'+(!add&&!del?'　— 違いはありません。':'')+'　（<span style="color:#1a7f37">＋ 新しい原文で増えた行</span>　<span style="color:#cf222e">− 無くなった・変わった行</span>）</div><div class="sd-box">'+(rows||'<div class="sd-gap">違いはありません。</div>')+'</div></div>'
+      +'<div class="dlg-b"><div class="fhint">文ごとに比較：追加 '+add+'文 ／ 削除 '+del+'文'+(!add&&!del?'　— 違いはありません。':'')+'　（<span style="color:#1a7f37">＋ 新しい原文で増えた文</span>　<span style="color:#cf222e">− 無くなった・変わった文</span>）</div><div class="sd-box">'+(rows||'<div class="sd-gap">違いはありません。</div>')+'</div></div>'
       +'<div class="dlg-f"><button class="hb2" id="sdClose">閉じる</button> <button class="hb2" id="sdBase" title="次回は今回の原文と比べます（本文は変わりません）">今回の原文を次の比較の基準にする</button> <button class="hb2" id="sdAdd">新しいページとしても追加</button></div></div>';
     document.body.appendChild(ov);
     var close=function(){ ov.remove(); };
