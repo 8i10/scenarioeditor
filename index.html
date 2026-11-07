@@ -373,6 +373,9 @@
   .block[data-type="get"] .be::before{content:"［入手］";display:inline-block;font-weight:700}
   .block[data-type="use"] .be::before{content:"［アイテム使用］";display:inline-block;font-weight:700}
   .block[data-type="back"] .be::before{content:"［戻る］";display:inline-block;font-weight:700}
+  .block[data-type="atk"] .be::before{content:"［攻撃］";display:inline-block;font-weight:700;color:#c0392b}
+  .block[data-type="atk"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
+  .block[data-type="atk"]+.block[data-type="atk"] .be{margin-top:2px}
   .block[data-type="get"] .be,.block[data-type="use"] .be,.block[data-type="back"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
   .block[data-type="trig"]+.block[data-type="back"] .be,.block[data-type="use"]+.block[data-type="use"] .be,.block[data-type="use"]+.block[data-type="back"] .be,.block[data-type="get"]+.block[data-type="get"] .be{margin-top:2px}
   .block[data-type="choice"] .be,.block[data-type="trig"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
@@ -1009,7 +1012,8 @@ button{font:inherit;cursor:pointer}
 @keyframes nvfade{from{opacity:0}to{opacity:1}}
 @keyframes nvblink{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (max-width:600px){#nvWin{padding:24px 18px 18px;bottom:64px}#nvStage{padding-bottom:220px}}
-#nvInv{position:fixed;left:10px;top:10px;z-index:7;width:min(320px,72vw);max-height:calc(100vh - 290px);display:flex;flex-direction:column;background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;font-size:13px}
+#nvLeft{position:fixed;left:10px;top:10px;z-index:7;width:min(320px,72vw);max-height:calc(100vh - 290px);display:flex;flex-direction:column;gap:8px;overflow:auto}
+#nvInv{position:relative;width:100%;flex:none;display:flex;flex-direction:column;background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;font-size:13px}
 #nvInvHead{padding:8px 12px;cursor:pointer;font-weight:700;display:flex;justify-content:space-between;gap:8px;-webkit-user-select:none;user-select:none}
 #nvInvHead.flash{animation:nvflash 1.2s}
 #nvInvBody{overflow:auto;padding:0 8px 8px;display:none}
@@ -1024,10 +1028,30 @@ button{font:inherit;cursor:pointer}
 .nv-it .use{margin-left:auto;height:24px;padding:0 10px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:linear-gradient(#5a4f7a,#3a3352);color:#fff;font-size:12px}
 #nvWait{display:none;margin-top:12px;gap:8px;flex-wrap:wrap}
 @keyframes nvflash{0%,100%{background:transparent}30%{background:rgba(255,220,120,.35)}}
+#nvPc{background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:10px;font-size:13px;flex:none}
+#nvPcHead{padding:8px 12px;cursor:pointer;font-weight:700;display:flex;justify-content:space-between;gap:8px;-webkit-user-select:none;user-select:none}
+#nvPcBody{display:none;padding:0 10px 10px}
+#nvPc.open #nvPcBody{display:block}
+.nv-st{display:flex;align-items:center;gap:6px;margin:4px 0}
+.nv-st .lb{min-width:46px;font-weight:700;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nv-st .bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.nv-st .bar i{display:block;height:100%;background:#6fbf73}
+.nv-st[data-k="mp"] .bar i{background:#5b9bd5}
+.nv-st[data-k="san"] .bar i{background:#b58ad6}
+.nv-st input{width:42px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;text-align:center;font:inherit;font-size:13px;padding:0}
+.nv-st .sl{color:#888}
+.nv-st button{width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#ddd;padding:0;font-size:13px}
+.nv-st .del{border:0;background:none;color:#888;width:16px}
+.nv-armor{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);color:#bbb;font-size:12px}
+.nv-armor input{width:38px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;text-align:center;font:inherit;padding:0}
+.nv-addst{margin-top:6px;height:24px;border-radius:6px;border:1px dashed rgba(255,255,255,.3);background:none;color:#bbb;padding:0 10px;font-size:12px}
+.nv-st.hit{animation:nvhit .8s}
+@keyframes nvhit{0%,100%{background:transparent}30%{background:rgba(220,60,60,.45)}}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
-<div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div>
+<div id="nvLeft"><div id="nvPc"><div id="nvPcHead"><span id="nvPcTitle">探索者</span><span id="nvPcTog">▸</span></div><div id="nvPcBody"></div></div>
+<div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div></div>
 <div id="nvTop"><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button></div>
 <div id="nvChoice"></div>
 <div id="nvWin"><div id="nvFeed"></div><div id="nvName" style="display:none"></div><div id="nvText"></div>
@@ -1050,7 +1074,7 @@ button{font:inherit;cursor:pointer}
 "use strict";
 var D=JSON.parse(document.getElementById("novel-data").textContent);
 var S=D.steps||[], KEY="novel:"+D.key;
-var st={pos:-1,q:[],cur:null,log:[],pc:null,narr:"KP",started:false,done:false,showChar:true,ch:null,inv:[],lastChoice:-1,invOpen:false};
+var st={pos:-1,q:[],cur:null,log:[],pc:null,narr:"KP",started:false,done:false,showChar:true,ch:null,inv:[],lastChoice:-1,invOpen:false,stat:null,pcOpen:true,pools:{}};
 try{var sv=JSON.parse(localStorage.getItem(KEY)||"null");if(sv&&typeof sv.pos==="number")for(var k in sv)st[k]=sv[k];}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
 function $(id){return document.getElementById(id);}
@@ -1073,6 +1097,7 @@ function show(step,noLog){
   if(step.k==="title"){st.ch=null;paintChar();titleEl.innerHTML=conv(step.html);titleEl.className="nv-title lv"+(step.lv||1);titleEl.style.display="";nameEl.style.display="none";textEl.innerHTML="";win.classList.add("dim");if(!noLog)addLog(st.narr,"【"+txt(conv(step.html))+"】","#888888");save();return;}
   if(step.k==="choice"){if(S[st.pos]===step)st.lastChoice=st.pos;busy="choice";nameEl.style.display="none";textEl.innerHTML="どうする？";nextEl.style.display="none";choiceEl.style.display="flex";choiceEl.innerHTML=step.items.map(function(it,i){return "<button data-i=\""+i+"\">"+conv(it.html)+"</button>";}).join("");save();return;}
   if(step.k==="get"){var got=[];step.names.forEach(function(n){if(invAdd(n))got.push(n);});nameEl.style.display="none";var msg=step.names.map(function(n){var it=itemDef(n);return (it.kind==="info"?"情報『":"『")+esc(n)+(it.kind==="info"?"』を入手した。":"』を手に入れた。");}).join("<br>");textEl.innerHTML=msg;if(!noLog)addLog(st.narr,txt(msg),"#888888");if(got.length)invFlash();save();return;}
+  if(step.k==="atk"){atkStart(step,noLog);save();return;}
   if(step.k==="trig"){busy="trig";nameEl.style.display="none";textEl.innerHTML="（発言してください）";nextEl.style.display="none";showBacks(step);$("nvIn").focus();save();return;}
   if(step.k==="use"){busy="use";nameEl.style.display="none";textEl.innerHTML="（持ち物からアイテムを使用してください）";nextEl.style.display="none";showBacks(step);if(!st.invOpen){st.invOpen=true;invRender();}save();return;}
   if(step.k==="check"){busy="check";nameEl.style.display="none";textEl.innerHTML="《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=skillVal(step.skill);chkIn.value=v==null?"":v;chk.style.display="flex";if(!noLog)addLog(st.narr,"《"+step.skill+"》の判定","#888888");save();return;}
@@ -1128,14 +1153,39 @@ function feedClear(){feed.innerHTML="";}
 function feedAdd(n,t,c,li,editable){var el=document.createElement("div");el.className="fd";el.style.borderLeftColor=c||"#888";el.innerHTML="<b style=\"color:"+esc(c||"#ddd")+"\">"+esc(n)+"</b>"+(editable?"<span contenteditable=\"true\" spellcheck=\"false\" title=\"クリックして書き直せます\"></span>":"<span></span>");el.querySelector("span").textContent=t;if(editable&&li!=null){var sp=el.querySelector("span");sp.addEventListener("input",function(){if(st.log[li]){st.log[li].t=sp.innerText.replace(/\n+$/,"");save();}});sp.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();sp.blur();}});}feed.appendChild(el);}
 feed.addEventListener("click",function(e){e.stopPropagation();});
 $("nvBar").addEventListener("submit",function(e){e.preventDefault();var inp=$("nvIn"),v=inp.value;if(!v.trim())return;var r=roll(v);var t=r?r.text:v;var li=addLog(pcName(),t,pcColor());feedAdd(pcName(),t,pcColor(),li,!r);inp.value="";save();if(!r&&busy==="trig")trigCheck(v);});
+/* ---- 探索者のステータス（HP・MP・SAN＋追加分、装甲） ---- */
+function num(v){var n=parseInt(hw(String(v==null?"":v)),10);return isNaN(n)?0:n;}
+function initStat(pc){pc=pc||{};var mk=function(v){var n=num(v);return {cur:n,max:n};};st.stat={hp:mk(pc.hp),mp:mk(pc.mp),san:mk(pc.san),extra:[],armorFix:num(pc.armor),armorPool:0};st.pools={};}
+function itemBonus(k){var s=0;st.inv.forEach(function(n){var it=itemDef(n);s+=+it[k]||0;});return s;}
+function poolLeft(n){var it=itemDef(n);if(!(+it.armorPool))return 0;if(st.pools[n]==null)st.pools[n]=+it.armorPool;return st.pools[n];}
+function stRow(k,lb,o,del){var mx=o.max||0,pc=mx>0?Math.max(0,Math.min(100,o.cur/mx*100)):0;return "<div class=\"nv-st\" data-k=\""+k+"\"><span class=\"lb\" title=\""+esc(lb)+"\">"+esc(lb)+"</span><button data-d=\"-1\">−</button><input data-f=\"cur\" value=\""+o.cur+"\" inputmode=\"numeric\"><span class=\"sl\">/</span><input data-f=\"max\" value=\""+mx+"\" inputmode=\"numeric\"><button data-d=\"1\">＋</button><span class=\"bar\"><i style=\"width:"+pc+"%\"></i></span>"+(del?"<button class=\"del\" title=\"削除\">✕</button>":"")+"</div>";}
+function pcRender(){
+  if(!st.stat)initStat(st.pc);var s=st.stat;$("nvPcTitle").textContent=pcName();$("nvPc").classList.toggle("open",!!st.pcOpen);$("nvPcTog").textContent=st.pcOpen?"▾":"▸";
+  var mpB=itemBonus("mpPlus"),afB=itemBonus("armorFix"),poolItems=st.inv.filter(function(n){return +itemDef(n).armorPool;});
+  var h=stRow("hp","HP",s.hp)+stRow("mp","MP"+(mpB?"(+"+mpB+")":""),{cur:s.mp.cur,max:s.mp.max+mpB})+stRow("san","SAN",s.san)+s.extra.map(function(x,i){return stRow("x"+i,x.name,x,true);}).join("");
+  h+="<button class=\"nv-addst\">＋ ステータスを追加</button>";
+  h+="<div class=\"nv-armor\">装甲 固定<input data-a=\"armorFix\" value=\""+s.armorFix+"\" inputmode=\"numeric\">"+(afB?"＋"+afB:"")+"　消費<input data-a=\"armorPool\" value=\""+s.armorPool+"\" inputmode=\"numeric\">"+poolItems.map(function(n){return "　"+esc(n)+"："+poolLeft(n);}).join("")+"</div>";
+  $("nvPcBody").innerHTML=h;
+}
+function statRef(k){var s=st.stat;if(k==="hp"||k==="mp"||k==="san")return s[k];var m=k.match(/^x(\d+)$/);return m?s.extra[+m[1]]:null;}
+$("nvPcHead").addEventListener("click",function(){st.pcOpen=!st.pcOpen;pcRender();save();});
+$("nvPc").addEventListener("click",function(e){e.stopPropagation();var row=e.target.closest(".nv-st");
+  if(e.target.classList.contains("nv-addst")){var nm=prompt("追加するステータスの名前（例：幸運、MOV）");if(!nm||!nm.trim())return;var v=num(prompt("値","0"));st.stat.extra.push({name:nm.trim(),cur:v,max:v});pcRender();save();return;}
+  if(!row)return;var k=row.getAttribute("data-k"),o=statRef(k);if(!o)return;
+  if(e.target.classList.contains("del")){st.stat.extra.splice(+k.slice(1),1);pcRender();save();return;}
+  var d=e.target.getAttribute("data-d");if(d){changeStat(k,+d,true);}});
+$("nvPc").addEventListener("change",function(e){var t=e.target;if(t.getAttribute("data-a")){st.stat[t.getAttribute("data-a")]=num(t.value);pcRender();save();return;}var row=t.closest(".nv-st");if(!row)return;var o=statRef(row.getAttribute("data-k"));if(!o)return;var f=t.getAttribute("data-f");var v=num(t.value);if(f==="max"&&row.getAttribute("data-k")==="mp")v-=itemBonus("mpPlus");var old=o[f];o[f]=v;if(f==="cur"&&v!==old)addLog(pcName(),labelOf(row.getAttribute("data-k"))+"："+old+"→"+v,pcColor());pcRender();save();});
+$("nvPc").addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter")e.target.blur();});
+function labelOf(k){if(k==="hp")return "HP";if(k==="mp")return "MP";if(k==="san")return "SAN";var o=statRef(k);return o?o.name:k;}
+function changeStat(k,d,log){var o=statRef(k);if(!o)return;var old=o.cur;o.cur+=d;if(log)addLog(pcName(),labelOf(k)+"："+old+"→"+o.cur,pcColor());pcRender();var r=document.querySelector(".nv-st[data-k=\""+k+"\"]");if(r&&d<0){r.classList.remove("hit");void r.offsetWidth;r.classList.add("hit");}save();}
 /* ---- 持ち物・情報 ---- */
 var ITEMS={};(D.items||[]).forEach(function(it){ITEMS[it.name]=it;});
 function itemDef(n){return ITEMS[n]||{name:n,kind:"item",desc:"",useText:""};}
-function invAdd(n){if(st.inv.indexOf(n)>=0)return false;st.inv.push(n);invRender();return true;}
+function invAdd(n){if(st.inv.indexOf(n)>=0)return false;st.inv.push(n);var it=itemDef(n);if(+it.mpPlus&&st.stat)st.stat.mp.cur+=+it.mpPlus;invRender();if(typeof pcRender==="function")pcRender();return true;}
 function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offsetWidth;h.classList.add("flash");}
 function invRender(){
   var box=$("nvInv");box.classList.toggle("open",!!st.invOpen);$("nvInvCnt").textContent=(st.inv.length?st.inv.length+" ":"")+(st.invOpen?"▾":"▸");
-  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\"><summary><span>"+esc(i.name)+"</span>"+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">使用</button>":"")+"</summary>"+(i.desc?"<div class=\"ds\">"+esc(i.desc)+"</div>":"")+"</details>";}).join("");};
+  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\"><summary><span>"+esc(i.name)+"</span>"+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">使用</button>":"")+"</summary>"+(function(){var ef=[];if(+i.mpPlus)ef.push("MP＋"+i.mpPlus);if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(+i.armorPool)ef.push("装甲（消費）"+poolLeft(i.name)+"/"+i.armorPool);if(i.ignoreArmor)ef.push("装甲無視");return (i.desc||ef.length)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>":"";})()+"</details>";}).join("");};
   $("nvInvBody").innerHTML=(sec("item","アイテム")+sec("info","情報"))||"<div class=\"nv-hint\" style=\"padding:8px 4px\">まだ何も持っていません。</div>";
 }
 $("nvInvHead").addEventListener("click",function(){st.invOpen=!st.invOpen;invRender();save();});
@@ -1143,12 +1193,51 @@ $("nvInv").addEventListener("click",function(e){e.stopPropagation();var u=e.targ
 function useItem(n){
   var it=itemDef(n);addLog(pcName(),"『"+n+"』を使用した",pcColor());
   var step=st.cur;
-  if(busy==="use"&&step&&step.k==="use"){for(var i=0;i<step.items.length;i++){var u=step.items[i];if(u.name===n||n.indexOf(u.name)>=0||u.name.indexOf(n)>=0){if(it.consume){st.inv=st.inv.filter(function(x){return x!==n;});invRender();}busy=null;st.q=[];feedAdd(pcName(),"『"+n+"』を使用した",pcColor(),null,false);var to=u.to;setTimeout(function(){if(typeof to==="number"&&to>=0){st.pos=to;show(S[st.pos]);}else next();},600);save();return;}}}
+  if(busy==="use"&&step&&step.k==="use"){for(var i=0;i<step.items.length;i++){var u=step.items[i];if(u.name===n||n.indexOf(u.name)>=0||u.name.indexOf(n)>=0){if(it.consume){st.inv=st.inv.filter(function(x){return x!==n;});invRender();pcRender();}busy=null;st.q=[];feedAdd(pcName(),"『"+n+"』を使用した",pcColor(),null,false);var to=u.to;setTimeout(function(){if(typeof to==="number"&&to>=0){st.pos=to;show(S[st.pos]);}else next();},600);save();return;}}}
   var msg=it.useText||"何も起こらなかった。";feedAdd(st.narr,msg,"#888888",null,false);addLog(st.narr,msg,"#888888");save();
 }
 /* 発言待ち・アイテム使用待ちの「戻る」 */
 function showBacks(step){var bs=step.backs||[];if(!bs.length)return;waitEl.innerHTML=bs.map(function(b,i){return "<button class=\"nv-btn sub\" data-i=\""+i+"\">"+conv(b.html)+"</button>";}).join("");waitEl.style.display="flex";}
-waitEl.addEventListener("click",function(e){e.stopPropagation();var b=e.target.closest("button");if(!b)return;var step=st.cur;var bk=step&&step.backs&&step.backs[+b.getAttribute("data-i")];if(!bk)return;addLog(pcName(),"▶ "+txt(conv(bk.html)),pcColor());busy=null;st.q=[];var to=(typeof bk.to==="number"&&bk.to>=0)?bk.to:st.lastChoice;if(to>=0){st.pos=to;show(S[st.pos]);}else next();});
+waitEl.addEventListener("keydown",function(e){e.stopPropagation();});
+waitEl.addEventListener("click",function(e){e.stopPropagation();var b=e.target.closest("button");if(!b)return;var step=st.cur;if(b.getAttribute("data-df")){if(step&&step.k==="atk")atkResolve(step,b.getAttribute("data-df"));return;}var bk=step&&step.backs&&step.backs[+b.getAttribute("data-i")];if(!bk)return;addLog(pcName(),"▶ "+txt(conv(bk.html)),pcColor());busy=null;st.q=[];var to=(typeof bk.to==="number"&&bk.to>=0)?bk.to:st.lastChoice;if(to>=0){st.pos=to;show(S[st.pos]);}else next();});
+/* ---- エネミーの攻撃：命中を自動判定 → 当たれば回避・受け流しを判定 → 失敗ならダメージを出して装甲を引き、HPを減らす ---- */
+function atkStart(step,noLog){
+  nameEl.textContent=step.enemy;nameEl.style.display="";nextEl.style.display="none";busy="atk";
+  if(noLog&&st.atkWait){atkDefense(step);return;}
+  var r=roll("CCB<="+step.rate+" 【"+step.name+"】");addLog(step.enemy,r.text,"#c0392b");feedAdd(step.enemy,r.text,"#c0392b",null,false);
+  if(!r.ok){textEl.innerHTML="《"+esc(step.name)+"》 "+esc(r.text.replace(/^.*?＞\s*/,"")).replace(/＞/g,"→")+"<br>攻撃は外れた。";busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};return;}
+  st.atkWait=true;atkDefense(step);
+}
+function pcSkill(names){for(var i=0;i<names.length;i++){var v=skillVal(names[i]);if(v!=null&&v!=="")return v;}return null;}
+function atkDefense(step){
+  var dodge=pcSkill(["回避"]);if(dodge==null&&st.pc&&st.pc.dex)dodge=num(st.pc.dex)*2;
+  var parry=pcSkill(["受け流し","マーシャルアーツ","こぶし","キック"]);
+  textEl.innerHTML="《"+esc(step.name)+"》が命中しそうだ！ どうする？";
+  waitEl.innerHTML="<span>回避</span><input id=\"nvDg\" value=\""+(dodge==null?"":dodge)+"\" inputmode=\"numeric\" style=\"width:56px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;text-align:center;font:inherit\"><button class=\"nv-btn\" data-df=\"dodge\">回避する</button>"
+    +"<span style=\"margin-left:8px\">受け流し</span><input id=\"nvPr\" value=\""+(parry==null?"":parry)+"\" inputmode=\"numeric\" style=\"width:56px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;text-align:center;font:inherit\"><button class=\"nv-btn\" data-df=\"parry\">受け流す</button>"
+    +"<button class=\"nv-btn sub\" data-df=\"none\">何もしない</button>";
+  waitEl.style.display="flex";
+}
+function armorTotal(){return (st.stat?st.stat.armorFix:0)+itemBonus("armorFix");}
+function atkResolve(step,kind){
+  var line="";
+  if(kind!=="none"){var v=num($(kind==="dodge"?"nvDg":"nvPr").value);var r=roll("CCB<="+v+" 【"+(kind==="dodge"?"回避":"受け流し")+"】");addLog(pcName(),r.text,pcColor());feedAdd(pcName(),r.text,pcColor(),null,false);
+    if(r.ok){st.atkWait=false;waitEl.style.display="none";waitEl.innerHTML="";textEl.innerHTML=(kind==="dodge"?"攻撃をかわした！":"攻撃を受け流した！");busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};save();return;}
+    line=(kind==="dodge"?"回避":"受け流し")+"に失敗した。";}
+  var d=roll(step.dmg);var dmg=d?parseInt(String(d.text).split("＞").pop(),10):0;if(isNaN(dmg))dmg=0;var dtext=d?d.text:step.dmg;
+  addLog(step.enemy,"ダメージ "+dtext,"#c0392b");
+  var left=dmg,parts=[];
+  if(!step.ignore){
+    var af=armorTotal();if(af>0&&left>0){var cut=Math.min(af,left);left-=cut;parts.push("装甲（固定）で"+cut+"軽減");}
+    if(left>0&&st.stat&&st.stat.armorPool>0){var c2=Math.min(st.stat.armorPool,left);st.stat.armorPool-=c2;left-=c2;parts.push("装甲（消費）で"+c2+"吸収（残り"+st.stat.armorPool+"）");}
+    st.inv.forEach(function(n){if(left<=0)return;var pl=poolLeft(n);if(pl>0){var c3=Math.min(pl,left);st.pools[n]=pl-c3;left-=c3;parts.push("『"+n+"』で"+c3+"吸収（残り"+st.pools[n]+"）");}});
+  }else parts.push("装甲無視");
+  st.atkWait=false;waitEl.style.display="none";waitEl.innerHTML="";
+  if(left>0)changeStat("hp",-left,false);
+  var hp=st.stat?st.stat.hp.cur:0;
+  var msg=(line?line+"<br>":"")+"ダメージ "+dmg+(parts.length?"（"+parts.join("、")+"）":"")+" → HP −"+left+"（残り "+hp+"）"+(hp<=0?"<br><b>HPが0になった……</b>":"");
+  textEl.innerHTML=msg;addLog(st.narr,txt(msg),"#888888");busy=null;nextEl.style.display="";st.cur={k:"line",html:msg};pcRender();invRender();save();
+}
 /* ---- 発言トリガー：合言葉を含む発言で先へ（見出しリンクがあればその見出しへ） ---- */
 function norm(s){return hw(s).toLowerCase().replace(/[\s　、。,.!?！？「」『』…・〜~ー-]/g,"");}
 function trigCheck(v){var step=st.cur;if(!step||step.k!=="trig")return;var nv=norm(v);for(var i=0;i<step.items.length;i++){var it=step.items[i];if(it.keys.some(function(k){var nk=norm(k);return nk&&nv.indexOf(nk)>=0;})){busy=null;st.q=[];var go=function(){if(typeof it.to==="number"&&it.to>=0){st.pos=it.to;show(S[st.pos]);}else next();};setTimeout(go,600);return;}}}
@@ -1200,10 +1289,10 @@ function fillStart(){
 }
 $("nvPcSel").addEventListener("change",function(){var p=pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,base=i!==""?JSON.parse(JSON.stringify(pcs[+i])):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
-$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.inv=[];st.lastChoice=-1;invRender();st.pc=readPc();st.narr=$("nvNarr").value.trim()||"KP";st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
-$("nvResume").onclick=function(){st.pc=Object.assign(st.pc||{},readPc());st.narr=$("nvNarr").value.trim()||"KP";st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
+$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.inv=[];st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);st.atkWait=false;pcRender();st.narr=$("nvNarr").value.trim()||"KP";st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvResume").onclick=function(){st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.narr=$("nvNarr").value.trim()||"KP";st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
-fillStart();invRender();$("nvStart").classList.add("show");
+fillStart();invRender();if(st.started)pcRender();$("nvStart").classList.add("show");
 })();
 </script>
 <script>
@@ -1251,6 +1340,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'get',     ic:'！', nm:'！入手',                   ph:'入手するアイテム・情報の名前（／で複数）'},
     {t:'trig',    ic:'！', nm:'！発言トリガー',           ph:'合言葉（／で区切って複数。見出しリンクで飛び先を指定）'},
     {t:'use',     ic:'！', nm:'！使用アイテム',           ph:'ここで使うアイテム名（見出しリンクで飛び先を指定）'},
+    {t:'atk',     ic:'⚔', nm:'！エネミー攻撃',           ph:'エネミー名／攻撃名／成功率／ダメージ（例：グール／かぎ爪／30／1D6+1D4　装甲無視なら最後に／装甲無視）'},
     {t:'back',    ic:'［', nm:'［戻る］',                 ph:'ボタンの文（見出しリンクで戻り先。なしなら直前の選択肢へ）'},
     {t:'ev',      ic:'！', nm:'！下線',                   ph:'イベント', sep:1},
     {t:'nv',      ic:'∇', nm:'▽下線',                   ph:'項目'},
@@ -3378,7 +3468,12 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<input class="it-in" data-i="'+i+'" data-k="name" placeholder="名前（本文の［入手］［アイテム使用］と同じ名前）" value="'+esc(it.name||'')+'" style="flex:1;height:30px;'+ta+'"><button class="hb2 it-del" data-i="'+i+'" title="削除">✕</button></div>'
       +'<textarea class="it-in" data-i="'+i+'" data-k="desc" rows="2" placeholder="説明（持ち物を開いたときに表示）" style="'+ta+'">'+esc(it.desc||'')+'</textarea>'
       +(it.kind==='info'?'':'<textarea class="it-in" data-i="'+i+'" data-k="useText" rows="2" placeholder="その場で使ったときの文章（空欄なら「何も起こらなかった」）" style="'+ta+'">'+esc(it.useText||'')+'</textarea>'
-      +'<label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="consume"'+(it.consume?' checked':'')+'> 使うと無くなる（［アイテム使用］で使ったとき）</label>')
+      +'<label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="consume"'+(it.consume?' checked':'')+'> 使うと無くなる（［アイテム使用］で使ったとき）</label>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px"><span style="color:var(--muted)">持っている間の効果：</span>'
+      +'<label>MP ＋<input class="it-in" data-i="'+i+'" data-k="mpPlus" inputmode="numeric" value="'+esc(it.mpPlus||'')+'" style="width:44px;'+ta+'"></label>'
+      +'<label>装甲（固定）<input class="it-in" data-i="'+i+'" data-k="armorFix" inputmode="numeric" value="'+esc(it.armorFix||'')+'" style="width:44px;'+ta+'"></label>'
+      +'<label>装甲（消費）<input class="it-in" data-i="'+i+'" data-k="armorPool" inputmode="numeric" value="'+esc(it.armorPool||'')+'" style="width:44px;'+ta+'"></label>'
+      +'<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視（この攻撃・武器は相手の装甲を無視）</label></div>')
       +'</div>'; }).join(''):'<div class="fhint">まだありません。</div>';
   }
   if(matOvl){
@@ -3830,7 +3925,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   /* ---- 書き出し（HTML / PDF） ---- */
   function skillNameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞]/g,'').trim(); }
   function skill2NameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var st=t.indexOf('※'); if(st>=0) t=t.slice(0,st); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞※]/g,'').trim(); }
-  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='view'){ return '■閲覧可能＜'+p+'＞'; } if(t==='viewb'){ return '［閲覧可能］'+p; } if(t==='choice'){ return '［選択肢］'+p; } if(t==='trig'){ return '［発言］'+p; } if(t==='get'){ return '［入手］'+p; } if(t==='use'){ return '［アイテム使用］'+p; } if(t==='back'){ return '［戻る］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
+  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='view'){ return '■閲覧可能＜'+p+'＞'; } if(t==='viewb'){ return '［閲覧可能］'+p; } if(t==='choice'){ return '［選択肢］'+p; } if(t==='trig'){ return '［発言］'+p; } if(t==='get'){ return '［入手］'+p; } if(t==='use'){ return '［アイテム使用］'+p; } if(t==='back'){ return '［戻る］'+p; } if(t==='atk'){ return '［攻撃］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var h=staticBlockHTML0(b);
@@ -3866,7 +3961,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'>'+boxCopy+'<div class="be lbl"'+lblStyle+'>'+lblInner+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)){ var tgCopy='<button class="npc-copy box-copy box-copy-tg" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+style+'>'+tgCopy+'<div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>'; }
-    if(b.type==='act'||b.type==='exb'||b.type==='actb'||b.type==='view'||b.type==='viewb'||b.type==='choice'||b.type==='trig'||b.type==='get'||b.type==='use'||b.type==='back'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act'||b.type==='view')?'<span class="asym asym-exl">'+(b.type==='act'?'■行動可能＜':'■閲覧可能＜')+'</span>':('<span class="asym asym-exl asym-exb">'+({exb:'［探索箇所］',actb:'［行動可能］',viewb:'［閲覧可能］',choice:'［選択肢］',trig:'［発言］',get:'［入手］',use:'［アイテム使用］',back:'［戻る］'}[b.type])+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+((b.type==='act'||b.type==='view')?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
+    if(b.type==='act'||b.type==='exb'||b.type==='actb'||b.type==='view'||b.type==='viewb'||b.type==='choice'||b.type==='trig'||b.type==='get'||b.type==='use'||b.type==='back'||b.type==='atk'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act'||b.type==='view')?'<span class="asym asym-exl">'+(b.type==='act'?'■行動可能＜':'■閲覧可能＜')+'</span>':('<span class="asym asym-exl asym-exb">'+({exb:'［探索箇所］',actb:'［行動可能］',viewb:'［閲覧可能］',choice:'［選択肢］',trig:'［発言］',get:'［入手］',use:'［アイテム使用］',back:'［戻る］',atk:'［攻撃］'}[b.type])+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+((b.type==='act'||b.type==='view')?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
     if(b.type==='explore'){ var exCopy='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block" data-type="explore"'+did+style+'>'+exCopy+'<div class="be"'+us+'><span class="asym asym-exl">■探索箇所＜</span>'+(b.html||'')+'<span class="asym asym-exr">＞</span></div></div>'; }
     if(isDd(b.type)) return '<div class="block" data-type="'+b.type+'"'+did+style+'><div class="be"'+us+'>'+(b.html||'')+'</div>'+ddSelectHTML(b)+'</div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
@@ -3945,7 +4040,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
       +' .block[data-type="skill"]>.lbl>.sk-wrap,.block[data-type="skill2"]>.lbl>.sk-wrap,.block[data-type="skcard"]>.lbl>.sk-wrap,.block[data-type="skcard2"]>.lbl>.sk-wrap{display:inline}'
       +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="nv"]>.be::before,.block[data-type="nvr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
-      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before,.block[data-type="choice"]>.be::before,.block[data-type="trig"]>.be::before,.block[data-type="get"]>.be::before,.block[data-type="use"]>.be::before,.block[data-type="back"]>.be::before{content:""!important;display:none!important}'
+      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before,.block[data-type="choice"]>.be::before,.block[data-type="trig"]>.be::before,.block[data-type="get"]>.be::before,.block[data-type="use"]>.be::before,.block[data-type="back"]>.be::before,.block[data-type="atk"]>.be::before{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
       +' .block[data-type="skill"]>.lbl .sknm::before,.block[data-type="skill"]>.lbl .sknm::after,.block[data-type="skill2"]>.lbl .sknm::before,.block[data-type="skill2"]>.lbl .sknm::after,.block[data-type="skcard"]>.lbl .sknm::before,.block[data-type="skcard"]>.lbl .sknm::after,.block[data-type="skcard2"]>.lbl .sknm::before,.block[data-type="skcard2"]>.lbl .sknm::after{content:""!important}'
       +' .block .box-copy{position:absolute;top:-11px;right:3px;z-index:4;opacity:0;transition:opacity .12s;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 5px;color:var(--muted)}'
@@ -4356,6 +4451,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       if(t==='trig'){ var tto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var keys=plainText(b.html).split(/[／\/、,，|｜]/).map(function(x){ return x.trim(); }).filter(Boolean); if(!keys.length) return; var titem={keys:keys,target:tto}; var tlast=arr[arr.length-1]; if(tlast&&tlast.k==='trig') tlast.items.push(titem); else arr.push({k:'trig',items:[titem]}); return; }
       if(t==='get'){ var gn=plainText(b.html).split(/[／\/、,，|｜]/).map(function(x){ return x.trim(); }).filter(Boolean); if(gn.length) arr.push({k:'get',names:gn}); return; }
       if(t==='use'){ var uto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var un=plainText(b.html).trim(); if(!un) return; var uitem={name:un,target:uto}; var ulast=arr[arr.length-1]; if(ulast&&ulast.k==='use') ulast.items.push(uitem); else arr.push({k:'use',items:[uitem]}); return; }
+      if(t==='atk'){ var ap=plainText(b.html).split(/[／\/]/).map(function(x){ return x.trim(); }); var ign=ap.some(function(x){ return /装甲無視/.test(x); }); ap=ap.filter(function(x){ return x&&!/装甲無視/.test(x); }); if(ap.length>=3){ var rate=parseInt(String(ap[2]).replace(/[^0-9０-９]/g,'').replace(/[０-９]/g,function(c){ return String.fromCharCode(c.charCodeAt(0)-0xFEE0); }),10); arr.push({k:'atk',enemy:ap[0],name:ap[1],rate:isNaN(rate)?50:rate,dmg:ap[3]||'1D3',ignore:ign}); } return; }
       if(t==='back'){ var bto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var bl=arr[arr.length-1]; if(bl&&(bl.k==='trig'||bl.k==='use')) (bl.backs=bl.backs||[]).push({html:(b.html||'').replace(/<a\b[^>]*>|<\/a>/gi,'')||'戻る',target:bto}); return; }
       if(/class="hlink"/.test(b.html||'')){ var to=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var item={html:(b.html||'').replace(/<a\b[^>]*>|<\/a>/gi,''),target:to}; var last=arr[arr.length-1]; if(last&&last.k==='choice') last.items.push(item); else arr.push({k:'choice',items:[item]}); return; }
       var pf=PFX[t]; lines((pf?esc(pf[0]):'')+(b.html||'')+(pf?esc(pf[1]):''),arr);
@@ -4368,9 +4464,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function exportNovel(){
     var steps=novelSteps();
     if(!steps.length){ alert('書き出す本文がありません。'); return; }
-    var pcs=(state.pcs||[]).filter(function(p){ return p&&p.name; }).map(function(p){ return {name:p.name,color:p.color||'',skills:(p.skills||[]).map(function(x){ return {name:x.name,val:x.val}; }),idea:p.idea||'',luck:p.luck||'',know:p.know||'',san:p.san||''}; });
+    var pcs=(state.pcs||[]).filter(function(p){ return p&&p.name; }).map(function(p){ return {name:p.name,color:p.color||'',skills:(p.skills||[]).map(function(x){ return {name:x.name,val:x.val}; }),idea:p.idea||'',luck:p.luck||'',know:p.know||'',san:p.san||'',hp:p.hp||'',mp:p.mp||'',armor:p.armor||'',db:p.db||'',dex:p.dex||''}; });
     var chars={}; (state.npcs||[]).forEach(function(n){ if(n&&n.img&&String(n.name||'').trim()) chars[String(n.name).trim()]=n.img; });
-    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume}; });
+    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,ignoreArmor:!!it.ignoreArmor}; });
     var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items};
     var tpl=function(id){ var e=document.getElementById(id); return e?e.textContent:''; };
     var html='<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name||'シナリオ')+'</title>'
