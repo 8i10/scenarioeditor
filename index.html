@@ -866,7 +866,7 @@
     <div class="dlg-b nh-b">
       <h4>ノベルゲームの画面と操作</h4>
       <dl>
-        <dt>はじめる画面</dt><dd>☰メニューの「ノベルゲームのトレーラー画像を設定」で選んだ画像を一番上に表示します。PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／探索者の画像：ファイルを選び、表示位置を選択（右はメッセージ枠の横、左はメッセージ枠の上。立ち絵は右、駒は左がおすすめ）。未設定ならコマの画像／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
+        <dt>はじめる画面</dt><dd>☰メニューの「ノベルゲームのトレーラー画像を設定」で選んだ画像を一番上に表示します。PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／探索者の画像：ファイルを選び、表示位置を選択（右はメッセージ枠の横、左はメッセージ枠の上。立ち絵は右、駒は左がおすすめ）。未設定ならコマの画像／ログの文字色）、設定（NPCの立ち絵：表示するか、中央か左（メッセージ枠の左上）かを選択／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
         <dt>画面左上</dt><dd>見出しは場所バーに表示。探索者の枠はHP・MP・SANを−／＋や入力で変更でき、名前をクリックすると能力値を確認できます。同行NPC、持ち物・情報、有効な条件もここに表示されます。</dd>
         <dt>判定</dt><dd>技能判定はメッセージ枠右上のコマンドで「振る（目標値）」。目標値が分からないときは「1d100を振る」「技能値を入力して振る」。探索者・味方NPCのクリティカルで効果が複数あるときは、PLが選びます。クリチケを採用していれば判定の直後に振り直せます。</dd>
         <dt>ダイス・チャパレ</dt><dd>振ったダイスはすべて結果と内訳をメッセージ枠の上に表示します。発言欄左の「チャパレ」で、1d3〜1d100のダイスと読み込んだチャットパレットを選べます（{DB}はDBに変換）。</dd>
@@ -1290,6 +1290,10 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 #nvExpBar button{padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.28);background:rgba(16,14,26,.92);color:#eee;font-size:13px;cursor:pointer}
 #nvExpBar button:hover{background:rgba(120,100,180,.35)}
 #nvWin.exp #nvFeed{right:230px}
+#nvChar.lw{position:absolute;left:10px;right:auto;top:auto;bottom:calc(100% + 6px);transform:none;max-height:min(34vh,300px);max-width:min(30%,240px);z-index:1}
+#nvWin.pcl #nvChar.lw{left:calc(min(28%,210px) + 20px)}
+#nvWin.npl #nvFeed{left:min(32%,256px)}
+#nvWin.pcl.npl #nvFeed{left:min(60%,480px)}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
@@ -1326,7 +1330,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   <div class="nv-hint" id="nvPcImgMsg" style="margin:-4px 0 8px"></div>
   <div class="nv-row"><label>ログの文字色</label><input id="nvPcColor" type="color" value="#e6e6e6" style="flex:0 0 60px;padding:2px"></div>
   <div class="nv-sec">設定</div>
-  <div class="nv-row"><label>NPCの立ち絵</label><label class="nv-ck"><input type="checkbox" id="nvShowChar" checked> 登場時に表示する</label></div>
+  <div class="nv-row"><label>NPCの立ち絵</label><label class="nv-ck"><input type="checkbox" id="nvShowChar" checked> 登場時に表示する</label><select id="nvCharPos" style="flex:0 0 220px;min-width:0"><option value="center">中央に表示</option><option value="left">左（メッセージ枠の左上）に表示</option></select></div>
   <div class="nv-row"><label>クリチケの採用</label><label class="nv-ck"><input type="checkbox" id="nvUseTicket" checked> チェックを入れると、ステータスに「C」を追加</label></div>
   <div class="nv-sec">本シナリオのルール確認</div>
   <div class="nv-rules" id="nvRules"></div>
@@ -1352,7 +1356,7 @@ function addLog(n,t,c,tab){if(!String(t||"").trim())return null;var e={n:n,t:t,c
 /* NPCの立ち絵：台詞の名前と同じNPCに画像があれば中央に表示。場面（見出し）が変わると消える */
 var CH=D.chars||{};
 function charFor(nm){nm=String(nm||"").trim();if(!nm)return null;if(CH[nm])return CH[nm];for(var k in CH){if(k&&(nm.indexOf(k)>=0||k.indexOf(nm)>=0))return CH[k];}return null;}
-function paintChar(){if(st.showChar&&st.ch&&!st.battle){charEl.src=st.ch;charEl.style.display="block";}else charEl.style.display="none";}
+function paintChar(){var lw=st.charPos==="left";if(lw&&charEl.parentNode!==win)win.appendChild(charEl);if(!lw&&charEl.parentNode===win)document.body.appendChild(charEl);charEl.classList.toggle("lw",lw);var on=!!(st.showChar&&st.ch&&!st.battle);if(on){charEl.src=st.ch;charEl.style.display="block";}else charEl.style.display="none";win.classList.toggle("npl",on&&lw);}
 var busy=null;
 function eqCond(s){var m=String(s||"").match(/『([^』]+)』を([^。\n]*?)場合/);if(!m)return null;return {name:m[1],neg:/(ない|無い|ず|せず)$/.test(m[2].replace(/\s/g,""))};}
 function eqHas(n){var it=ITEMS[n];if(st.inv.indexOf(n)<0)return false;return it&&it.equip?isEq(n):true;}
@@ -1968,14 +1972,14 @@ function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").s
   
   var sel=$("nvPcSel");pcOptions();
   if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=st.koma&&st.koma.name===st.pc.name?"koma":ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";}
-  $("nvShowChar").checked=st.showChar!==false;$("nvUseTicket").checked=st.useTicket!==false;
+  $("nvShowChar").checked=st.showChar!==false;$("nvCharPos").value=st.charPos||"center";$("nvUseTicket").checked=st.useTicket!==false;
   $("nvResume").style.display=st.started?"":"none";
 }
 $("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
 function lockLand(){try{if(!window.matchMedia("(pointer:coarse)").matches)return;var el=document.documentElement,lk=function(){try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(function(){});}catch(_){}};if(el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().then(lk).catch(lk);else lk();}catch(_){}}
-$("nvBegin").onclick=function(){lockLand();setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.healed={};st.talks=[];st.place="";st.rec={};st.done=false;st.endCard=null;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
-$("nvResume").onclick=function(){lockLand();setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
+$("nvBegin").onclick=function(){lockLand();setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.healed={};st.talks=[];st.place="";st.rec={};st.done=false;st.endCard=null;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.charPos=$("nvCharPos").value;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvResume").onclick=function(){lockLand();setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;st.charPos=$("nvCharPos").value;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
 fillStart();invRender();locRender(false);afterBtn();pcImgRender();if(st.started)pcRender();$("nvStart").classList.add("show");
 })();
