@@ -858,6 +858,15 @@
   <div class="dlg" style="max-width:640px">
     <div class="dlg-h">ノベルゲーム用メニュー（KPレス用）の使い方</div>
     <div class="dlg-b nh-b">
+      <h4>ノベルゲームの画面と操作</h4>
+      <dl>
+        <dt>はじめる画面</dt><dd>PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
+        <dt>画面左上</dt><dd>見出しは場所バーに表示。探索者の枠はHP・MP・SANを−／＋や入力で変更でき、名前をクリックすると能力値を確認できます。同行NPC、持ち物・情報、有効な条件もここに表示されます。</dd>
+        <dt>判定</dt><dd>技能判定はメッセージ枠右上のコマンドで「振る（目標値）」。目標値が分からないときは「1d100を振る」「技能値を入力して振る」。探索者・味方NPCのクリティカルで効果が複数あるときは、PLが選びます。クリチケを採用していれば判定の直後に振り直せます。</dd>
+        <dt>ダイス・チャパレ</dt><dd>振ったダイスはすべて結果と内訳をメッセージ枠の上に表示します。発言欄左の「チャパレ」で、1d3〜1d100のダイスと読み込んだチャットパレットを選べます（{DB}はDBに変換）。</dd>
+        <dt>ログ</dt><dd>右上の「バックログ」で読み返し、「ログ出力」でココフォリア形式のログを保存できます（文字色はログのみ、語り手は黒）。</dd>
+        <dt>戦闘の画面</dt><dd>上部にラウンドと敵の状態（HPバー）、右上に行動順を表示し、行動はメッセージ枠右上のコマンドで選びます。</dd>
+      </dl>
       <p>右サイドメニュー／「/」メニューの<b>「KPレス用」</b>にある行を本文に置くと、「ノベルゲーム形式で保存（KPレス）」で書き出したときに動きが付きます。エディタやHTML出力では普通の行として表示されます。</p>
       <h4>進行</h4>
       <dl>
@@ -882,6 +891,7 @@
         <dt>対抗ロール（探索中）</dt><dd>技能ブロックを＜STR10との対抗ロール＞　※PCのSTRとの対抗 のように書くと、メッセージ枠の右上に「振る（目標値）」「振らない（探索へ戻る）」を表示します。成功率は50＋（PCの値−10）×5。「成功」「失敗」のトグルで結果を分岐できます。※がなければ同じ能力値同士の対抗です。</dd>
         <dt>ショックロール・気絶</dt><dd>一度に現在のHPの半分以上が減るとショックロール（CON×5）を行い、失敗すると移行します。HPが2以下になると自動で気絶して移行します（0以下になった場合も気絶の移行先を優先）。移行先は［気絶］［ショック失敗］に見出しリンク、または「敗北」「エンド」と書いて指定します。［戦闘開始］の直後に置くとその戦闘だけ、それ以外の場所に置くとシナリオ全体の移行先になります。指定がない場合、戦闘中は敗北、戦闘外はエンドです。</dd>
         <dt>エネミーの被ダメージ</dt><dd>NPCデータの「被ダメージ（ノベル用）」に「物理→1点／雷→1/2／炎→1/2」のように書くと、攻撃の種類や攻撃名ごとに受けるダメージが変わります（装甲の後に適用）。攻撃の種類はアイテムの「武器として使う」の「種類」で指定し、空欄やチャパレの攻撃は「物理」です。</dd>
+        <dt>エネミーのラウンド終わりの行動（【R末】）</dt><dd>NPCのチャパレに「CCB　獣の咆哮@50(【R末】成功時『揺らめく炎』1体追加)」のように【R末】を含む行を書くと、攻撃ではなく各ラウンドの終わりにその敵が行う判定になります。成功時（「失敗時」も可）の『名前』N体追加で同じ名前のNPCデータの敵が増援として現れ（次のラウンドから行動）、＜HP-1d3＞などは探索者に反映します。「CCB<=50 【獣の咆哮】」の形や、判定なしで「【R末】『揺らめく炎』1体追加」とも書けます。</dd>
         <dt>エネミーのラウンド終わり・装甲（消費）</dt><dd>NPCデータの「装甲（消費）」は受けたダメージを吸収して減っていきます（装甲の後、被ダメージ設定の前）。「ラウンド終わりHP回復」「ラウンド終わり装甲回復」に数値かダイスを書くと、各ラウンドの終わりに回復します（最大値まで。味方NPCも同じ）。</dd>
         <dt>同行NPC・［離脱］</dt><dd>［戦闘開始］の直後以外の場所に<b>青・緑</b>のNPC/エネミーデータを置くと、そこでそのNPCが同行し、PCの下にHP・MP・SANが表示されます（数値は変更できます）。同行中は以降の戦闘に味方として自動で参加し、HPは戦闘後も引き継ぎます。［離脱］にNPCの名前を書くと同行をやめます。</dd>
         <dt>［条件］［条件解除］</dt><dd>判定に条件を付けます（探索・戦闘どちらも）。<br>・<b>ランプを入手まで、＜目星＞-20</b>（補正。『ランプ』を手に入れると自動で解除）<br>・<b>この戦闘では＜回避＞は＜幸運＞との組み合わせロール</b>（両方成功で成功。どちらか失敗なら失敗）<br>・<b>この戦闘では『水之羽衣』を纏っていない場合、毎ラウンド＜HP-1d3＞</b>（各ラウンドの終わりに増減。「毎R」でも可。『』の装備・所持の条件も可）<br>［戦闘開始］の直後に置くか「この戦闘」と書くと、その戦闘の間だけ有効です。［条件解除］に技能名を書くと解除（空欄ならすべて）。有効な条件はPCの枠に表示されます。</dd>
@@ -1596,9 +1606,17 @@ function enemyAttack(ei,tgt,pre){var b=st.battle,e=b.en[ei];if(!e||e.down||!e.at
   var stp={k:"atk",enemy:e.name,name:a.name,rate:a.rate,dmg:a.dmg,base:a.base,dbt:a.dbt,ignore:false,color:e.color,ei:ei,tgt:tgt,pre:pre||"",fx:a.fx||null,hidden:!!a.hidden};st.cur=stp;b.phase="def";b.atk=stp;atkStart(stp,false);save();return true;}
 /* ---- 戦闘ラウンド：DEX順に手番。エネミーはチャパレの攻撃からランダムに1つ、探索者はコマンドで行動 ---- */
 var EN=D.enemies||{};
+function spawnEnemy(n){var b=st.battle,d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};var same=b.en.filter(function(e){return e.base===n;});if(same.length===1&&same[0].name===n)same[0].name=n+"A";var label=same.length?n+String.fromCharCode(65+same.length):n;
+  var e={acts:(d.roundActs||[]).slice(),base:n,name:label,take:d.take||"",pool:+d.pool||0,poolMax:+d.pool||0,roundHp:d.roundHp||"",roundPool:d.roundPool||"",hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#c0392b",down:false};b.en.push(e);return e;}
+function roundActs(ms){var b=st.battle;b.en.slice().forEach(function(u){if(u.down||!u.acts||!u.acts.length)return;u.acts.forEach(function(a){var ok=true;
+    if(a.rate!=null){var r=roll("CCB<="+a.rate+" 【"+a.name+"】");var rt=a.hidden?r.text.replace(/<=\s*\d+/g,""):r.text;addLog(u.name,rt,u.color||"#c0392b");ok=r.ok;}
+    var eff=ok?a.ok:a.ng,line=esc(u.name)+"の《"+esc(a.name)+"》"+(a.rate!=null?"："+(ok?"成功":"失敗"):"");
+    if(eff){var out=[],sm,re=/『([^』]+)』\s*([0-9０-９]+)?\s*(?:体|匹|人)?\s*(?:を)?\s*追加/g;while((sm=re.exec(eff))){var cnt=parseInt(hw(sm[2]||"1"),10)||1,nn=[];for(var i=0;i<cnt;i++)nn.push(spawnEnemy(sm[1]).name);out.push(nn.map(function(x){return "『"+esc(x)+"』";}).join("、")+"が現れた！");addLog(st.narr,"【増援】"+nn.join("、"),"#888888");}
+      var sx=statFx(eff,false);if(sx)out.push("（"+esc(sx)+"）");line+=" → "+(out.length?out.join(" "):esc(eff));}
+    ms.push(line);});});}
 function battleStart(step){
   var cnt={},list=[];step.enemies.forEach(function(n){cnt[n]=(cnt[n]||0)+1;});var seen={};
-  step.enemies.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};seen[n]=(seen[n]||0)+1;var label=cnt[n]>1?n+String.fromCharCode(64+seen[n]):n;list.push({base:n,name:label,take:d.take||"",pool:+d.pool||0,poolMax:+d.pool||0,roundHp:d.roundHp||"",roundPool:d.roundPool||"",hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#c0392b",down:false});});
+  step.enemies.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};seen[n]=(seen[n]||0)+1;var label=cnt[n]>1?n+String.fromCharCode(64+seen[n]):n;list.push({acts:(d.roundActs||[]).slice(),base:n,name:label,take:d.take||"",pool:+d.pool||0,poolMax:+d.pool||0,roundHp:d.roundHp||"",roundPool:d.roundPool||"",hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#c0392b",down:false});});
   var al=[];var alNames=(step.allies||[]).slice();(st.comp||[]).forEach(function(c){if(alNames.indexOf(c.name)<0)alNames.push(c.name);});alNames.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};var same=alNames.filter(function(x){return x===n;}).length;var k=al.filter(function(x){return x.base===n;}).length+1;al.push({pool:+d.pool||0,poolMax:+d.pool||0,roundHp:d.roundHp||"",roundPool:d.roundPool||"",base:n,name:same>1?n+String.fromCharCode(64+k):n,hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#4a8fd8",down:false});var cc=(st.comp||[]).filter(function(c){return c.name===n;})[0];if(cc){var la=al[al.length-1];la.hp=cc.hp.cur;la.max=cc.hp.max;la.down=cc.hp.cur<=0;}});
   (step.conds||[]).forEach(function(c){var c2=JSON.parse(JSON.stringify(c));c2.battle=true;condAdd(c2);});
   st.battle={fleeRes:!!step.fleeRes,noFlee:!!step.noFlee,al:al,en:list,round:0,order:[],turn:-1,delayed:false,res:step.res||{},stepPos:st.pos,phase:"msg",limit:+step.limit||0,evs:(step.rounds||[]).slice()};
@@ -1626,13 +1644,13 @@ function battleContinue(){
     if(pe&&!pe.down&&!(pu&&pu.down)){battleBar();feedClear();if(p.t==="counter"){counterTurn(p);return;}if(enemyAttack(p.ei,p.tgt,pe.name+"の反撃！"))return;}}
   b.turn++;if(b.turn>=b.order.length){
     /* ラウンド終了：アイテムの回復・ラウンド経過イベント・ラウンド上限 */
-    if(b.round>=1&&!b.rEnd){var ms=roundHeal();
+    if(b.round>=1&&!b.rEnd){feedClear();var ms=roundHeal();roundActs(ms);
       b.en.concat(b.al||[]).forEach(function(u){if(u.down)return;var hv=u.roundHp?rollTotal(u.roundHp):null,pv=u.roundPool?rollTotal(u.roundPool):null,out=[];
         if(hv&&hv.v>0){if(/d/i.test(u.roundHp))addLog(u.name,hv.text.replace(" ("," 【ラウンド回復】 ("),u.color||"#888888");var h0=u.hp;u.hp=Math.min(u.max,u.hp+hv.v);if(u.hp>h0)out.push("HP"+(b.en.indexOf(u)>=0?"が"+(u.hp-h0)+"回復":" "+h0+"→"+u.hp));}
         if(pv&&pv.v>0&&u.poolMax>0){if(/d/i.test(u.roundPool))addLog(u.name,pv.text.replace(" ("," 【装甲回復】 ("),u.color||"#888888");var p0=u.pool||0;u.pool=Math.min(u.poolMax,p0+pv.v);if(u.pool>p0)out.push("装甲（消費）が"+(u.pool-p0)+"回復");}
         if(out.length)ms.push(esc(u.name)+"："+out.join("、"));});
       (st.conds||[]).forEach(function(c){if(!c.round)return;var ec=eqCond(c.round);if(ec&&eqHas(ec.name)===ec.neg)return;var r=statFx(c.round,false);if(r)ms.push("【条件】"+esc(r));});if(st.madB){st.madB.left--;if(st.madB.left<=0){st.madB=null;ms.push("一時的狂気のダイス補正が終わった。");}else ms.push("一時的狂気：残り"+st.madB.left+"ラウンド（ダイス補正−10）");}(b.evs||[]).forEach(function(ev){if(ev.n===b.round&&ev.text)ms.push(esc(ev.text).replace(/\n/g,"<br>"));});var lim=b.limit>0&&b.round>=b.limit;
-      if(ms.length){b.rEnd=true;b.limHit=lim;b.turn--;hideCmd();nameEl.style.display="none";var rm="【ラウンド"+b.round+"終了】<br>"+ms.join("<br>");textEl.innerHTML=rm;st.cur={k:"line",html:rm};addLog(st.narr,txt(rm),"#888888");b.phase="msg";feedClear();battleBar();pcRender();invRender();save();return;}
+      if(ms.length){b.rEnd=true;b.limHit=lim;b.turn--;hideCmd();nameEl.style.display="none";var rm="【ラウンド"+b.round+"終了】<br>"+ms.join("<br>");textEl.innerHTML=rm;st.cur={k:"line",html:rm};addLog(st.narr,txt(rm),"#888888");b.phase="msg";battleBar();pcRender();invRender();save();return;}
       if(lim){battleEnd("limit");return;}}
     if(b.rEnd){b.rEnd=false;if(b.limHit){b.limHit=false;battleEnd("limit");return;}}
     battleOrder();b.turn=0;}
@@ -5074,7 +5092,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var fixDb=function(x){ return x.replace(/\s*\+?\s*DB/i,dbTerm).replace(/\s+/g,''); };
     var hits=[], dmgs=[], dodge=null;
     var fxs=[];
-    lines.forEach(function(l,i){ var hm=l.match(/^(?:CCB|CC)\s+([^@]+?)\s*@\s*(\d+)/i); if(hm){ var hn=hm[1].replace(/[【】\[\]《》「」]/g,'').trim(); if(/回避/.test(hn)) dodge=+hm[2]; else hits.push({i:i,name:hn,rate:+hm[2],hidden:true}); return; }
+    var racts=[];
+    lines.forEach(function(l,i){ if(/R末/.test(l)){ var rr=l.match(/@\s*(\d+)/)||l.match(/<=\s*(\d+)/); var rn=(l.match(/^(?:CCB|CC|1D100)\s+([^@<(]+?)\s*@/i)||[])[1]||nameOf(l.replace(/[【\[]R末[】\]]/g,'')); var rok=(l.match(/成功時\s*:?\s*(.+?)(?=\s*[,、\/]?\s*失敗時|\)?\s*$)/)||[])[1]||'', rng=(l.match(/失敗時\s*:?\s*(.+?)\)?\s*$/)||[])[1]||''; if(!/成功時|失敗時/.test(l)){ rok=l.replace(/^.*R末[】\]]?/,'').replace(/\)\s*$/,'').trim(); } racts.push({name:String(rn||'行動').replace(/[【】\[\]]/g,'').trim(),rate:rr?+rr[1]:null,hidden:/@\s*\d+/.test(l),ok:rok.replace(/\)\s*$/,'').trim(),ng:rng.trim()}); return; }
+      var hm=l.match(/^(?:CCB|CC)\s+([^@]+?)\s*@\s*(\d+)/i); if(hm){ var hn=hm[1].replace(/[【】\[\]《》「」]/g,'').trim(); if(/回避/.test(hn)) dodge=+hm[2]; else hits.push({i:i,name:hn,rate:+hm[2],hidden:true}); return; }
       var rm=l.match(/<([^>]+)>\s*(\d+)\s*と\s*<([^>]+)>\s*の?\s*対抗/); if(rm){ fxs.push({i:i,t:'res',an:rm[1].trim(),av:+rm[2],pk:rm[3].trim().toUpperCase()}); return; }
       var om=l.match(/^(成功|失敗)\s*:\s*(.*)$/); if(om){ var lf=fxs[fxs.length-1]; if(lf){ if(om[1]==='成功') lf.ok=om[2].trim(); else lf.ng=om[2].trim(); } return; }
       var DXP='(\\d+(?:D\\d+)?(?:\\s*\\+\\s*\\d+(?:D\\d+)?)*)'; var sm=/SAN|正気度/i.test(l)?l.match(new RegExp(DXP+'\\s*/\\s*'+DXP,'i')):null; if(sm){ var mz=l.match(/発狂(?:内容)?\s*:\s*(.+)$/); fxs.push({i:i,name:nameOf(l),t:'san',ok:sm[1].replace(/\s/g,''),ng:sm[2].replace(/\s/g,''),exempt:/発狂免除/.test(l),mad:mz?mz[1].trim():''}); return; }
@@ -5085,7 +5105,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     hits.forEach(function(h){ var nextHit=hits.filter(function(x){ return x.i>h.i; })[0]; h.end=nextHit?nextHit.i:1e9; var dm=dmgs.filter(function(d){ return d.name&&h.name&&(d.name.indexOf(h.name)>=0||h.name.indexOf(d.name)>=0); })[0]; if(!dm){ dm=dmgs.filter(function(d){ return d.i>h.i&&d.i<h.end; })[0]; } if(dm){ var at={name:h.name||'攻撃',rate:h.rate,dmg:dm.dmg,base:dm.base,dbt:dm.dbt}; if(h.hidden) at.hidden=true; dm.used=true; h.at=at; attacks.push(at); } });
     hits.forEach(function(h){ if(!h.at) return; dmgs.forEach(function(d){ if(d.used||d.i<=h.i||d.i>=h.end) return; d.used=true; (h.at.fx=h.at.fx||[]).push({t:'dice',expr:d.dmg,label:d.name||'ダイス',dmg:/ダメージ|DMG/i.test(lines[d.i])}); }); });
     fxs.forEach(function(f){ var nm=String(f.name||'').replace(/[:：].*$/,'').trim(); var at=null; hits.forEach(function(h){ if(!at&&h.at&&f.i>h.i&&f.i<h.end) at=h.at; }); if(!at) attacks.forEach(function(a){ if(!at&&nm&&a.name&&(nm.indexOf(a.name)>=0||a.name.indexOf(nm)>=0)) at=a; }); if(!at){ var prev=hits.filter(function(h){ return h.i<f.i; }).pop(); if(prev) attacks.forEach(function(a){ if(!at&&a.name===(prev.name||'攻撃')) at=a; }); } if(at){ var o={t:f.t}; for(var k in f) if(k!=='i'&&k!=='name') o[k]=f[k]; (at.fx=at.fx||[]).push(o); } });
-    return {attacks:attacks,dodge:dodge};
+    return {attacks:attacks,dodge:dodge,roundActs:racts};
   }
   /* ノベルゲームでコマを貼り付けるための読み取り関数（エディタと同じもの） */
   function novelLib(){ return 'var NVLIB=(function(){'+[pcNumI,npcHp,npcMp,npcDb,pcDerivedVal,parseSkills,parseBattlePalette].map(function(f){ return f.toString(); }).join('\n').replace(/<\//g,'<\\/')+'\nreturn {pcDerivedVal:pcDerivedVal,parseSkills:parseSkills,parseBattlePalette:parseBattlePalette};})();\n'; }
@@ -5096,7 +5116,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var chars={}; (state.npcs||[]).forEach(function(n){ if(n&&n.img&&String(n.name||'').trim()) chars[String(n.name).trim()]=n.img; });
     /* 戦闘用：NPCデータからHP・DEX・装甲・回避・攻撃（チャパレの命中とダメージ）を読む */
     var enemies={}; (state.npcs||[]).forEach(function(n){ if(!n||!String(n.name||'').trim()) return; var db=n.db||npcDb(n.str,n.siz)||''; var cp=parseBattlePalette(n.chat||n.skills||'',db);
-      enemies[String(n.name).trim()]={pool:+String(n.armorPool||'').replace(/[^0-9]/g,'')||0,roundHp:String(n.roundHp||'').trim(),roundPool:String(n.roundPool||'').trim(),take:String(n.take||'').trim(),mp:+(n.mp||npcMp(n.pow))||0,san:+(n.san||(n.pow!=null&&n.pow!==''?(+n.pow||0)*5:''))||0,hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
+      enemies[String(n.name).trim()]={roundActs:cp.roundActs||[],pool:+String(n.armorPool||'').replace(/[^0-9]/g,'')||0,roundHp:String(n.roundHp||'').trim(),roundPool:String(n.roundPool||'').trim(),take:String(n.take||'').trim(),mp:+(n.mp||npcMp(n.pow))||0,san:+(n.san||(n.pow!=null&&n.pow!==''?(+n.pow||0)*5:''))||0,hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
     var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,dur:+it.dur||0,ammo:+it.ammo||0,ignoreArmor:!!it.ignoreArmor,ignoreN:+String(it.ignoreN||'').replace(/[^0-9]/g,'')||0,wSkill:it.wSkill||'',wDmg:it.wDmg||'',lastStand:!!it.lastStand,wType:String(it.wType||'').trim(),equip:!!it.equip,equipOnly:!!(it.equip&&it.equipOnly),dmgCut:String(it.dmgCut||'').trim(),healHp:String(it.healHp||'').trim(),healMp:String(it.healMp||'').trim(),healSan:String(it.healSan||'').trim(),roundHp:String(it.roundHp||'').trim(),roundMp:String(it.roundMp||'').trim(),roundSan:String(it.roundSan||'').trim(),sub:(it.sub==='pick'||it.sub==='auto')?it.sub:''}; });
     pcs.forEach(function(pc,ix){ var src=(state.pcs||[]).filter(function(p){ return p&&p.name; })[ix]; pc.attacks=parseBattlePalette((src&&src.commands)||'',pc.db||'').attacks; pc.commands=(src&&src.commands)||''; });
     var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items,enemies:enemies,rules:state.novelRules||{},routes:steps.routes||{}};
