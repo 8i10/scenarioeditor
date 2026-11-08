@@ -857,6 +857,7 @@
       <p>右サイドメニュー／「/」メニューの<b>「KPレス用」</b>にある行を本文に置くと、「ノベルゲーム形式で保存（KPレス）」で書き出したときに動きが付きます。エディタやHTML出力では普通の行として表示されます。</p>
       <h4>進行</h4>
       <dl>
+        <dt>情報枠・カード</dt><dd>情報（囲い）・情報（左+下線）・色変えボックス・カードの中身は、ノベルゲームでは画面中央の専用の枠に全文を表示し、右上の×で閉じると先へ進みます。</dd>
         <dt>［選択肢］</dt><dd>選択肢ボタンを出します。続けて置いた［選択肢］は1組になります。見出しリンクを付けるとその見出しへ飛びます。</dd>
         <dt>！発言トリガー</dt><dd>PLの発言で先へ進みます。「合言葉／ひらけごま」のように／区切りでキーワードを書き、見出しリンクで飛び先を指定します。</dd>
         <dt>［戻る］</dt><dd>直前の［発言トリガー］［使用アイテム］に「戻る」ボタンを付けます。見出しリンクがなければ直前の選択肢へ戻ります。</dd>
@@ -885,7 +886,7 @@
         <dt>！エネミー攻撃</dt><dd>戦闘外の単発攻撃です。「敵名／攻撃名／成功率／ダメージ（／装甲無視）」の形で書きます。</dd>
       </dl>
       <h4>技能判定・シークレットダイス</h4>
-      <p>技能ブロックの中に「成功」「失敗」のトグルを置くと、判定結果で分岐します。<b>技能（※あり）</b>で<b>＜1d100＞　※＜幸運/2＞</b>のように書くと、PLには「1D100」の出目だけを見せ、裏で※の＜＞内の値と比べて成功／失敗を決めます。＜＞内は技能名・数値に「/2」「*5」「+10」「-10」を付けられます。</p>
+      <p>技能ブロックの中に「成功」「失敗」のトグルを置くと、判定結果で分岐します。＜アイデア+50＞のように補正を書くと、技能値に補正を足して判定します。<b>技能（※あり）</b>で<b>＜1d100＞　※＜幸運/2＞</b>のように書くと、PLには「1D100」の出目だけを見せ、裏で※の＜＞内の値と比べて成功／失敗を決めます。＜＞内は技能名・数値に「/2」「*5」「+10」「-10」を付けられます。</p>
       <h4>アイテムの設定（素材 → アイテム）</h4>
       <dl>
         <dt>数値</dt><dd>保有MP・装甲（固定／消費）・耐久値・弾数。持ち物の中で−／＋や直接入力で変えられます。</dd>
@@ -1210,6 +1211,8 @@ button{font:inherit;cursor:pointer}
 #nvBattleBar span.en .hb i{display:block;height:100%;background:#d0453a;transition:width .3s}
 .nv-cond{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);color:#ccc;font-weight:700;font-size:12px;line-height:1.6}
 .nv-cond span{display:block;font-weight:400;color:#e8d38a}
+.nv-cardv .bd{line-height:1.9;font-size:15px}
+.nv-cardv h2{font-size:16px}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
@@ -1226,6 +1229,7 @@ button{font:inherit;cursor:pointer}
 <form id="nvBar" autocomplete="off"><button type="button" id="nvPalBtn" title="チャットパレットを開く">チャパレ</button><input id="nvIn" placeholder="発言・ダイス（例：CCB<=70　1d100　2d6+3　1d3）"><button class="nv-btn" type="submit">送信</button></form>
 <div class="nv-ovl" id="nvBack"><div class="nv-dlg"><h2>バックログ</h2><div class="bd"><div id="nvBackList"></div></div><div class="ft"><button class="nv-btn sub" id="nvBackClose">閉じる</button></div></div></div>
 <div id="nvOrder"></div>
+<div class="nv-ovl" id="nvCard"><div class="nv-dlg nv-info nv-cardv"><button class="nv-x" id="nvCardX" title="閉じて進む">×</button><h2 id="nvCardT"></h2><div class="bd" id="nvCardB"></div></div></div>
 <div class="nv-ovl" id="nvInfo"><div class="nv-dlg nv-info"><button class="nv-x" id="nvInfoX" title="閉じて持ち物にしまう">×</button><h2 id="nvInfoT"></h2><div class="bd" id="nvInfoB"></div></div></div>
 <div class="nv-ovl" id="nvAbil"><div class="nv-dlg nv-info"><button class="nv-x" id="nvAbilX" title="閉じる">×</button><h2 id="nvAbilT"></h2><div class="bd" id="nvAbilB"></div></div></div>
 <div class="nv-ovl" id="nvStart"><div class="nv-dlg"><h2>はじめる</h2><div class="bd">
@@ -1272,12 +1276,15 @@ function show(step,noLog){
   if(step.k==="choice"){if(S[st.pos]===step)st.lastChoice=st.pos;busy="choice";nameEl.style.display="none";textEl.innerHTML="どうする？";nextEl.style.display="none";choiceEl.style.display="flex";choiceEl.innerHTML=step.items.map(function(it,i){return "<button data-i=\""+i+"\">"+conv(it.html)+"</button>";}).join("");save();return;}
   if(step.k==="chg"){/* アイテム変化：持っていれば同じ位置で置き換える。持っていなければ何もせず次へ */var ix=st.inv.indexOf(step.from);if(ix<0||st.inv.indexOf(step.to)>=0){if(ix>=0){st.inv.splice(ix,1);invRender();pcRender();}next();return;}
     var newIt=itemDef(step.to);st.inv[ix]=step.to;if(st.iv)delete st.iv[step.from];ivOf(step.to);
-    nameEl.style.display="none";var cm="『"+esc(step.from)+"』は『"+esc(step.to)+"』だった。"+(newIt.desc?"<br><span style=\"font-size:.9em;opacity:.85\">"+esc(newIt.desc)+"</span>":"");textEl.innerHTML=cm;if(!noLog)addLog(st.narr,txt(cm),"#888888");invRender();pcRender();invFlash();save();return;}
+    nameEl.style.display="none";var cm="『"+esc(step.from)+"』は『"+esc(step.to)+"』に変化した。"+(newIt.desc?"<br><span style=\"font-size:.9em;opacity:.85\">"+esc(newIt.desc)+"</span>":"");textEl.innerHTML=cm;if(!noLog)addLog(st.narr,txt(cm),"#888888");invRender();pcRender();invFlash();save();return;}
   if(step.k==="get"){if(!noLog){var fresh=[];step.names.forEach(function(n){if(st.inv.indexOf(n)<0&&fresh.indexOf(n)<0)fresh.push(n);});st.infoQ=fresh;}var got=[];nameEl.style.display="none";var msg=step.names.map(function(n){var it=itemDef(n);return (it.kind==="info"?"情報『":"『")+esc(n)+(it.kind==="info"?"』を入手した。":"』を手に入れた。");}).join("<br>");textEl.innerHTML=msg;if(!noLog)addLog(st.narr,txt(msg),"#888888");if(st.infoQ&&st.infoQ.length){busy="info";nextEl.style.display="none";infoShow();}save();return;}
   if(step.k==="atk"){atkStart(step,noLog);save();return;}
   if(step.k==="battle"){if(noLog&&st.battle){battleResume();return;}battleStart(step);return;}
   if(step.k==="trig"){busy="trig";nameEl.style.display="none";textEl.innerHTML="（発言してください）";nextEl.style.display="none";showBacks(step);$("nvIn").focus();save();return;}
   if(step.k==="use"){busy="use";nameEl.style.display="none";textEl.innerHTML="（持ち物からアイテムを使用してください）";nextEl.style.display="none";showBacks(step);if(!st.invOpen){st.invOpen=true;invRender();}save();return;}
+  if(step.k==="card"){nameEl.style.display="none";busy="card";nextEl.style.display="none";var ct=conv(step.title||"");textEl.innerHTML=ct?"<b>"+ct+"</b>":"（情報）";
+    $("nvCardT").innerHTML=ct||"情報";$("nvCardT").style.display=ct?"":"none";$("nvCardB").innerHTML=step.body.map(function(x){return (x.name?"<b>"+esc(x.name)+"</b>「"+conv(x.html)+"」":conv(x.html))+(x.img?"<img src=\""+esc(x.img)+"\" style=\"display:block;max-width:100%;margin:6px 0\">":"");}).join("<br>");$("nvCardB").scrollTop=0;$("nvCard").classList.add("show");
+    if(!noLog){if(ct)addLog(st.narr,txt(ct),"#888888");step.body.forEach(function(x){addLog(x.name||st.narr,txt(conv(x.html)),"#888888");});}save();return;}
   if(step.k==="cond"){if(!noLog)condAdd(step.c);pcRender();if(step.html){nameEl.style.display="none";textEl.innerHTML=conv(step.html);if(!noLog)addLog(st.narr,txt(conv(step.html)),"#888888");save();return;}save();busy=null;next();return;}
   if(step.k==="uncond"){if(!noLog){var bf=(st.conds||[]).length;st.conds=(st.conds||[]).filter(function(c){return step.names.length&&step.names.indexOf(c.skill)<0;});if(bf!==st.conds.length)addLog(st.narr,"【条件解除】"+(step.names.join("・")||"すべて"),"#888888");}pcRender();save();busy=null;next();return;}
   if(step.k==="join"){nameEl.style.display="none";st.comp=st.comp||[];var jn=step.name;if(!noLog&&!st.comp.some(function(c){return c.name===jn;})){var jd=EN[jn]||{hp:10};var mk=function(v){v=+v||0;return {cur:v,max:v};};st.comp.push({name:jn,hp:mk(jd.hp),mp:mk(jd.mp),san:mk(jd.san)});}var jm="『"+esc(jn)+"』が同行することになった。";textEl.innerHTML=jm;if(!noLog)addLog(st.narr,txt(jm),"#888888");pcRender();save();return;}
@@ -1288,7 +1295,7 @@ function show(step,noLog){
     textEl.innerHTML="《"+esc(step.skill)+"》<br><span style=\"font-size:.85em;opacity:.8\">PCの"+esc(rx.pk)+"（"+(pv==null?"?":pv)+"）と"+esc(rx.an)+esc(String(rx.av))+"の対抗</span>";if(!noLog)addLog(st.narr,"《"+step.skill+"》","#888888");
     showCmd("対抗ロール",[{html:"振る<small>"+(rv==null?"?":rv+"%")+"</small>",fn:function(){var v=rv;if(v==null){var iv=prompt("PCの"+rx.pk+"の値を入力してください","10");if(iv==null)return;v=Math.max(0,Math.min(100,50+(num(iv)-rx.av)*5));}hideCmd();busy=null;nextEl.style.display="";doCheck(step,v,false);}},
       {html:"振らない（探索へ戻る）",cls:"back",fn:function(){hideCmd();busy=null;nextEl.style.display="";if(st.log.length&&st.log[st.log.length-1].t==="《"+step.skill+"》")st.log.pop();next();}}]);save();return;}
-  if(step.k==="check"){var sec=secretOf(step)!=null;busy="check";nameEl.style.display="none";textEl.innerHTML=sec?"1D100を振ってください。":step.shock?"《ショックロール（CON×5）》の判定をしてください。":step.mad?"発狂ロール：《アイデア》の判定をしてください。":step.sanc?"《SANチェック》をしてください（"+esc(step.sanc.ok)+"／"+esc(step.sanc.ng)+"）。":"《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=sec?null:step.sanc?(st.stat?st.stat.san.cur:skillVal("SAN")):step.abil?abilVal(step.abil):step.res?step.res.v:skillVal(step.skill);var md=(sec||step.sanc||step.mad||st.battle)?0:(st.nextMod||0);var cf=(sec||step.sanc||step.mad||step.shock||step.abil||step.res)?{mod:0,combo:[]}:condFor(step.skill);if(cf.mod&&v!=null&&v!==""){v=num(v)+cf.mod;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：技能値"+(cf.mod>0?"+":"")+cf.mod+"）</span>";}if(cf.combo.length)textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：《"+cf.combo.join("》《")+"》との組み合わせロール）</span>";if(md&&v!=null&&v!==""){v=num(v)+md;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（前回の判定の効果で技能値"+(md>0?"+":"")+md+"）</span>";}chkIn.value=v==null?"":v;chk.classList.toggle("secret",sec);$("nvChkGo").textContent=sec?"1D100を振る":"判定する（CCB）";chk.style.display="flex";if(!noLog)addLog(st.narr,sec?"1D100の判定":"《"+step.skill+"》の判定","#888888");save();return;}
+  if(step.k==="check"){var sec=secretOf(step)!=null;busy="check";nameEl.style.display="none";textEl.innerHTML=sec?"1D100を振ってください。":step.shock?"《ショックロール（CON×5）》の判定をしてください。":step.mad?"発狂ロール：《アイデア》の判定をしてください。":step.sanc?"《SANチェック》をしてください（"+esc(step.sanc.ok)+"／"+esc(step.sanc.ng)+"）。":"《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=sec?null:step.sanc?(st.stat?st.stat.san.cur:skillVal("SAN")):step.abil?abilVal(step.abil):step.res?step.res.v:skillValMod(step.skill);var md=(sec||step.sanc||step.mad||st.battle)?0:(st.nextMod||0);var cf=(sec||step.sanc||step.mad||step.shock||step.abil||step.res)?{mod:0,combo:[]}:condFor(step.skill);if(cf.mod&&v!=null&&v!==""){v=num(v)+cf.mod;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：技能値"+(cf.mod>0?"+":"")+cf.mod+"）</span>";}if(cf.combo.length)textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：《"+cf.combo.join("》《")+"》との組み合わせロール）</span>";if(md&&v!=null&&v!==""){v=num(v)+md;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（前回の判定の効果で技能値"+(md>0?"+":"")+md+"）</span>";}chkIn.value=v==null?"":v;chk.classList.toggle("secret",sec);$("nvChkGo").textContent=sec?"1D100を振る":"判定する（CCB）";chk.style.display="flex";if(!noLog)addLog(st.narr,sec?"1D100の判定":"《"+step.skill+"》の判定","#888888");save();return;}
   var nm=step.k==="say"?(step.name||""):"";if(nm){var ci=charFor(nm);if(ci){st.ch=ci;}paintChar();}nameEl.textContent=nm;nameEl.style.display=nm?"":"none";textEl.innerHTML=conv(step.html);
   if(!noLog)addLog(nm||st.narr,txt(conv(step.html)),step.k==="say"?(step.color||"#888888"):"#888888");
   if(!noLog){var sx=statFx(txt(conv(step.html)),!!step.bare);if(sx)textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(sx)+"）</span>";}
@@ -1405,6 +1412,10 @@ function infoClose(){if(!st.infoQ||!st.infoQ.length){$("nvInfo").classList.remov
 $("nvInfoX").addEventListener("click",function(e){e.stopPropagation();infoClose();});
 $("nvInfo").addEventListener("click",function(e){e.stopPropagation();});
 document.addEventListener("keydown",function(e){if($("nvInfo").classList.contains("show")&&(e.key==="Escape"||e.key==="Enter")){e.preventDefault();infoClose();}});
+function cardClose(){if(!$("nvCard").classList.contains("show"))return;$("nvCard").classList.remove("show");if(st.cur&&st.cur.k==="card"){busy=null;nextEl.style.display="";var sx=[];(st.cur.body||[]).forEach(function(x){var r=statFx(txt(conv(x.html)),false);if(r)sx.push(r);});if(sx.length){textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(sx.join("、"))+"）</span>";save();return;}save();next();}}
+$("nvCardX").addEventListener("click",function(e){e.stopPropagation();cardClose();});
+$("nvCard").addEventListener("click",function(e){e.stopPropagation();});
+document.addEventListener("keydown",function(e){if($("nvCard").classList.contains("show")&&(e.key==="Escape"||e.key==="Enter")){e.preventDefault();cardClose();}});
 function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offsetWidth;h.classList.add("flash");}
 function invRender(){
   var openSet={};[].forEach.call(document.querySelectorAll("#nvInvBody details[open] summary span"),function(x){openSet[x.textContent]=1;});
@@ -1557,7 +1568,7 @@ function battleStart(step){
   var al=[];var alNames=(step.allies||[]).slice();(st.comp||[]).forEach(function(c){if(alNames.indexOf(c.name)<0)alNames.push(c.name);});alNames.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};var same=alNames.filter(function(x){return x===n;}).length;var k=al.filter(function(x){return x.base===n;}).length+1;al.push({base:n,name:same>1?n+String.fromCharCode(64+k):n,hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#4a8fd8",down:false});var cc=(st.comp||[]).filter(function(c){return c.name===n;})[0];if(cc){var la=al[al.length-1];la.hp=cc.hp.cur;la.max=cc.hp.max;la.down=cc.hp.cur<=0;}});
   (step.conds||[]).forEach(function(c){var c2=JSON.parse(JSON.stringify(c));c2.battle=true;condAdd(c2);});
   st.battle={al:al,en:list,round:0,order:[],turn:-1,delayed:false,res:step.res||{},stepPos:st.pos,phase:"msg",limit:+step.limit||0,evs:(step.rounds||[]).slice()};
-  nameEl.style.display="none";textEl.innerHTML="戦闘開始！　"+list.map(function(e){return esc(e.name);}).join("、")+"が現れた。"+(al.length?"<br>味方："+al.map(function(x){return esc(x.name);}).join("、"):"")+(step.conds||[]).map(function(c){return "<br><span style=\"font-size:.85em;opacity:.85\">"+(c.html?conv(c.html):"条件："+esc(condText(c)))+"</span>";}).join("");pcRender();addLog(st.narr,"【戦闘開始】"+list.map(function(e){return e.name;}).join("、"),"#888888");
+  nameEl.style.display="none";textEl.innerHTML="【戦闘開始】"+(step.conds||[]).map(function(c){return "<br><span style=\"font-size:.85em;opacity:.85\">"+(c.html?conv(c.html):"条件："+esc(condText(c)))+"</span>";}).join("");pcRender();addLog(st.narr,"【戦闘開始】","#888888");
   battleBar();save();
 }
 function pcDex(){return num(st.pc&&st.pc.dex)||10;}
@@ -1568,7 +1579,7 @@ function battleBar(){var b=st.battle;if(!b){barEl.style.display="none";orderRend
   barEl.innerHTML="<span class=\"rd\">ラウンド "+Math.max(1,b.round)+(b.limit>0?" / "+b.limit:"")+"</span>"+"<span class=\""+(cur==="pc"?"tn":"")+"\">"+esc(pcName())+"</span>"+(b.al||[]).map(function(x,i){return "<span class=\"al "+(x.down?"dn ":"")+(cur==="a"+i?"tn":"")+"\">"+esc(x.name)+"：HP "+x.hp+"/"+x.max+"</span>";}).join("")+b.en.map(function(e,i){var r=e.max>0?e.hp/e.max:0;var stt=e.down?"戦闘不能":(r>0.5?"健在":"負傷");return "<span class=\"en "+(e.down?"dn ":"")+(cur===i?"tn":"")+"\">"+esc(e.name)+"："+stt+"<i class=\"hb\"><i style=\"width:"+Math.max(0,Math.min(100,Math.round(r*100)))+"%\"></i></i></span>";}).join("");barEl.style.display="flex";}
 function battleOrder(){var b=st.battle;var o=[{k:"pc",dex:pcDex()}];b.en.forEach(function(e,i){if(!e.down)o.push({k:i,dex:e.dex});});(b.al||[]).forEach(function(x,i){if(!x.down)o.push({k:"a"+i,dex:x.dex});});o.sort(function(x,y){return y.dex-x.dex||(x.k==="pc"?-1:y.k==="pc"?1:0);});b.order=o.map(function(x){return x.k;});b.turn=-1;b.delayed=false;b.round++;addLog(st.narr,"―― ラウンド"+b.round+" ――","#888888");}
 function battleEnd(kind){var b=st.battle;st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";var to=b.res["b"+(kind==="win"?"win":kind==="lose"?"lose":kind==="limit"?"limit":"flee")];st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();
-  var msg=kind==="win"?"戦闘に勝利した！":kind==="lose"?"戦闘に敗れた……":kind==="limit"?b.limit+"ラウンドが経過した。":"戦闘から逃げ出した。";addLog(st.narr,"【"+msg+"】","#888888");
+  var msg="【戦闘終了】";addLog(st.narr,msg,"#888888");
   if(typeof to==="number"&&to>=0){st.pos=to;show(S[st.pos]);return;}
   if(kind==="lose"&&!(typeof to==="number"&&to>=0)){nameEl.style.display="none";textEl.innerHTML=msg+"<br><span style=\"font-size:.85em;opacity:.75\">（敗北時の飛び先がないため、ここで止まります）</span>";busy="over";nextEl.style.display="none";save();return;}
   nameEl.style.display="none";textEl.innerHTML=msg;st.cur={k:"line",html:msg};busy=null;nextEl.style.display="";save();}
@@ -1687,6 +1698,7 @@ function condAdd(c){st.conds=st.conds||[];if(c.until&&st.inv.indexOf(c.until)>=0
 /* 組み合わせロール：r に加えて組み合わせる技能もすべて成功で成功 */
 function comboRoll(r,combos){if(!combos.length)return r;var all=r.ok,txt=[];combos.forEach(function(cn){var cv=skillVal(cn);var c=roll("CCB<="+(cv==null?0:num(cv))+" 【"+cn+"（組み合わせ）】");addLog(pcName(),c.text,pcColor());feedAdd(pcName(),c.text,pcColor(),null,false);if(!c.ok)all=false;txt.push("《"+cn+"》"+c.text.split("＞").pop().trim());});
   return {text:r.text,ok:all,n:r.n,crit:all&&r.crit,fum:r.fum,combo:txt.join("・")+" → "+(all?"成功":"失敗")};}
+function skillValMod(sk){var m=hw(String(sk||"")).match(/^(.+?)\s*([+\-])\s*(\d+)\s*$/);if(m){var bv=skillVal(m[1].trim());return (bv==null||bv==="")?null:num(bv)+(m[2]==="-"?-1:1)*(+m[3]);}return skillVal(sk);}
 function secretOf(step){return (step&&step.secret)||null;}
 function secretTarget(ex){ex=hw(ex).replace(/\s/g,"").replace(/×/g,"*").replace(/÷/g,"/");var m=ex.match(/^(.*?)((?:[*\/+\-]\d+)*)$/),base=m[1],v=/^\d+$/.test(base)?+base:num(skillVal(base));(m[2].match(/[*\/+\-]\d+/g)||[]).forEach(function(o){var n=+o.slice(1);if(o[0]==="*")v*=n;else if(o[0]==="/")v=n?Math.floor(v/n):v;else if(o[0]==="+")v+=n;else v-=n;});return Math.floor(v);}
 $("nvChkGo").addEventListener("click",function(e){
@@ -1758,7 +1770,7 @@ function fillStart(){$("nvRules").innerHTML=rulesHTML();
 }
 $("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
-$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
 $("nvResume").onclick=function(){st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
 fillStart();invRender();if(st.started)pcRender();$("nvStart").classList.add("show");
@@ -4954,6 +4966,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         (b.children||[]).forEach(function(c){ var lb=plainText(c.html); if(isCtn(c.type)&&/失敗/.test(lb)) walk(c.children,ck.fail,false); else if(isCtn(c.type)&&/成功/.test(lb)) walk(c.children,ck.succ,false); else walk([c],ck.other,false); });
         if(!ck.succ.length&&!ck.fail.length){ ck.succ=ck.other; ck.other=[]; }
         arr.push(ck); return; }
+      if({info:1,lbox:1,cbox:1,cbox2:1,cbox3:1,ccard0:1,ccard:1,ccard2:1,ccard3:1}[t]){ var sub=[]; walk(b.children,sub,false); var bodyL=[], rest=[]; sub.forEach(function(x){ if(x.k==='line'||x.k==='say') bodyL.push({html:x.html,name:x.k==='say'?(x.name||''):'',img:x.img||''}); else if(x.k==='title') bodyL.push({html:'<b>'+x.html+'</b>'}); else rest.push(x); }); var ttl=(t!=='ccard0'&&plainText(b.html))?(b.html||''):''; if(bodyL.length||ttl) arr.push({k:'card',title:ttl,body:bodyL}); rest.forEach(function(x){ arr.push(x); }); return; }
       if(isCtn(t)){ var lb2=plainText(b.html); if(lb2&&t!=='ccard0') arr.push({k:'line',html:'<b>'+(b.html||'')+'</b>'}); walk(b.children,arr,top); return; }
       if(t==='choice'){ var cto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var citem={html:(b.html||'').replace(/<a\b[^>]*>|<\/a>/gi,''),target:cto}; var clast=arr[arr.length-1]; if(clast&&clast.k==='choice') clast.items.push(citem); else arr.push({k:'choice',items:[citem]}); return; }
       if(t==='trig'){ var tto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var keys=plainText(b.html).split(/[／\/、,，|｜]/).map(function(x){ return x.trim(); }).filter(Boolean); if(!keys.length) return; var titem={keys:keys,target:tto}; var tlast=arr[arr.length-1]; if(tlast&&tlast.k==='trig') tlast.items.push(titem); else arr.push({k:'trig',items:[titem]}); return; }
