@@ -860,7 +860,7 @@
       <h4>進行</h4>
       <dl>
         <dt>情報枠・カード</dt><dd>情報（囲い）・情報（左+下線）・色変えボックス・カードの中身は、ノベルゲームでは画面中央の専用の枠に全文を表示し、右上の×で閉じると先へ進みます。</dd>
-        <dt>［選択肢］</dt><dd>選択肢ボタンを出します。続けて置いた［選択肢］は1組になります。見出しリンクを付けるとその見出しへ飛びます。</dd>
+        <dt>［選択肢］</dt><dd>選択肢ボタンを出します。続けて置いた［選択肢］は1組になります。見出しリンクを付けるとその見出しへ飛びます。本文のどこかに「＜先へ進む＞が追加。」のように書いた選択肢は、その文が表示されるまで出ません。</dd>
         <dt>！発言トリガー</dt><dd>PLの発言で先へ進みます。「合言葉／ひらけごま」のように／区切りでキーワードを書き、見出しリンクで飛び先を指定します。</dd>
         <dt>［戻る］</dt><dd>直前の［発言トリガー］［使用アイテム］に「戻る」ボタンを付けます。見出しリンクがなければ直前の選択肢へ戻ります。</dd>
       </dl>
@@ -1284,7 +1284,7 @@ function show(step,noLog){
   if(!step){st.done=true;nameEl.style.display="none";textEl.innerHTML="― おわり ―<br><span style=\"font-size:.85em;opacity:.75\">右上の「ログ出力」でプレイログを保存できます。</span>";nextEl.style.display="none";save();return;}
   if(step.img){imgEl.src=step.img;imgEl.style.display="block";st.img=step.img;}
   if(step.k==="title"){st.ch=null;paintChar();titleEl.innerHTML=conv(step.html);titleEl.className="nv-title lv"+(step.lv||1);titleEl.style.display="";nameEl.style.display="none";textEl.innerHTML="";win.classList.add("dim");if(!noLog)addLog(st.narr,"【"+txt(conv(step.html))+"】","#888888");save();return;}
-  if(step.k==="choice"){if(S[st.pos]===step)st.lastChoice=st.pos;busy="choice";nameEl.style.display="none";textEl.innerHTML="どうする？";nextEl.style.display="none";choiceEl.style.display="flex";choiceEl.innerHTML=step.items.map(function(it,i){return "<button data-i=\""+i+"\">"+conv(it.html)+"</button>";}).join("");save();return;}
+  if(step.k==="choice"){if(S[st.pos]===step)st.lastChoice=st.pos;busy="choice";nameEl.style.display="none";textEl.innerHTML="どうする？";nextEl.style.display="none";var vis=step.items.filter(function(it){return !it.lock||(st.unlock&&st.unlock[it.lock]);});if(!vis.length){busy=null;choiceEl.style.display="none";next();return;}choiceEl.style.display="flex";choiceEl.innerHTML=step.items.map(function(it,i){if(it.lock&&!(st.unlock&&st.unlock[it.lock]))return "";return "<button data-i=\""+i+"\">"+conv(it.html)+"</button>";}).join("");save();return;}
   if(step.k==="chg"){/* アイテム変化：持っていれば同じ位置で置き換える。持っていなければ何もせず次へ */var ix=st.inv.indexOf(step.from);if(ix<0||st.inv.indexOf(step.to)>=0){if(ix>=0){st.inv.splice(ix,1);invRender();pcRender();}next();return;}
     var newIt=itemDef(step.to);st.inv[ix]=step.to;if(st.iv)delete st.iv[step.from];if(st.eq)delete st.eq[step.from];ivOf(step.to);
     nameEl.style.display="none";var cm="『"+esc(step.from)+"』は『"+esc(step.to)+"』に変化した。"+(newIt.desc?"<br><span style=\"font-size:.9em;opacity:.85\">"+esc(newIt.desc)+"</span>":"");textEl.innerHTML=cm;if(!noLog)addLog(st.narr,txt(cm),"#888888");invRender();pcRender();invFlash();save();return;}
@@ -1309,6 +1309,7 @@ function show(step,noLog){
   if(step.k==="check"){var sec=secretOf(step)!=null;busy="check";nameEl.style.display="none";textEl.innerHTML=sec?"1D100を振ってください。":step.shock?"《ショックロール（CON×5）》の判定をしてください。":step.mad?"発狂ロール：《アイデア》の判定をしてください。":step.sanc?"《SANチェック》をしてください（"+esc(step.sanc.ok)+"／"+esc(step.sanc.ng)+"）。":"《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=sec?null:step.sanc?(st.stat?st.stat.san.cur:skillVal("SAN")):step.abil?abilVal(step.abil):step.res?step.res.v:skillValMod(step.skill);var md=(sec||step.sanc||step.mad||st.battle)?0:(st.nextMod||0);var cf=(sec||step.sanc||step.mad||step.shock||step.abil||step.res)?{mod:0,combo:[]}:condFor(step.skill);if(cf.mod&&v!=null&&v!==""){v=num(v)+cf.mod;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：技能値"+(cf.mod>0?"+":"")+cf.mod+"）</span>";}if(cf.combo.length)textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：《"+cf.combo.join("》《")+"》との組み合わせロール）</span>";if(md&&v!=null&&v!==""){v=num(v)+md;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（前回の判定の効果で技能値"+(md>0?"+":"")+md+"）</span>";}chkIn.value=v==null?"":v;chk.classList.toggle("secret",sec);chk.style.display="none";checkCmd(step,v,sec);if(!noLog)addLog(st.narr,sec?"1D100の判定":"《"+step.skill+"》の判定","#888888");save();return;}
   var nm=step.k==="say"?(step.name||""):"";if(nm){var ci=charFor(nm);if(ci){st.ch=ci;}paintChar();}nameEl.textContent=nm;nameEl.style.display=nm?"":"none";textEl.innerHTML=conv(step.html);
   if(!noLog)addLog(nm||st.narr,txt(conv(step.html)),step.k==="say"?(step.color||"#888888"):"#888888");
+  if(!noLog){var ulm,ure=/[<＜]([^>＞]+)[>＞]\s*(?:が|を)\s*追加/g,utx=txt(conv(step.html));while((ulm=ure.exec(utx))){st.unlock=st.unlock||{};st.unlock[ulm[1].trim()]=true;}}
   if(!noLog){var sx=statFx(txt(conv(step.html)),!!step.bare);if(sx)textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(sx)+"）</span>";}
   save();
 }
@@ -1815,7 +1816,7 @@ function fillStart(){$("nvRules").innerHTML=rulesHTML();
 }
 $("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
-$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
 $("nvResume").onclick=function(){st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
 fillStart();invRender();if(st.started)pcRender();$("nvStart").classList.add("show");
@@ -3139,6 +3140,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     if(!(e.target&&e.target.isContentEditable)) return;
     var a=caretAtLinkEnd(); if(a) caretAfterLink(a);
   },true);
+  /* 日本語入力（IME）・貼り付けなど keydown を通らない入力でも、リンクの外へ出してから入力する */
+  document.addEventListener('compositionstart',function(e){ if(!(e.target&&e.target.isContentEditable)) return; var a=caretAtLinkEnd(); if(a) caretAfterLink(a); },true);
+  document.addEventListener('beforeinput',function(e){ if(!(e.target&&e.target.isContentEditable)) return; if(!/^insert(Text|FromPaste|ReplacementText|FromDrop)$/.test(e.inputType||'')) return; var a=caretAtLinkEnd(); if(a) caretAfterLink(a); },true);
   document.addEventListener('input',function(e){
     if(e.isComposing) return;
     var sel=window.getSelection(); if(!sel||!sel.rangeCount) return;
@@ -5042,6 +5046,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var pages=state.pages||[];
     pages.forEach(function(p){ if(pages.length>1&&p.name) steps.push({k:'title',lv:0,html:esc(p.name)}); walk(p.blocks,steps,true); });
     (function fix(arr){ arr.forEach(function(s){ if(s.k==='battle'&&s.res){ Object.keys(s.res).forEach(function(k){ var tg=s.res[k]; s.res[k]=(tg&&tg.charAt(0)==='@')?tg:(tg&&head.hasOwnProperty(tg))?head[tg]:-1; }); } (s.backs||[]).forEach(function(it){ it.to=(it.target&&head.hasOwnProperty(it.target))?head[it.target]:-1; delete it.target; }); if(s.k==='choice'||s.k==='trig'||s.k==='use') s.items.forEach(function(it){ it.to=(it.target&&head.hasOwnProperty(it.target))?head[it.target]:-1; delete it.target; }); if(s.k==='check'){ fix(s.succ); fix(s.fail); fix(s.other); } }); })(steps);
+    /* 「＜先へ進む＞が追加」と書かれた選択肢は、その文が出るまで表示しない */
+    (function(){ var L={}; (function scan(bl){ (bl||[]).forEach(function(b){ var tx=plainText(b.html||''), m, re=/[＜<]([^＞>]+)[＞>]\s*(?:が|を)\s*追加/g; if(b.type!=='choice') while((m=re.exec(tx))) L[m[1].trim()]=1; scan(b.children); }); })([].concat.apply([],pages.map(function(p){ return p.blocks||[]; })));
+      (function mark(arr){ (arr||[]).forEach(function(s2){ if(s2.k==='choice') s2.items.forEach(function(it){ var lb=plainText(it.html||'').trim(); if(L[lb]) it.lock=lb; }); if(s2.k==='check'){ mark(s2.succ); mark(s2.fail); mark(s2.other); } }); })(steps); })();
     Object.keys(groutes).forEach(function(k){ var tg=groutes[k]; groutes[k]=(tg.charAt(0)==='@')?tg:head.hasOwnProperty(tg)?head[tg]:-1; }); steps.routes=groutes;
     return steps;
   }
