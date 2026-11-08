@@ -910,7 +910,7 @@
         <dt>同行NPC・［離脱］</dt><dd>［戦闘開始］の直後以外の場所に<b>青・緑</b>のNPC/エネミーデータを置くと、そこでそのNPCが同行し、PCの下にHP・MP・SANが表示されます（数値は変更できます）。同行中は以降の戦闘に味方として自動で参加し、HPは戦闘後も引き継ぎます。［離脱］にNPCの名前を書くと同行をやめます。</dd>
         <dt>［条件］［条件解除］</dt><dd>判定に条件を付けます（探索・戦闘どちらも）。［条件］は枠になっていて、中に条件を複数書けます（1行に1つ、またはトグルの見出し）。トグルの見出しを「初めて敵に攻撃が当たった時」「攻撃を受けた時」「敵を倒した時」にすると、その出来事が起きたときに中身（描写・判定・増援など）を実行します（「初めて」があれば一度だけ）。<br>・<b>ランプを入手まで、＜目星＞-20</b>（補正。『ランプ』を手に入れると自動で解除）<br>・<b>この戦闘では＜回避＞は＜幸運＞との組み合わせロール</b>（両方成功で成功。どちらか失敗なら失敗）<br>・<b>この戦闘では『水之羽衣』を纏っていない場合、毎ラウンド＜HP-1d3＞</b>（各ラウンドの終わりに増減。「毎R」でも可。『』の装備・所持の条件も可）<br>［戦闘開始］の直後に置くか「この戦闘」と書くと、その戦闘の間だけ有効です。［条件解除］に技能名を書くと解除（空欄ならすべて）。有効な条件はPCの枠に表示されます。</dd>
         <dt>行動順</dt><dd>戦闘中は画面の右上に行動順を表示し、いまの手番を強調します。敵のHPは上部の表示にバーで示します。</dd>
-        <dt>敵の攻撃で能力値ロール・SANチェック</dt><dd>NPCデータのチャパレで、命中（CCB）の行と次の命中の行の間に書いたダイスや判定は、すべて回避・受け流しに失敗したとき（攻撃が当たったとき）に発動します。<br>・<b>CCB 噛みつき@40</b>（目標値40を伏せた命中判定。01〜05クリティカル、96〜100ファンブル）<br>・<b>1d3 ダメージ</b>（最初のダイスがダメージ。2つ目以降も振り、「ダメージ」と書いたものはHPを減らします）<br>・<b>＜POT＞10と＜CON＞の対抗</b>（RESB(PCのCON-10)で対抗ロール）。続けて「成功：なにもなし」「失敗：HP-10」のように書くと結果を表示し、HP・MP・SANの増減は自動で反映します<br>・<b>CON×5 【噛みつき】 失敗：毒が回り始めた</b>（能力値ロール。「成功：」「失敗：」の後の文は結果に表示）<br>・<b>SANチェック 0/1d3 【触手】</b>（SANチェック。「発狂免除」「発狂：内容」も書けます）</dd>
+        <dt>敵の攻撃で能力値ロール・SANチェック</dt><dd>NPCデータのチャパレで、命中（CCB）の行と次の命中の行の間に書いたダイスや判定は、すべて回避・受け流しに失敗したとき（攻撃が当たったとき）に発動します。<br>・<b>CCB 噛みつき@40</b>（目標値40を伏せた命中判定。01〜05クリティカル、96〜100ファンブル）<br>・<b>x2　CCB　炎の刃@50　受け流し：刃物技能</b>（先頭の「x2」か名前の「(2回攻撃)」「(二回攻撃)」で1回の手番に複数回攻撃。「受け流し：」の後に受け流しに使える技能を書く。刃物技能＝刀・剣・ナイフなどの武器、MA＝マーシャルアーツ。書かない攻撃は従来どおり受け流しに使える技能で受け流し可）。耐久値のある武器で受け流すと、ダメージは武器の耐久値で受け（アイテムの軽減は適用しない）、超えた分だけ探索者に通ります<br>・<b>1d3 ダメージ</b>（最初のダイスがダメージ。2つ目以降も振り、「ダメージ」と書いたものはHPを減らします）<br>・<b>＜POT＞10と＜CON＞の対抗</b>（RESB(PCのCON-10)で対抗ロール）。続けて「成功：なにもなし」「失敗：HP-10」のように書くと結果を表示し、HP・MP・SANの増減は自動で反映します<br>・<b>CON×5 【噛みつき】 失敗：毒が回り始めた</b>（能力値ロール。「成功：」「失敗：」の後の文は結果に表示）<br>・<b>SANチェック 0/1d3 【触手】</b>（SANチェック。「発狂免除」「発狂：内容」も書けます）</dd>
         <dt>クリティカル・ファンブル</dt><dd>☰メニューの「ノベルゲームのクリティカル・ファンブル設定」で、戦闘時（攻撃・回避）と探索時の効果を選べます。効果が複数あるとき、探索者・味方NPCのクリティカルはPLが1つ選び、敵のクリティカル・ファンブルは choice で1つを決めます（探索者側のファンブルは設定した効果をすべて適用）。設定内容はノベルゲームの最初の画面にも表示されます。</dd>
         <dt>SANチェック・発狂</dt><dd>技能ブロックを＜SANチェック＞　※1/1d6 のように書くと、成功・失敗で自動的にSANが減ります。一度に5以上減ると発狂ロール（＜アイデア＞）を行います。※に「発狂免除」と書くと発狂ロールなし、「発狂：（内容）」と書くと＜アイデア＞成功時にその内容を表示します。KPレス用に、SANチェックのブロックの中に見出しが「発狂時」のトグルを置くと、＜アイデア＞成功時はその中身（文・［入手］・判定・飛び先など）を発狂の処理として実行します（内容ロール・ダイス補正は行いません）。見出しが「発狂しなかった場合」のトグルは＜アイデア＞失敗時に実行します。内容がない場合は内容ロール＜1d10＞（内容はルールブックを確認）の後、戦闘中は＜1d10+4＞ラウンドのダイス補正−10、探索中は次の探索のダイス補正−30になります。</dd>
         <dt>［勝利］［敗北］［逃走］</dt><dd>［戦闘開始］の直後に置き、見出しリンクでそれぞれの飛び先を指定します。［戦闘開始］右上のボタンで、その戦闘の逃走を「DEX×5」「DEX対抗」（一番DEXが高い敵との対抗ロール：50＋（PCのDEX−敵のDEX）×5）「逃走不可」から切り替えられます。</dd>
@@ -1629,13 +1629,20 @@ function atkStart(step,noLog){
   st.atkWait=true;if(step.cx==="atkCritNoDodge"){atkResolve(step,"none");return;}atkDefense(step);
 }
 function pcSkill(names){for(var i=0;i<names.length;i++){var v=skillVal(names[i]);if(v!=null&&v!=="")return v;}return null;}
+function parryOpts(tks){var out=[],seen={},weps=pcAttacks().filter(function(a){if(!a.item)return false;var dv=ivOf(a.item).dur;return !(dv&&dv.cur<=0);});var add=function(o){if(seen[o.label])return;seen[o.label]=1;var cm=condFor(o.sk).mod;if(o.v!=null&&o.v!==""&&cm)o.v=num(o.v)+cm;out.push(o);};
+  tks.forEach(function(t){t=String(t).trim();if(!t)return;
+    if(/刃物|刀剣/.test(t)){weps.forEach(function(a){if(/刀|剣|ナイフ|刃|斧|槍|鎌/.test(a.skill+a.item))add({label:a.name,sk:a.skill,v:skillVal(a.skill),item:a.item});});return;}
+    var nm=/^(MA|ＭＡ|マーシャル)/i.test(t)?"マーシャルアーツ":t;
+    weps.forEach(function(a){if(a.skill===nm||String(a.skill).indexOf(nm)>=0||a.item===nm)add({label:a.name,sk:a.skill,v:skillVal(a.skill),item:a.item});});
+    var v=skillVal(nm);if(v!=null&&v!=="")add({label:nm,sk:nm,v:v});});return out;}
 function atkDefense(step){
   var al=unitOf(step.tgt),dodge,parry=null;
   if(al){dodge=al.dodge!=null?al.dodge:(al.dex||0)*2;}
   else{dodge=pcSkill(["回避"]);if(dodge==null&&st.pc&&st.pc.dex)dodge=num(st.pc.dex)*2;parry=pcSkill(["受け流し","マーシャルアーツ","こぶし","キック"]);var cfd=condFor("回避"),cfp=condFor("受け流し");if(dodge!=null&&cfd.mod)dodge=num(dodge)+cfd.mod;if(parry!=null&&cfp.mod)parry=num(parry)+cfp.mod;}
   textEl.innerHTML=(step.pre?esc(step.pre)+"<br>":"")+"《"+esc(step.name)+"》が"+esc(unitName(step.tgt))+"に命中しそうだ！ どうする？";step._dg=dodge;step._pr=parry;
   var its=[{html:"回避する<small>"+(dodge==null?"技能値?":dodge+"%")+"</small>",fn:function(){atkResolve(step,"dodge");}}];
-  if(parry!=null)its.push({html:"受け流す<small>"+parry+"%</small>",fn:function(){atkResolve(step,"parry");}});
+  var pops=al?[]:(step.parry&&step.parry.length?parryOpts(step.parry):(parry!=null?[{label:"",sk:"受け流し",v:parry}]:[]));
+  pops.forEach(function(o){its.push({html:"受け流す"+(o.label?"："+esc(o.label):"")+"<small>"+(o.v==null||o.v===""?"技能値?":o.v+"%")+"</small>",fn:function(){atkResolve(step,"parry",o);}});});
   its.push({html:"何もしない",cls:"back",fn:function(){atkResolve(step,"none");}});
   showCmd("防御（"+unitName(step.tgt)+"）",its);return;
 }
@@ -1656,17 +1663,19 @@ function subPick(n){var w=st.subWait;if(!w)return;hideCmd();if(n&&subItems("pick
   if(n&&w.left>0&&subItems("pick").length){subChoice();invRender();save();return;}
   st.subWait=null;atkFinish(w.step,w.dmg,w.left,w.parts,w.line);}
 function armorTotal(){return (st.stat?st.stat.armorFix:0)+itemBonus("armorFix");}
-function atkResolve(step,kind){
+function atkResolve(step,kind,opt){var forced=null;
   var line="";
   var fum=false,dn=unitName(step.tgt),dc=unitColor(step.tgt);
-  if(kind!=="none"){hideCmd();var v=num(kind==="dodge"?step._dg:step._pr)-madMod(step.tgt);var r=roll("CCB<="+v+" 【"+(kind==="dodge"?"回避":"受け流し")+"】");addLog(dn,r.text,dc);feedAdd(dn,r.text,dc,null,false);if(!step.tgt||step.tgt==="pc"){recSkill(kind==="dodge"?"回避":"受け流し",r);var cbd=condFor(kind==="dodge"?"回避":"受け流し").combo;if(cbd.length)r=comboRoll(r,cbd);}
-    if(r.ok){hideCmd();st.atkWait=false;if(st.battle)st.battle.phase="msg";waitEl.style.display="none";waitEl.innerHTML="";var okm=esc(dn)+(kind==="dodge"?"は攻撃をかわした！":"は攻撃を受け流した！");
+  var dlb=kind==="dodge"?"回避":(opt&&opt.sk&&opt.sk!=="受け流し"?"受け流し："+opt.sk:"受け流し");if(kind!=="none"){hideCmd();var v=num(kind==="dodge"?step._dg:(opt?opt.v:step._pr))-madMod(step.tgt);var r=roll("CCB<="+v+" 【"+dlb+"】");addLog(dn,r.text,dc);feedAdd(dn,r.text,dc,null,false);if(!step.tgt||step.tgt==="pc"){recSkill(kind==="dodge"?"回避":(opt&&opt.sk)||"受け流し",r);var cbd=condFor(kind==="dodge"?"回避":"受け流し").combo;if(cbd.length)r=comboRoll(r,cbd);}
+    var wdur=(r.ok&&kind==="parry"&&opt&&opt.item)?ivOf(opt.item).dur:null,wmsg="";
+    if(wdur&&wdur.cur>0){var wp=dmgParts(step,"enemy"),wd=dmgOf(wp.base,wp.dbt,step.cx==="atkCritMax",step.cx==="atkCritDouble");addLog(step.enemy,"ダメージ "+wd.text,step.color||"#c0392b");var ab=Math.min(wdur.cur,wd.v),w0=wdur.cur;wdur.cur-=ab;var over=wd.v-ab;wmsg=esc(dn)+"は『"+esc(opt.item)+"』で受け流した！ ダメージ "+wd.v+" → 『"+esc(opt.item)+"』の耐久 "+w0+"→"+wdur.cur+(wdur.cur<=0?"（耐久が尽きた）":"");addLog(st.narr,txt(wmsg),"#888888");invRender();if(over>0){forced=over;line=wmsg+"<br>受けきれなかった"+over+"ダメージが通る。";}}
+    if(r.ok&&forced==null){hideCmd();st.atkWait=false;if(st.battle)st.battle.phase="msg";waitEl.style.display="none";waitEl.innerHTML="";var okm=wmsg||(esc(dn)+(kind==="dodge"?"は攻撃をかわした！":"は攻撃を受け流した！"));
       if(r.crit&&rule("defCritCounter")&&st.battle&&step.ei!=null&&st.battle.en[step.ei]&&!st.battle.en[step.ei].down&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};okm="クリティカル！ "+okm+"<br>反撃のチャンス！";}
       textEl.innerHTML=okm;busy=null;nextEl.style.display="";st.cur={k:"line",html:okm};save();return;}
-    line=(kind==="dodge"?"回避":"受け流し")+"に失敗した。"+(r.combo?"（組み合わせ："+esc(r.combo)+"）":"");if(r.fum){var fks=DEFF.filter(rule);fum=fks.join(",");line="ファンブル"+(fks.length?"（"+fks.map(function(k){return EFN[k];}).join("・")+"）":"")+"！ "+line;}}
+    if(forced==null){line=(kind==="dodge"?"回避":"受け流し")+"に失敗した。"+(r.combo?"（組み合わせ："+esc(r.combo)+"）":"");if(r.fum){var fks=DEFF.filter(rule);fum=fks.join(",");line="ファンブル"+(fks.length?"（"+fks.map(function(k){return EFN[k];}).join("・")+"）":"")+"！ "+line;}}}
   if(step.cx)line="《"+esc(step.name)+"》クリティカル（"+EFN[step.cx]+"）！"+(line?"<br>"+line:"");
-  var dp=dmgParts(step,"enemy");var dd=dmgOf(dp.base,dp.dbt,String(fum||"").indexOf("defFumMax")>=0||step.cx==="atkCritMax",String(fum||"").indexOf("defFumDouble")>=0||step.cx==="atkCritDouble");var dmg=dd.v;
-  addLog(step.enemy,"ダメージ "+dd.text,step.color||"#c0392b");
+  var dmg;if(forced!=null){dmg=forced;}else{var dp=dmgParts(step,"enemy");var dd=dmgOf(dp.base,dp.dbt,String(fum||"").indexOf("defFumMax")>=0||step.cx==="atkCritMax",String(fum||"").indexOf("defFumDouble")>=0||step.cx==="atkCritDouble");dmg=dd.v;
+  addLog(step.enemy,"ダメージ "+dd.text,step.color||"#c0392b");}
   var alu=unitOf(step.tgt);if(alu){hideCmd();st.atkWait=false;var ac=step.ignore?0:Math.min(alu.armor||0,dmg),al2=dmg-ac;alu.hp-=al2;if(alu.hp<=0){alu.hp=0;alu.down=true;}if(st.battle)st.battle.phase="msg";
     var am=(line?esc(dn)+"の"+line+"<br>":"")+"ダメージ "+dmg+(ac?"（装甲で"+ac+"軽減）":"")+" → "+esc(dn)+"に"+al2+"ダメージ（残りHP "+alu.hp+"）"+(alu.down?"<br><b>"+esc(dn)+"は倒れた。</b>":"");
     textEl.innerHTML=am;addLog(st.narr,txt(am),"#888888");busy=null;nextEl.style.display="";st.cur={k:"line",html:am};battleBar();save();return;}
@@ -1727,10 +1736,11 @@ function unitOf(k){var b=st.battle;if(!k||k==="pc")return null;return b&&b.al?b.
 function unitName(k){var u=unitOf(k);return u?u.name:pcName();}
 function unitColor(k){var u=unitOf(k);return u?(u.color||"#888888"):pcColor();}
 function unitAttacks(k){var u=unitOf(k);return u?(u.attacks||[]):pcAttacks();}
-function enemyAttack(ei,tgt,pre){var b=st.battle,e=b.en[ei];if(!e||e.down||!e.attacks.length)return false;var a=e.attacks[Math.floor(Math.random()*e.attacks.length)];
+function enemyAttack(ei,tgt,pre,ai){var b=st.battle,e=b.en[ei];if(!e||e.down||!e.attacks.length)return false;var cont=ai!=null;if(!cont)ai=Math.floor(Math.random()*e.attacks.length);var a=e.attacks[ai];
   if(!tgt){var tg=["pc"];(b.al||[]).forEach(function(x,i){if(!x.down)tg.push("a"+i);});tgt=tg[Math.floor(Math.random()*tg.length)];}
   var ch=charFor(e.base);if(ch){st.ch=ch;paintChar();}
-  var stp={k:"atk",enemy:e.name,name:a.name,rate:a.rate,dmg:a.dmg,base:a.base,dbt:a.dbt,ignore:false,color:e.color,ei:ei,tgt:tgt,pre:pre||"",fx:a.fx||null,hidden:!!a.hidden};st.cur=stp;b.phase="def";b.atk=stp;atkStart(stp,false);save();return true;}
+  if(!cont&&(+a.times||1)>1){b.multi={ei:ei,ai:ai,left:(+a.times)-1,tgt:tgt};pre=(pre?pre+" ":"")+"（1回目）";}
+  var stp={k:"atk",enemy:e.name,name:a.name,rate:a.rate,dmg:a.dmg,base:a.base,dbt:a.dbt,ignore:false,color:e.color,ei:ei,tgt:tgt,pre:pre||"",fx:a.fx||null,hidden:!!a.hidden,parry:a.parry||null};st.cur=stp;b.phase="def";b.atk=stp;atkStart(stp,false);save();return true;}
 /* ---- 戦闘ラウンド：DEX順に手番。エネミーはチャパレの攻撃からランダムに1つ、探索者はコマンドで行動 ---- */
 var EN=D.enemies||{};
 function spawnEnemy(n){var b=st.battle,d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};var same=b.en.filter(function(e){return e.base===n;});if(same.length===1&&same[0].name===n)same[0].name=n+"A";var label=same.length?n+String.fromCharCode(65+same.length):n;
@@ -1771,6 +1781,7 @@ function battleContinue(){
   if(b.en.every(function(e){return e.down;})){battleEnd("win");return;}
   if(st.stat&&st.stat.hp.cur<=0&&!st.q.some(function(x){return x.k==="faint";})){battleEnd("lose");return;}
   if(st.q.length){show(st.q.shift());return;}
+  if(b.multi){var mu=b.multi,me=b.en[mu.ei];if(mu.left>0&&me&&!me.down){mu.left--;var nth=(+me.attacks[mu.ai].times)-mu.left;if(mu.left<=0)b.multi=null;var tg2=mu.tgt,tu2=tg2&&tg2!=="pc"?unitOf(tg2):null;if(tu2&&tu2.down)tg2=null;battleBar();feedClear();if(enemyAttack(mu.ei,tg2,"（"+nth+"回目）",mu.ai))return;}b.multi=null;}
   if(b.pend){var p=b.pend;b.pend=null;var pe=b.en[p.ei];var pu=p.tgt&&p.tgt!=="pc"?unitOf(p.tgt):null;
     if(pe&&!pe.down&&!(pu&&pu.down)){battleBar();feedClear();if(p.t==="counter"){counterTurn(p);return;}if(enemyAttack(p.ei,p.tgt,pe.name+"の反撃！"))return;}}
   b.turn++;if(b.turn>=b.order.length){
@@ -5259,15 +5270,16 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var fxs=[];
     var racts=[];
     lines.forEach(function(l,i){ if(/R末/.test(l)){ var rr=l.match(/@\s*(\d+)/)||l.match(/<=\s*(\d+)/); var rn=(l.match(/^(?:CCB|CC|1D100)\s+([^@<(]+?)\s*@/i)||[])[1]||nameOf(l.replace(/[【\[]R末[】\]]/g,'')); var rok=(l.match(/成功時\s*:?\s*(.+?)(?=\s*[,、\/]?\s*失敗時|\)?\s*$)/)||[])[1]||'', rng=(l.match(/失敗時\s*:?\s*(.+?)\)?\s*$/)||[])[1]||''; if(!/成功時|失敗時/.test(l)){ rok=l.replace(/^.*R末[】\]]?/,'').replace(/\)\s*$/,'').trim(); } racts.push({name:String(rn||'行動').replace(/[【】\[\]]/g,'').trim(),rate:rr?+rr[1]:null,hidden:/@\s*\d+/.test(l),ok:rok.replace(/\)\s*$/,'').trim(),ng:rng.trim()}); return; }
-      var hm=l.match(/^(?:CCB|CC)\s+([^@]+?)\s*@\s*(\d+)/i); if(hm){ var hn=hm[1].replace(/[【】\[\]《》「」]/g,'').trim(); if(/回避/.test(hn)) dodge=+hm[2]; else hits.push({i:i,name:hn,rate:+hm[2],hidden:true}); return; }
+      var htimes=1, hparry=null, tmx=l.match(/^[xX×*]\s*(\d+)\s+/); if(tmx){ htimes=+tmx[1]; l=l.slice(tmx[0].length); } var pmx=l.match(/\s*受け流し\s*[:：]\s*(.+)$/); if(pmx&&/^(CCB|CC|1D100)/i.test(l)){ hparry=pmx[1].split(/[、,，\/／]/).map(function(x){ return x.trim(); }).filter(Boolean); l=l.slice(0,pmx.index); } var kmx=l.match(/\(\s*([0-9一二三四五六七八九]+)\s*回攻撃\s*\)/); if(kmx){ var kn={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9}[kmx[1]]||+kmx[1]||1; if(htimes===1) htimes=kn; l=l.replace(kmx[0],'').trim(); }
+      var hm=l.match(/^(?:CCB|CC)\s+([^@]+?)\s*@\s*(\d+)/i); if(hm){ var hn=hm[1].replace(/[【】\[\]《》「」]/g,'').trim(); if(/回避/.test(hn)) dodge=+hm[2]; else hits.push({i:i,name:hn,rate:+hm[2],hidden:true,times:htimes,parry:hparry}); return; }
       var rm=l.match(/<([^>]+)>\s*(\d+)\s*と\s*<([^>]+)>\s*の?\s*対抗/); if(rm){ fxs.push({i:i,t:'res',an:rm[1].trim(),av:+rm[2],pk:rm[3].trim().toUpperCase()}); return; }
       var om=l.match(/^(成功|失敗)\s*:\s*(.*)$/); if(om){ var lf=fxs[fxs.length-1]; if(lf){ if(om[1]==='成功') lf.ok=om[2].trim(); else lf.ng=om[2].trim(); } return; }
       var DXP='(\\d+(?:D\\d+)?(?:\\s*\\+\\s*\\d+(?:D\\d+)?)*)'; var sm=/SAN|正気度/i.test(l)?l.match(new RegExp(DXP+'\\s*/\\s*'+DXP,'i')):null; if(sm){ var mz=l.match(/発狂(?:内容)?\s*:\s*(.+)$/); fxs.push({i:i,name:nameOf(l),t:'san',ok:sm[1].replace(/\s/g,''),ng:sm[2].replace(/\s/g,''),exempt:/発狂免除/.test(l),mad:mz?mz[1].trim():''}); return; }
       var am=l.match(/\{?(STR|CON|POW|DEX|APP|SIZ|INT|EDU)\}?\s*[×xX*]\s*(\d+)/i); if(am){ var ok=(l.match(/成功\s*:\s*(.+?)(?=\s*失敗\s*:|$)/)||[])[1]||'', ng=(l.match(/失敗\s*:\s*(.+)$/)||[])[1]||''; fxs.push({i:i,name:nameOf(l).replace(/^.*?[×xX*]\s*\d+\s*/,''),t:'abil',k:am[1].toUpperCase(),m:+am[2],ok:ok.trim(),ng:ng.trim()}); return; }
-      var m=l.match(/(?:CCB|CC|1D100)\s*<=\s*(\d+)/i); if(m){ var nm=nameOf(l); if(/回避/.test(nm)) dodge=+m[1]; else hits.push({i:i,name:nm,rate:+m[1]}); return; }
+      var m=l.match(/(?:CCB|CC|1D100)\s*<=\s*(\d+)/i); if(m){ var nm=nameOf(l); if(/回避/.test(nm)) dodge=+m[1]; else hits.push({i:i,name:nm,rate:+m[1],times:htimes,parry:hparry}); return; }
       var d=l.match(/^(\d*D\d+(?:\s*[+\-]\s*(?:\d*D\d+|\d+|DB))*)/i); if(d) dmgs.push({i:i,name:nameOf(l).replace(/ダメージ|DMG/ig,'').trim(),dmg:fixDb(d[1]),base:d[1].replace(/\s*\+?\s*DB/i,'').replace(/\s+/g,''),dbt:/DB/i.test(d[1])?dbTerm:''}); });
     var attacks=[];
-    hits.forEach(function(h){ var nextHit=hits.filter(function(x){ return x.i>h.i; })[0]; h.end=nextHit?nextHit.i:1e9; var dm=dmgs.filter(function(d){ return d.name&&h.name&&(d.name.indexOf(h.name)>=0||h.name.indexOf(d.name)>=0); })[0]; if(!dm){ dm=dmgs.filter(function(d){ return d.i>h.i&&d.i<h.end; })[0]; } if(dm){ var at={name:h.name||'攻撃',rate:h.rate,dmg:dm.dmg,base:dm.base,dbt:dm.dbt}; if(h.hidden) at.hidden=true; dm.used=true; h.at=at; attacks.push(at); } });
+    hits.forEach(function(h){ var nextHit=hits.filter(function(x){ return x.i>h.i; })[0]; h.end=nextHit?nextHit.i:1e9; var dm=dmgs.filter(function(d){ return d.name&&h.name&&(d.name.indexOf(h.name)>=0||h.name.indexOf(d.name)>=0); })[0]; if(!dm){ dm=dmgs.filter(function(d){ return d.i>h.i&&d.i<h.end; })[0]; } if(dm){ var at={name:h.name||'攻撃',rate:h.rate,dmg:dm.dmg,base:dm.base,dbt:dm.dbt}; if(h.hidden) at.hidden=true; if(h.times>1) at.times=h.times; if(h.parry) at.parry=h.parry; dm.used=true; h.at=at; attacks.push(at); } });
     hits.forEach(function(h){ if(!h.at) return; dmgs.forEach(function(d){ if(d.used||d.i<=h.i||d.i>=h.end) return; d.used=true; (h.at.fx=h.at.fx||[]).push({t:'dice',expr:d.dmg,label:d.name||'ダイス',dmg:/ダメージ|DMG/i.test(lines[d.i])}); }); });
     fxs.forEach(function(f){ var nm=String(f.name||'').replace(/[:：].*$/,'').trim(); var at=null; hits.forEach(function(h){ if(!at&&h.at&&f.i>h.i&&f.i<h.end) at=h.at; }); if(!at) attacks.forEach(function(a){ if(!at&&nm&&a.name&&(nm.indexOf(a.name)>=0||a.name.indexOf(nm)>=0)) at=a; }); if(!at){ var prev=hits.filter(function(h){ return h.i<f.i; }).pop(); if(prev) attacks.forEach(function(a){ if(!at&&a.name===(prev.name||'攻撃')) at=a; }); } if(at){ var o={t:f.t}; for(var k in f) if(k!=='i'&&k!=='name') o[k]=f[k]; (at.fx=at.fx||[]).push(o); } });
     return {attacks:attacks,dodge:dodge,roundActs:racts};
