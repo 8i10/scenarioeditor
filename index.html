@@ -876,6 +876,7 @@
         <dt>描写でのHP・MP・SANの増減</dt><dd>本文に「炎が僅かにあなたの肌を焼くだろう。＜HP-1＞」のように＜HP-1＞＜MP-2＞＜SAN-1d3＞＜HP+2＞を書くと、表示したときに自動で増減します。</dd>
         <dt>対抗ロール（探索中）</dt><dd>技能ブロックを＜STR10との対抗ロール＞　※PCのSTRとの対抗 のように書くと、メッセージ枠の右上に「振る（目標値）」「振らない（探索へ戻る）」を表示します。成功率は50＋（PCの値−10）×5。「成功」「失敗」のトグルで結果を分岐できます。※がなければ同じ能力値同士の対抗です。</dd>
         <dt>ショックロール・気絶</dt><dd>一度に現在のHPの半分以上が減るとショックロール（CON×5）を行い、失敗すると移行します。HPが2・1になると自動で気絶して移行します（0以下は戦闘では敗北）。移行先は［気絶］［ショック失敗］に見出しリンク、または「敗北」「エンド」と書いて指定します。［戦闘開始］の直後に置くとその戦闘だけ、それ以外の場所に置くとシナリオ全体の移行先になります。指定がない場合、戦闘中は敗北、戦闘外はエンドです。</dd>
+        <dt>エネミーの被ダメージ</dt><dd>NPCデータの「被ダメージ（ノベル用）」に「物理→1点／雷→1/2／炎→1/2」のように書くと、攻撃の種類や攻撃名ごとに受けるダメージが変わります（装甲の後に適用）。攻撃の種類はアイテムの「武器として使う」の「種類」で指定し、空欄やチャパレの攻撃は「物理」です。</dd>
         <dt>同行NPC・［離脱］</dt><dd>［戦闘開始］の直後以外の場所に<b>青・緑</b>のNPC/エネミーデータを置くと、そこでそのNPCが同行し、PCの下にHP・MP・SANが表示されます（数値は変更できます）。同行中は以降の戦闘に味方として自動で参加し、HPは戦闘後も引き継ぎます。［離脱］にNPCの名前を書くと同行をやめます。</dd>
         <dt>［条件］［条件解除］</dt><dd>判定に条件を付けます（探索・戦闘どちらも）。<br>・<b>ランプを入手まで、＜目星＞-20</b>（補正。『ランプ』を手に入れると自動で解除）<br>・<b>この戦闘では＜回避＞は＜幸運＞との組み合わせロール</b>（両方成功で成功。どちらか失敗なら失敗）<br>［戦闘開始］の直後に置くか「この戦闘」と書くと、その戦闘の間だけ有効です。［条件解除］に技能名を書くと解除（空欄ならすべて）。有効な条件はPCの枠に表示されます。</dd>
         <dt>行動順</dt><dd>戦闘中は画面の右上に行動順を表示し、いまの手番を強調します。敵のHPは上部の表示にバーで示します。</dd>
@@ -896,7 +897,7 @@
         <dt>使うと回復</dt><dd>HP・MP・SANに数値かダイス（例：1D3、2）を入れると、使ったときに回復します（最大値まで）。「使うと無くなる」にチェックすると回復後に無くなります。</dd>
         <dt>ラウンド終わりに回復</dt><dd>持っている間、戦闘の各ラウンドの終わりに自動で回復します（最大値まで）。</dd>
         <dt>武器として使う</dt><dd>技能とダメージを入れると戦闘の「攻撃」に「技能(アイテム名)」の形で出ます（例：日本刀(《○○》)）。技能を「日本刀／太刀」のように書くと、技能値の高い方で振ります。装甲無視と、その上限も設定できます。</dd>
-        <dt>被ダメージ：軽減</dt><dd>「タッチ→-2／かぎ爪→/2」のように攻撃名ごとに軽減を書きます。「/2」「半減」で半分、「全て→-1」で全ての攻撃に効きます。敵名を書くとその敵の攻撃すべてに効きます。</dd>
+        <dt>被ダメージ：軽減</dt><dd>「タッチ→1/3／かぎ爪→-2」のように攻撃名ごとに軽減を書きます（書いていない攻撃は素のダメージ）。「1/3」「/3」で1/3、「半減」で半分、「-2」で2減少、「1点」で1点だけ、「無効」で0、「全て→-1」で全ての攻撃に効きます。敵名を書くとその敵の攻撃すべてに効きます。</dd>
         <dt>被ダメージ：肩代わり</dt><dd>耐久値の分だけダメージを肩代わりします。「自動で優先消費」は装甲の後に自動で減り、「選んで使う」はダメージを受けるときにどれで受けるかコマンドで選べます。武器や、呪文を付与したもの（アイテムとして登録）に使えます。</dd>
       </dl>
       <p class="fhint">ダメージは「攻撃別の軽減 → 装甲（固定）→ 装甲（消費）→ 肩代わり（自動）→ 肩代わり（選択）→ HP」の順に計算します。装甲無視の攻撃では装甲だけが無効になります。</p>
@@ -1485,9 +1486,13 @@ function atkDefense(step){
   showCmd("防御（"+unitName(step.tgt)+"）",its);return;
 }
 /* アイテムの攻撃別ダメージ軽減（例：タッチ→-2／かぎ爪→/2／全て→-1） */
-function cutRules(s){var out=[],re=/([^→=＝:：\n]+?)\s*(?:→|->|=|＝|:|：)\s*(半減|[\-－−ー]\s*[0-9０-９]+|[\/／÷]\s*[0-9０-９]+)/g,m;s=String(s||"");while((m=re.exec(s))){var key=m[1].replace(/^[\s／\/、，,・]+/,"").trim(),op=hw(m[2]).replace(/\s/g,"").replace(/[−ー]/g,"-").replace(/÷/g,"/");if(op==="半減")op="/2";if(key)out.push({key:key,op:op});}return out;}
+function cutRules(s){var out=[],re=/([^→=＝:：\n]+?)\s*(?:→|->|=|＝|:|：)\s*(半減|無効|[0-9０-９]+\s*点(?:のみ)?|[×xX*＊]\s*[0-9０-９]+(?:\s*[\/／]\s*[0-9０-９]+)?|[0-9０-９]+\s*[\/／]\s*[0-9０-９]+|[\-－−ー]\s*[0-9０-９]+|[\/／÷]\s*[0-9０-９]+)/g,m;s=String(s||"");
+  while((m=re.exec(s))){var key=m[1].replace(/^[\s／\/、，,・]+/,"").trim(),raw=m[2].replace(/\s/g,""),op=hw(raw).replace(/[−ー]/g,"-").replace(/÷/g,"/").replace(/[×xX＊]/g,"*"),fm;
+    if(op==="半減")op="*1/2";else if(op==="無効")op="=0";else if((fm=op.match(/^(\d+)点/)))op="="+fm[1];else if(/^\d+\/\d+$/.test(op))op="*"+op;else if(/^\*\d+$/.test(op))op=op+"/1";
+    if(key)out.push({key:key,op:op,raw:raw});}return out;}
+function cutApply(op,v){if(op[0]==="/"){var k=+op.slice(1)||0;return k?Math.floor(v/k):v;}if(op[0]==="-")return Math.max(0,v-(+op.slice(1)||0));if(op[0]==="="){var f=+op.slice(1)||0;return v>0?Math.min(v,f):v;}if(op[0]==="*"){var p=op.slice(1).split("/");return Math.floor(v*(+p[0]||0)/(+p[1]||1));}return v;}
 function cutMatch(key,step){if(/^(全て|すべて|全部|\*|＊)$/.test(key))return true;var nm=String(step.name||""),en=String(step.enemy||"");return nm===key||nm.indexOf(key)>=0||(nm&&key.indexOf(nm)>=0)||en===key||en.indexOf(key)===0;}
-function applyCuts(step,left,parts){st.inv.forEach(function(n){var it=itemDef(n);if(it.kind==="info"||!it.dmgCut||!itemOn(n))return;cutRules(it.dmgCut).forEach(function(r){if(left<=0||!cutMatch(r.key,step))return;var b=left,k=+r.op.slice(1)||0;if(r.op[0]==="/")left=k?Math.floor(left/k):left;else left=Math.max(0,left-k);if(b!==left)parts.push("『"+n+"』で"+r.key+"→"+(r.op==="/2"?"半減":r.op)+"（"+b+"→"+left+"）");});});return left;}
+function applyCuts(step,left,parts){st.inv.forEach(function(n){var it=itemDef(n);if(it.kind==="info"||!it.dmgCut||!itemOn(n))return;cutRules(it.dmgCut).forEach(function(r){if(left<=0||!cutMatch(r.key,step))return;var b=left;left=cutApply(r.op,left);if(b!==left)parts.push("『"+n+"』で"+r.key+"→"+r.raw+"（"+b+"→"+left+"）");});});return left;}
 function subItems(mode){return st.inv.filter(function(n){var it=itemDef(n),o=ivOf(n).dur;return it.kind!=="info"&&it.sub===mode&&o&&o.cur>0&&itemOn(n);});}
 function subTake(n,left,parts){var o=ivOf(n).dur;var c=Math.min(o.cur,left);o.cur-=c;parts.push("『"+n+"』が"+c+"肩代わり（耐久"+o.cur+"）"+(o.cur<=0?"・耐久値が尽きた":""));return left-c;}
 function subChoice(){var w=st.subWait;busy="atk";nextEl.style.display="none";nameEl.style.display="none";
@@ -1576,7 +1581,7 @@ function enemyAttack(ei,tgt,pre){var b=st.battle,e=b.en[ei];if(!e||e.down||!e.at
 var EN=D.enemies||{};
 function battleStart(step){
   var cnt={},list=[];step.enemies.forEach(function(n){cnt[n]=(cnt[n]||0)+1;});var seen={};
-  step.enemies.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};seen[n]=(seen[n]||0)+1;var label=cnt[n]>1?n+String.fromCharCode(64+seen[n]):n;list.push({base:n,name:label,hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#c0392b",down:false});});
+  step.enemies.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};seen[n]=(seen[n]||0)+1;var label=cnt[n]>1?n+String.fromCharCode(64+seen[n]):n;list.push({base:n,name:label,take:d.take||"",hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#c0392b",down:false});});
   var al=[];var alNames=(step.allies||[]).slice();(st.comp||[]).forEach(function(c){if(alNames.indexOf(c.name)<0)alNames.push(c.name);});alNames.forEach(function(n){var d=EN[n]||{hp:10,dex:10,armor:0,attacks:[],dodge:null};var same=alNames.filter(function(x){return x===n;}).length;var k=al.filter(function(x){return x.base===n;}).length+1;al.push({base:n,name:same>1?n+String.fromCharCode(64+k):n,hp:d.hp,max:d.hp,dex:d.dex,armor:d.armor,dodge:d.dodge,attacks:(d.attacks||[]).slice(),color:d.color||"#4a8fd8",down:false});var cc=(st.comp||[]).filter(function(c){return c.name===n;})[0];if(cc){var la=al[al.length-1];la.hp=cc.hp.cur;la.max=cc.hp.max;la.down=cc.hp.cur<=0;}});
   (step.conds||[]).forEach(function(c){var c2=JSON.parse(JSON.stringify(c));c2.battle=true;condAdd(c2);});
   st.battle={al:al,en:list,round:0,order:[],turn:-1,delayed:false,res:step.res||{},stepPos:st.pos,phase:"msg",limit:+step.limit||0,evs:(step.rounds||[]).slice()};
@@ -1631,7 +1636,7 @@ function pcTurn(){
 }
 function pcDone(msg){hideCmd();busy=null;st.battle.phase="msg";nextEl.style.display="";textEl.innerHTML=msg;st.cur={k:"line",html:msg};addLog(st.narr,txt(msg),"#888888");battleBar();save();}
 function bestSkill(s){var a=String(s||"").split(/[／\/、,]/).map(function(x){return x.trim();}).filter(Boolean);if(!a.length)return "";var b=a[0],bv=-1;a.forEach(function(x){var v=skillVal(x);v=(v==null||v==="")?-1:num(v);if(v>bv){bv=v;b=x;}});return b;}
-function pcAttacks(){var out=[];st.inv.forEach(function(n){var it=itemDef(n);if(!itemOn(n))return;var bs=bestSkill(it.wSkill);if(it.wDmg)out.push({name:bs?bs+"("+n+")":n,skill:bs||n,dmg:it.wDmg,ignore:!!it.ignoreArmor,ignoreN:+it.ignoreN||0});});
+function pcAttacks(){var out=[];st.inv.forEach(function(n){var it=itemDef(n);if(!itemOn(n))return;var bs=bestSkill(it.wSkill);if(it.wDmg)out.push({name:bs?bs+"("+n+")":n,item:n,type:it.wType||"",skill:bs||n,dmg:it.wDmg,ignore:!!it.ignoreArmor,ignoreN:+it.ignoreN||0});});
   (st.pc&&st.pc.attacks||[]).forEach(function(a){out.push({name:a.name,skill:a.name,rate:a.rate,dmg:a.dmg,base:a.base,dbt:a.dbt,ignore:false});});
   if(!out.length){var dbt=pcDbTerm();out.push({name:"こぶし",skill:"こぶし",dmg:"1D3"+dbt,base:"1D3",dbt:dbt,ignore:false});out.push({name:"キック",skill:"キック",dmg:"1D6"+dbt,base:"1D6",dbt:dbt,ignore:false});}
   return out;}
@@ -1649,6 +1654,7 @@ function attackBy(by,a,ti){
   if(r.crit){var co=ATKC.filter(rule);if(co.length>1){b.phase="critsel";b.cs={by:by,a:a,ti:ti};textEl.innerHTML="";critPick(co,nm,col,function(k){b.cs=null;b.phase="msg";atkHit(by,a,ti,true,k);});return;}atkHit(by,a,ti,true,co[0]||"");return;}
   atkHit(by,a,ti,false,"");
 }
+function enemyTake(e,a,dmg,parts){if(!e.take)return dmg;var ty=a.type||"物理",keys=[ty,a.name,a.skill,a.item].filter(Boolean);cutRules(e.take).forEach(function(r){if(dmg<=0)return;var hit=/^(全て|すべて|全部|\*|＊)$/.test(r.key)||keys.some(function(k){return k===r.key||String(k).indexOf(r.key)>=0;});if(!hit)return;var b=dmg;dmg=cutApply(r.op,dmg);if(b!==dmg)parts.push(r.key+"→"+r.raw+"（"+b+"→"+dmg+"）");});return dmg;}
 function atkHit(by,a,ti,crit,ce){var b=st.battle,e=b.en[ti],nm=unitName(by),col=unitColor(by);
   var ef=ce?"（"+EFN[ce]+"）":"",fe="";
   if(e.dodge!=null&&ce!=="atkCritNoDodge"){var dr=roll("CCB<="+e.dodge+" 【回避】");addLog(e.name,dr.text,e.color);feedAdd(e.name,dr.text,e.color,null,false);
@@ -1656,8 +1662,8 @@ function atkHit(by,a,ti,crit,ce){var b=st.battle,e=b.en[ti],nm=unitName(by),col=
       pcDone((crit?"クリティカル"+ef+"！ ":"")+esc(e.name)+"は攻撃をかわした！");return;}
     if(dr.fum){fe=pickEff(DEFF,e.name);}}
   var dp=dmgParts(a,by);var dd=dmgOf(dp.base,dp.dbt,ce==="atkCritMax"||fe==="defFumMax",ce==="atkCritDouble"||fe==="defFumDouble");var dmg=dd.v;addLog(nm,"ダメージ "+dd.text,col);
-  /* 装甲無視：最大値があればその分だけ無視（0・空欄はすべて無視） */var ign=a.ignore?(a.ignoreN>0?Math.min(a.ignoreN,e.armor):e.armor):0;var eff=Math.max(0,e.armor-ign);var cut=eff>0?Math.min(eff,dmg):0;var left=dmg-cut;e.hp-=left;var down=e.hp<=0;if(down)e.down=true;
-  pcDone((crit?"クリティカル"+ef+"！ ":"")+(fe?esc(e.name)+"の回避ファンブル（"+EFN[fe]+"）！ ":"")+"《"+esc(a.name)+"》命中！ ダメージ "+dmg+((ign?"（装甲無視"+(eff?"："+ign+"無視":"")+(cut?"、装甲で"+cut+"軽減":"")+"）":(cut?"（装甲で"+cut+"軽減）":"")))+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
+  /* 装甲無視：最大値があればその分だけ無視（0・空欄はすべて無視） */var ign=a.ignore?(a.ignoreN>0?Math.min(a.ignoreN,e.armor):e.armor):0;var eff=Math.max(0,e.armor-ign);var cut=eff>0?Math.min(eff,dmg):0;var left=dmg-cut;var tparts=[];left=enemyTake(e,a,left,tparts);e.hp-=left;var down=e.hp<=0;if(down)e.down=true;
+  pcDone((crit?"クリティカル"+ef+"！ ":"")+(fe?esc(e.name)+"の回避ファンブル（"+EFN[fe]+"）！ ":"")+"《"+esc(a.name)+"》命中！ ダメージ "+dmg+((ign?"（装甲無視"+(eff?"："+ign+"無視":"")+(cut?"、装甲で"+cut+"軽減":"")+"）":(cut?"（装甲で"+cut+"軽減）":"")))+(tparts.length?"（"+esc(e.name)+"："+esc(tparts.join("、"))+"）":"")+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
 }
 /* 回避クリティカル後の反撃 */
 function counterTurn(p){var b=st.battle;b.phase="counter";b.cp=p;busy="cmd";nextEl.style.display="none";var nm=unitName(p.by),e=b.en[p.ei];nameEl.textContent=nm;nameEl.style.display="";textEl.innerHTML=esc(nm)+"の反撃！ "+esc(e.name)+"への攻撃方法を選んでください。";
@@ -3859,6 +3865,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         +'<div class="npc-grid npc-chars">'+charGrid+'</div>'
         +'<div class="npc-grid npc-derived">'+derived+'</div>'
         +'<div class="npc-autonote">HP/MP/DBは空欄なら自動算出（入力すると手動値が優先）</div>'
+        +'<label class="npc-lbl2">被ダメージ（ノベル用）</label><input class="npc-in" data-i="'+i+'" data-k="take" placeholder="例：物理→1点／雷→1/2／炎→1/2（攻撃の種類・攻撃名→軽減）" value="'+esc(n.take||'')+'" style="width:100%;box-sizing:border-box;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:12px;font-family:inherit">'
         +richBox('chat','チャパレ')+richBox('notes','メモ')+richBox('policy','行動方針')) : '';
       return '<div class="npc-row'+(open?'':' collapsed')+'" style="border:1px solid var(--line);border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px">'
         +'<div class="npc-top" style="display:flex;gap:6px;align-items:center"><button class="npc-tog" data-i="'+i+'" title="開閉">'+(open?'▾':'▸')+'</button><input class="npc-in npc-name" data-i="'+i+'" data-k="name" placeholder="名前（NPC／エネミー）" value="'+esc(n.name||'')+'" style="flex:1;height:32px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:0 10px;font-size:13px;font-family:inherit">'+vopenBtn('npc-vopen',i,n)+'<button class="npc-up" data-i="'+i+'" title="上へ">▲</button><button class="npc-dn" data-i="'+i+'" title="下へ">▼</button><button class="npc-dup" data-i="'+i+'" title="複製">⧉</button><button class="npc-del" data-i="'+i+'" title="削除">🗑</button></div>'
@@ -4018,11 +4025,12 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<label>MP<input class="it-in it-n it-h" data-i="'+i+'" data-k="roundMp" value="'+esc(it.roundMp||'')+'"></label>'
       +'<label>SAN<input class="it-in it-n it-h" data-i="'+i+'" data-k="roundSan" value="'+esc(it.roundSan||'')+'"></label></div>'
       +'<div class="it-fx"><span class="it-fl">被ダメージ：</span>'
-      +'<label title="攻撃名（または敵名・全て）→ -数値 か /数値（半減）。／区切りで複数">軽減<input class="it-in it-w it-cut" data-i="'+i+'" data-k="dmgCut" placeholder="例：タッチ→-2／かぎ爪→/2／全て→-1" value="'+esc(it.dmgCut||'')+'"></label>'
+      +'<label title="攻撃名（または敵名・全て）→ -数値 か /数値（半減）。／区切りで複数">軽減<input class="it-in it-w it-cut" data-i="'+i+'" data-k="dmgCut" placeholder="例：タッチ→1/3／かぎ爪→-2／全て→半減" value="'+esc(it.dmgCut||'')+'"></label>'
       +'<label title="耐久値の分だけダメージを肩代わり">肩代わり<select class="it-in it-sel" data-i="'+i+'" data-k="sub"><option value="">しない</option><option value="pick"'+(it.sub==='pick'?' selected':'')+'>選んで使う</option><option value="auto"'+(it.sub==='auto'?' selected':'')+'>自動で優先消費</option></select></label></div>'
       +'<div class="it-fx"><span class="it-fl">武器として使う：</span>'
       +'<label>技能<input class="it-in it-w" data-i="'+i+'" data-k="wSkill" placeholder="例：日本刀／太刀" value="'+esc(it.wSkill||'')+'"></label>'
       +'<label>ダメージ<input class="it-in it-w" data-i="'+i+'" data-k="wDmg" placeholder="例：1D4+2+DB" value="'+esc(it.wDmg||'')+'"></label>'
+      +'<label title="敵の被ダメージ設定と合わせる種類（空欄は物理）">種類<input class="it-in it-n" data-i="'+i+'" data-k="wType" placeholder="物理" value="'+esc(it.wType||'')+'" style="width:60px"></label>'
       +'<label><input type="checkbox" class="it-in" data-i="'+i+'" data-k="ignoreArmor"'+(it.ignoreArmor?' checked':'')+'> 装甲無視</label>'
       +'<label title="0か空欄なら装甲をすべて無視">最大<input class="it-in it-n" data-i="'+i+'" data-k="ignoreN" inputmode="numeric" placeholder="全" value="'+esc(it.ignoreN||'')+'">まで</label></div>')
       +'</div>'; }).join(''):'<div class="fhint">まだありません。</div>';
@@ -5054,8 +5062,8 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var chars={}; (state.npcs||[]).forEach(function(n){ if(n&&n.img&&String(n.name||'').trim()) chars[String(n.name).trim()]=n.img; });
     /* 戦闘用：NPCデータからHP・DEX・装甲・回避・攻撃（チャパレの命中とダメージ）を読む */
     var enemies={}; (state.npcs||[]).forEach(function(n){ if(!n||!String(n.name||'').trim()) return; var db=n.db||npcDb(n.str,n.siz)||''; var cp=parseBattlePalette(n.chat||n.skills||'',db);
-      enemies[String(n.name).trim()]={mp:+(n.mp||npcMp(n.pow))||0,san:+(n.san||(n.pow!=null&&n.pow!==''?(+n.pow||0)*5:''))||0,hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
-    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,dur:+it.dur||0,ammo:+it.ammo||0,ignoreArmor:!!it.ignoreArmor,ignoreN:+String(it.ignoreN||'').replace(/[^0-9]/g,'')||0,wSkill:it.wSkill||'',wDmg:it.wDmg||'',equip:!!it.equip,equipOnly:!!(it.equip&&it.equipOnly),dmgCut:String(it.dmgCut||'').trim(),healHp:String(it.healHp||'').trim(),healMp:String(it.healMp||'').trim(),healSan:String(it.healSan||'').trim(),roundHp:String(it.roundHp||'').trim(),roundMp:String(it.roundMp||'').trim(),roundSan:String(it.roundSan||'').trim(),sub:(it.sub==='pick'||it.sub==='auto')?it.sub:''}; });
+      enemies[String(n.name).trim()]={take:String(n.take||'').trim(),mp:+(n.mp||npcMp(n.pow))||0,san:+(n.san||(n.pow!=null&&n.pow!==''?(+n.pow||0)*5:''))||0,hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
+    var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,dur:+it.dur||0,ammo:+it.ammo||0,ignoreArmor:!!it.ignoreArmor,ignoreN:+String(it.ignoreN||'').replace(/[^0-9]/g,'')||0,wSkill:it.wSkill||'',wDmg:it.wDmg||'',wType:String(it.wType||'').trim(),equip:!!it.equip,equipOnly:!!(it.equip&&it.equipOnly),dmgCut:String(it.dmgCut||'').trim(),healHp:String(it.healHp||'').trim(),healMp:String(it.healMp||'').trim(),healSan:String(it.healSan||'').trim(),roundHp:String(it.roundHp||'').trim(),roundMp:String(it.roundMp||'').trim(),roundSan:String(it.roundSan||'').trim(),sub:(it.sub==='pick'||it.sub==='auto')?it.sub:''}; });
     pcs.forEach(function(pc,ix){ var src=(state.pcs||[]).filter(function(p){ return p&&p.name; })[ix]; pc.attacks=parseBattlePalette((src&&src.commands)||'',pc.db||'').attacks; pc.commands=(src&&src.commands)||''; });
     var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items,enemies:enemies,rules:state.novelRules||{},routes:steps.routes||{}};
     var tpl=function(id){ var e=document.getElementById(id); return e?e.textContent:''; };
