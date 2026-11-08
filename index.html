@@ -863,10 +863,11 @@
     <div class="dlg-b nh-b">
       <h4>ノベルゲームの画面と操作</h4>
       <dl>
-        <dt>はじめる画面</dt><dd>☰メニューの「ノベルゲームのトレーラー画像を設定」で選んだ画像を一番上に表示します。PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／探索者の画像：ファイルを選び、メッセージ枠の左・右・表示しないを選択。未設定ならコマの画像／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
+        <dt>はじめる画面</dt><dd>☰メニューの「ノベルゲームのトレーラー画像を設定」で選んだ画像を一番上に表示します。PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／探索者の画像：ファイルを選び、表示位置を選択（右はメッセージ枠の横、左はメッセージ枠の上。立ち絵は右、駒は左がおすすめ）。未設定ならコマの画像／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
         <dt>画面左上</dt><dd>見出しは場所バーに表示。探索者の枠はHP・MP・SANを−／＋や入力で変更でき、名前をクリックすると能力値を確認できます。同行NPC、持ち物・情報、有効な条件もここに表示されます。</dd>
         <dt>判定</dt><dd>技能判定はメッセージ枠右上のコマンドで「振る（目標値）」。目標値が分からないときは「1d100を振る」「技能値を入力して振る」。探索者・味方NPCのクリティカルで効果が複数あるときは、PLが選びます。クリチケを採用していれば判定の直後に振り直せます。</dd>
         <dt>ダイス・チャパレ</dt><dd>振ったダイスはすべて結果と内訳をメッセージ枠の上に表示します。発言欄左の「チャパレ」で、1d3〜1d100のダイスと読み込んだチャットパレットを選べます（{DB}はDBに変換）。</dd>
+        <dt>スクショ・画像</dt><dd>シナリオ終了後、右上の右端に「スクショ」ボタンが出ます。押すと画面の表示をすべて消し、トレーラー画像と表示中の立ち絵だけを表示します（Escキー、スマホはダブルタップで戻る）。ゲーム内の画像は右クリックや長押しで保存できないようにしています。スマホは横向き固定（対応していない端末では縦向きのとき横向きにするよう案内）。</dd>
         <dt>ログ</dt><dd>右上の「バックログ」で読み返し、「ログ出力」でココフォリア形式のログを保存できます（文字色はログのみ、語り手は黒）。</dd>
         <dt>戦闘の画面</dt><dd>画面中央に敵（名前・HPバー・NPCデータの立ち絵があれば画像）を並べて表示し、上部にラウンドと敵の状態、右上に行動順を表示し、行動はメッセージ枠右上のコマンドで選びます。</dd>
       </dl>
@@ -1262,12 +1263,26 @@ button{font:inherit;cursor:pointer}
 #nvFoes .foe .fb i{display:block;height:100%;background:#d0453a;transition:width .3s}
 #nvFoes .foe.now .fn{color:#ffe08a}
 #nvFoes .foe.dn{opacity:.25;filter:grayscale(1)}
+#nvPcImg.left{right:auto;left:10px;bottom:calc(100% + 6px);max-height:min(28vh,220px);max-width:min(28%,210px)}
+#nvWin.pcl #nvFeed{left:min(30%,224px)}
+img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#nvTop #nvBtnSS{border-color:#c9a75a;color:#f3ead2}
+#nvSS{position:fixed;inset:0;z-index:50;background:#000;display:none}
+#nvSS.show{display:block}
+#nvSS #nvSST{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#nvSS #nvSSC{position:absolute;left:50%;bottom:0;transform:translateX(-50%);max-height:92vh;max-width:70vw;object-fit:contain}
+#nvSS #nvSSP{position:absolute;bottom:0;max-height:92vh;max-width:45vw;object-fit:contain}
+#nvSS #nvSSP.right{right:2vw}#nvSS #nvSSP.left{left:2vw;max-height:60vh}
+#nvSSHint{position:absolute;left:50%;top:24px;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 18px;font-size:14px;cursor:pointer;text-align:center;line-height:1.6}
+#nvSSHint span{display:block;font-size:11px;opacity:.75}
+#nvRot{display:none}
+@media (orientation:portrait) and (pointer:coarse){#nvRot{display:flex;position:fixed;inset:0;z-index:99;background:#0b0b10;color:#fff;align-items:center;justify-content:center;font-size:18px;letter-spacing:.1em;text-align:center;padding:20px}}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
 <div id="nvLeft"><div id="nvLoc" style="display:none"></div><div id="nvPc"><div id="nvPcHead"><span id="nvPcTitle">探索者</span><span id="nvPcTog">▸</span></div><div id="nvPcBody"></div></div><div id="nvComp"></div>
 <div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div></div>
-<div id="nvTop"><button id="nvBtnAfter" style="display:none">あとがき</button><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button></div>
+<div id="nvTop"><button id="nvBtnAfter" style="display:none">あとがき</button><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button><button id="nvBtnSS" style="display:none">スクショ</button></div>
 <div id="nvChoice"></div>
 <div id="nvBattleBar"></div>
 <div id="nvFoes"></div>
@@ -1282,6 +1297,8 @@ button{font:inherit;cursor:pointer}
 <div class="nv-ovl" id="nvCard"><div class="nv-dlg nv-info nv-cardv"><button class="nv-x" id="nvCardX" title="閉じて進む">×</button><h2 id="nvCardT"></h2><div class="bd" id="nvCardB"></div></div></div>
 <div class="nv-ovl" id="nvEnd"><div class="nv-dlg nv-info nv-endc"><button class="nv-x" id="nvEndX" title="閉じる">×</button><h2 id="nvEndT"></h2><div class="bd" id="nvEndB"></div></div></div>
 <div class="nv-ovl" id="nvAfter"><div class="nv-dlg nv-info"><button class="nv-x" id="nvAfterX" title="閉じる">×</button><h2>あとがき</h2><div class="bd" id="nvAfterB"></div></div></div>
+<div id="nvSS"><img id="nvSST" alt=""><img id="nvSSC" alt=""><img id="nvSSP" alt=""><div id="nvSSHint">「Esc」で元の画面に戻る<span>（スマホはダブルタップ）・クリックでこの案内を消す</span></div></div>
+<div id="nvRot">画面を横向きにしてください</div>
 <div class="nv-ovl" id="nvInfo"><div class="nv-dlg nv-info"><button class="nv-x" id="nvInfoX" title="閉じて持ち物にしまう">×</button><h2 id="nvInfoT"></h2><div class="bd" id="nvInfoB"></div></div></div>
 <div class="nv-ovl" id="nvAbil"><div class="nv-dlg nv-info"><button class="nv-x" id="nvAbilX" title="閉じる">×</button><h2 id="nvAbilT"></h2><div class="bd" id="nvAbilB"></div></div></div>
 <div class="nv-ovl" id="nvStart"><div class="nv-dlg"><h2>はじめる</h2><div class="bd">
@@ -1493,7 +1510,18 @@ $("nvEnd").addEventListener("click",function(e){e.stopPropagation();});
 $("nvBtnAfter").onclick=function(e){e.stopPropagation();$("nvAfterB").innerHTML=D.afterword||"";$("nvAfter").classList.add("show");};
 $("nvAfterX").addEventListener("click",function(e){e.stopPropagation();$("nvAfter").classList.remove("show");});
 $("nvAfter").addEventListener("click",function(e){e.stopPropagation();if(e.target.id==="nvAfter")$("nvAfter").classList.remove("show");});
-function afterBtn(){$("nvBtnAfter").style.display=(st.done&&D.afterword)?"":"none";}
+function afterBtn(){$("nvBtnAfter").style.display=(st.done&&D.afterword)?"":"none";$("nvBtnSS").style.display=st.done?"":"none";}
+function ssOpen(){var ss=$("nvSS"),t=$("nvSST"),c=$("nvSSC"),p=$("nvSSP"),pi=$("nvPcImg");t.style.display=D.trailer?"block":"none";if(D.trailer)t.src=D.trailer;
+  var ch=charEl.style.display!=="none"&&charEl.src;c.style.display=ch?"block":"none";if(ch)c.src=charEl.src;var ps=pi.style.display!=="none"&&pi.src;p.style.display=ps?"block":"none";if(ps){p.src=pi.src;p.className=pi.className;}
+  $("nvSSHint").style.display="";ss.classList.add("show");}
+function ssClose(){$("nvSS").classList.remove("show");}
+$("nvBtnSS").onclick=function(e){e.stopPropagation();ssOpen();};
+$("nvSSHint").addEventListener("click",function(e){e.stopPropagation();this.style.display="none";});
+$("nvSS").addEventListener("dblclick",function(e){e.stopPropagation();ssClose();});
+(function(){var lt=0;$("nvSS").addEventListener("touchend",function(e){var n=Date.now();if(n-lt<350){e.preventDefault();ssClose();lt=0;}else lt=n;});})();
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("nvSS").classList.contains("show")){e.preventDefault();ssClose();}},true);
+document.addEventListener("contextmenu",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault();},true);
+document.addEventListener("dragstart",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault();},true);
 function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offsetWidth;h.classList.add("flash");}
 function invRender(){
   var openSet={};[].forEach.call(document.querySelectorAll("#nvInvBody details[open] summary span"),function(x){openSet[x.textContent]=1;});
@@ -1891,11 +1919,11 @@ function rulesHTML(){var li=function(t,keys,nm,cs,md){var on=keys.filter(ruleS).
    +"<div class=\"rt\">探索のクリティカル・ファンブル</div><ul>"+li("クリティカル",["expCritTicket","expCritPlus"],X,ruleS("expCritTicket")?tk:"","pl")+li("ファンブル",["expFumTicket","expFumMinus"],X,ruleS("expFumTicket")?tk:"","all")+"</ul>"
    +"<div class=\"rn\">クリティカル＝01〜05、ファンブル＝96〜100。</div>"
    +"<div class=\"rt\">発狂の扱い</div><ul><li>一度のSANチェックで5以上減ると、発狂ロール（＜アイデア＞）を行います（※に「発狂免除」があるときは行いません）。</li><li>＜アイデア＞成功で一時的狂気。内容が決まっている場合はその内容を表示します。</li><li>決まっていない場合は内容ロール＜1d10＞（内容はルールブックを確認）。戦闘中は＜1d10+4＞ラウンドの間ダイス補正−10、探索中は次の探索のダイス補正−30。</li></ul>";}
-function pcImgRender(){var im=$("nvPcImg"),src=st.pcImg||(st.pc&&st.pc.iconUrl)||"",pos=st.pcImgPos||"left";if(!src||pos==="none"||!st.started){im.style.display="none";return;}im.src=src;im.className=pos;im.style.display="block";}
+function pcImgRender(){var im=$("nvPcImg"),src=st.pcImg||(st.pc&&st.pc.iconUrl)||"",pos=st.pcImgPos||"left";if(!src||pos==="none"||!st.started){im.style.display="none";win.classList.remove("pcl");return;}im.src=src;im.className=pos;im.style.display="block";win.classList.toggle("pcl",pos==="left");}
 function imgShrink(file,max,cb){var rd=new FileReader();rd.onload=function(){var g=new Image();g.onload=function(){var k=Math.min(1,max/Math.max(g.width,g.height)),c=document.createElement("canvas");c.width=Math.round(g.width*k);c.height=Math.round(g.height*k);c.getContext("2d").drawImage(g,0,0,c.width,c.height);var png=/png|gif|webp/i.test(file.type);cb(c.toDataURL(png?"image/png":"image/jpeg",.88));};g.src=rd.result;};rd.readAsDataURL(file);}
-$("nvPcImgF").addEventListener("change",function(){var f=this.files&&this.files[0];if(!f)return;imgShrink(f,700,function(u){st.pcImg=u;$("nvPcImgMsg").textContent="画像を設定しました。";save();pcImgRender();});});
+$("nvPcImgF").addEventListener("change",function(){var f=this.files&&this.files[0];if(!f)return;imgShrink(f,700,function(u){st.pcImg=u;$("nvPcImgMsg").textContent="画像を設定しました。　立ち絵は右、駒は左がおすすめです（左はメッセージ枠の上に表示）。";save();pcImgRender();});});
 $("nvPcImgPos").addEventListener("change",function(){st.pcImgPos=this.value;save();pcImgRender();});
-function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").style.display="block";}$("nvPcImgPos").value=st.pcImgPos||"left";$("nvPcImgMsg").textContent=st.pcImg?"画像を設定済み（ファイルを選ぶと変更）":"未設定の場合、コマに画像があればそれを使います。";$("nvRules").innerHTML=rulesHTML();
+function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").style.display="block";}$("nvPcImgPos").value=st.pcImgPos||"left";$("nvPcImgMsg").textContent=(st.pcImg?"画像を設定済み（ファイルを選ぶと変更）":"未設定の場合、コマに画像があればそれを使います。")+"　立ち絵は右、駒は左がおすすめです（左はメッセージ枠の上に表示）。";$("nvRules").innerHTML=rulesHTML();
   
   var sel=$("nvPcSel");pcOptions();
   if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=st.koma&&st.koma.name===st.pc.name?"koma":ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";}
@@ -1904,8 +1932,9 @@ function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").s
 }
 $("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
-$("nvBegin").onclick=function(){setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.rec={};st.done=false;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
-$("nvResume").onclick=function(){setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
+function lockLand(){try{if(!window.matchMedia("(pointer:coarse)").matches)return;var el=document.documentElement,lk=function(){try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(function(){});}catch(_){}};if(el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().then(lk).catch(lk);else lk();}catch(_){}}
+$("nvBegin").onclick=function(){lockLand();setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.rec={};st.done=false;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvResume").onclick=function(){lockLand();setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
 fillStart();invRender();locRender(false);afterBtn();pcImgRender();if(st.started)pcRender();$("nvStart").classList.add("show");
 })();
