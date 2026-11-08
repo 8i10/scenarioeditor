@@ -383,13 +383,15 @@
   .block[data-type="blimit"] .be::before{content:"［ラウンド上限］";display:inline-block;font-weight:700}
   .block[data-type="bfaint"] .be::before{content:"［気絶］";display:inline-block;font-weight:700}
   .block[data-type="leave"] .be::before{content:"［離脱］";display:inline-block;font-weight:700}
+  .block[data-type="ending"] .be::before{content:"［エンディング］";display:inline-block;font-weight:700}
   .block[data-type="chframe"]>.chead>.be::before{content:"［選択肢枠］";display:inline-block;font-weight:700;margin-right:4px}
+  .block[data-type="afterword"]>.chead>.be::before{content:"［あとがき］";display:inline-block;font-weight:700;margin-right:4px}
   .block[data-type="chframe"]{border:1px dashed var(--line);border-radius:8px;padding:2px 6px 4px}
   .block[data-type="cond"]>.be::before,.block[data-type="cond"]>.chead>.be::before{content:"［条件］";display:inline-block;font-weight:700}
   .block[data-type="uncond"] .be::before{content:"［条件解除］";display:inline-block;font-weight:700}
   .block[data-type="bshock"] .be::before{content:"［ショック失敗］";display:inline-block;font-weight:700}
   .block[data-type="bround"]>.be::before,.block[data-type="bround"]>.chead>.be::before{content:"［ラウンド経過］";display:inline-block;font-weight:700}
-  .block[data-type="battle"] .be,.block[data-type="bwin"] .be,.block[data-type="blose"] .be,.block[data-type="bflee"] .be,.block[data-type="blimit"] .be,.block[data-type="bround"]>.be,.block[data-type="bround"]>.chead>.be,.block[data-type="bfaint"] .be,.block[data-type="bshock"] .be,.block[data-type="leave"] .be,.block[data-type="cond"]>.be,.block[data-type="cond"]>.chead>.be,.block[data-type="uncond"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
+  .block[data-type="battle"] .be,.block[data-type="bwin"] .be,.block[data-type="blose"] .be,.block[data-type="bflee"] .be,.block[data-type="blimit"] .be,.block[data-type="bround"]>.be,.block[data-type="bround"]>.chead>.be,.block[data-type="bfaint"] .be,.block[data-type="bshock"] .be,.block[data-type="leave"] .be,.block[data-type="ending"] .be,.block[data-type="cond"]>.be,.block[data-type="cond"]>.chead>.be,.block[data-type="uncond"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
   .block[data-type="battle"]+.block .be{margin-top:2px}
   .block[data-type="bwin"]+.block .be,.block[data-type="blose"]+.block .be,.block[data-type="bflee"]+.block .be,.block[data-type="blimit"]+.block .be,.block[data-type="bround"]+.block .be,.block[data-type="bfaint"]+.block .be,.block[data-type="bshock"]+.block .be{margin-top:2px}
   .block[data-type="atk"] .be{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:500;margin:12px 0 4px}
@@ -811,6 +813,7 @@
       <button class="hm-item" id="btnHtml">HTMLで保存</button>
       <button class="hm-item" id="btnNovel">ノベルゲーム形式で保存（KPレス）</button>
       <button class="hm-item" id="btnNovelHelp">ノベルゲーム用メニュー（KPレス用）の使い方</button>
+      <button class="hm-item" id="btnNovelTrailer">ノベルゲームのトレーラー画像を設定</button>
       <button class="hm-item" id="btnNovelRules">ノベルゲームのクリティカル・ファンブル設定</button>
       <button class="hm-item" id="btnPdfBk">PDFで保存（しおり付き・文字選択可）</button>
       <button class="hm-item" id="btnPdf">PDFで保存（印刷・軽量／文字のみ）</button>
@@ -860,12 +863,13 @@
     <div class="dlg-b nh-b">
       <h4>ノベルゲームの画面と操作</h4>
       <dl>
-        <dt>はじめる画面</dt><dd>PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
+        <dt>はじめる画面</dt><dd>☰メニューの「ノベルゲームのトレーラー画像を設定」で選んだ画像を一番上に表示します。PC設定（コマ貼り付け：ココフォリアに貼り付けるのと同じものでOK／探索者／名前／探索者の画像：ファイルを選び、表示位置を選択（右はメッセージ枠の横、左はメッセージ枠の上。立ち絵は右、駒は左がおすすめ）。未設定ならコマの画像／ログの文字色）、設定（NPCの立ち絵／クリチケの採用：チェックするとステータスに「C」を追加）、本シナリオのルール確認（クリティカル・ファンブル・発狂の扱い）があります。</dd>
         <dt>画面左上</dt><dd>見出しは場所バーに表示。探索者の枠はHP・MP・SANを−／＋や入力で変更でき、名前をクリックすると能力値を確認できます。同行NPC、持ち物・情報、有効な条件もここに表示されます。</dd>
         <dt>判定</dt><dd>技能判定はメッセージ枠右上のコマンドで「振る（目標値）」。目標値が分からないときは「1d100を振る」「技能値を入力して振る」。探索者・味方NPCのクリティカルで効果が複数あるときは、PLが選びます。クリチケを採用していれば判定の直後に振り直せます。</dd>
         <dt>ダイス・チャパレ</dt><dd>振ったダイスはすべて結果と内訳をメッセージ枠の上に表示します。発言欄左の「チャパレ」で、1d3〜1d100のダイスと読み込んだチャットパレットを選べます（{DB}はDBに変換）。</dd>
+        <dt>スクショ・画像</dt><dd>シナリオ終了後、右上の右端に「スクショ」ボタンが出ます。押すと画面の表示をすべて消し、トレーラー画像と表示中の立ち絵だけを表示します（Escキー、スマホはダブルタップで戻る）。ゲーム内の画像は右クリックや長押しで保存できないようにしています。スマホは横向き固定（対応していない端末では縦向きのとき横向きにするよう案内）。</dd>
         <dt>ログ</dt><dd>右上の「バックログ」で読み返し、「ログ出力」でココフォリア形式のログを保存できます（文字色はログのみ、語り手は黒）。</dd>
-        <dt>戦闘の画面</dt><dd>上部にラウンドと敵の状態（HPバー）、右上に行動順を表示し、行動はメッセージ枠右上のコマンドで選びます。</dd>
+        <dt>戦闘の画面</dt><dd>画面中央に敵（名前・HPバー・NPCデータの立ち絵があれば画像）を並べて表示し、上部にラウンドと敵の状態、右上に行動順を表示し、行動はメッセージ枠右上のコマンドで選びます。</dd>
       </dl>
       <p>右サイドメニュー／「/」メニューの<b>「KPレス用」</b>にある行を本文に置くと、「ノベルゲーム形式で保存（KPレス）」で書き出したときに動きが付きます。エディタやHTML出力では普通の行として表示されます。</p>
       <h4>進行</h4>
@@ -873,6 +877,8 @@
         <dt>情報枠・カード</dt><dd>情報（囲い）・情報（左+下線）・色変えボックス・カードの中身は、ノベルゲームでは画面中央の専用の枠に全文を表示し、右上の×で閉じると先へ進みます。</dd>
         <dt>［選択肢枠］</dt><dd>見出しに問いかけ（例：鍵を持っていく？）を書き、中にトグルを置くと、トグルの見出しが選択肢になります（例：持っていく／持って行かない）。選んだトグルの中身（［入手］など）を実行して、枠の後へ進みます。</dd>
         <dt>見出し</dt><dd>見出しはノベルゲームでは左上のバー（場所の表示）に出ます。</dd>
+        <dt>［エンディング］</dt><dd>見出しの下に［エンディング］を置くと、そこから次の見出しまでの内容（生還報酬・後遺症など）を画面中央のエンドカードに表示します。カードを出したまま発言・ダイス・チャパレを使え、×で閉じるとシナリオ終了になります。見出しか［エンディング］の文に「生還」を含むときは、プレイ中に振った技能の記録（クリティカル・ファンブル・スペシャル・成功、重複なし）を下に表示します。</dd>
+        <dt>［あとがき］</dt><dd>枠の中に書いた内容は本編では流れず、シナリオ終了後だけ右上の「バックログ」の左に出る「あとがき」ボタンで読めます。</dd>
         <dt>［選択肢］</dt><dd>選択肢ボタンを出します。続けて置いた［選択肢］は1組になります。見出しリンクを付けるとその見出しへ飛びます。本文のどこかに「＜先へ進む＞が追加。」のように書いた選択肢は、その文が表示されるまで出ません。</dd>
         <dt>！発言トリガー</dt><dd>PLの発言で先へ進みます。「合言葉／ひらけごま」のように／区切りでキーワードを書き、見出しリンクで飛び先を指定します。</dd>
         <dt>［戻る］</dt><dd>直前の［発言トリガー］［使用アイテム］に「戻る」ボタンを付けます。見出しリンクがなければ直前の選択肢へ戻ります。</dd>
@@ -1237,15 +1243,50 @@ button{font:inherit;cursor:pointer}
 #nvLoc{flex:none;padding:8px 16px 8px 14px;background:linear-gradient(90deg,rgba(20,18,30,.95),rgba(20,18,30,.75) 70%,rgba(20,18,30,0));border-left:4px solid #c9a75a;color:#f3ead2;font-family:"Shippori Mincho B1","Yu Mincho",serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-shadow:0 1px 6px rgba(0,0,0,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #nvLoc.in{animation:nvloc .6s ease-out}
 @keyframes nvloc{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.nv-endc{width:min(600px,94vw)}
+.nv-endc h2{text-align:center;font-size:20px;letter-spacing:.12em;padding-right:20px;padding-left:20px}
+.nv-endc .bd{line-height:1.9;font-size:15px}
+.nv-endc .erec{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);font-size:14px}
+.nv-endc .erec .et{font-weight:700;margin-bottom:6px;color:#e8d38a}
+.nv-endc .erec .er{margin:2px 0}.nv-endc .erec .er b{display:inline-block;min-width:96px;color:#bbb;font-weight:700}
+#nvEnd{background:transparent;pointer-events:none;align-items:flex-start;padding-top:56px}
+#nvEnd .nv-dlg{pointer-events:auto;max-height:calc(100vh - 300px);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+#nvEnd .nv-dlg .bd{overflow:auto}
+#nvTrailer{display:block;width:100%;max-height:42vh;object-fit:contain;border-radius:10px;margin:0 0 14px;background:#000}
+#nvPcImg{position:absolute;bottom:-70px;max-height:min(48vh,440px);max-width:calc((100vw - min(980px,95vw))/2 - 10px);object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6))}
+#nvPcImg.left{right:calc(100% + 6px)}#nvPcImg.right{left:calc(100% + 6px)}
+#nvFoes{position:fixed;left:50%;top:58px;transform:translateX(-50%);width:min(980px,95vw);display:none;justify-content:center;align-items:flex-end;gap:18px;flex-wrap:wrap;z-index:2;pointer-events:none;max-height:calc(100vh - 400px)}
+#nvFoes .foe{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:220px;transition:opacity .4s,filter .4s}
+#nvFoes .foe img{max-height:calc(100vh - 470px);max-width:220px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,.6));animation:nvfade .4s}
+#nvFoes .foe .fn{font-weight:700;font-size:14px;color:#fff;text-shadow:0 1px 4px #000;white-space:nowrap}
+#nvFoes .foe .fb{width:140px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+#nvFoes .foe .fb i{display:block;height:100%;background:#d0453a;transition:width .3s}
+#nvFoes .foe.now .fn{color:#ffe08a}
+#nvFoes .foe.dn{opacity:.25;filter:grayscale(1)}
+#nvPcImg.left{right:auto;left:10px;bottom:calc(100% + 6px);max-height:min(28vh,220px);max-width:min(28%,210px)}
+#nvWin.pcl #nvFeed{left:min(30%,224px)}
+img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#nvTop #nvBtnSS{border-color:#c9a75a;color:#f3ead2}
+#nvSS{position:fixed;inset:0;z-index:50;background:#000;display:none}
+#nvSS.show{display:block}
+#nvSS #nvSST{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#nvSS #nvSSC{position:absolute;left:50%;bottom:0;transform:translateX(-50%);max-height:92vh;max-width:70vw;object-fit:contain}
+#nvSS #nvSSP{position:absolute;bottom:0;max-height:92vh;max-width:45vw;object-fit:contain}
+#nvSS #nvSSP.right{right:2vw}#nvSS #nvSSP.left{left:2vw;max-height:60vh}
+#nvSSHint{position:absolute;left:50%;top:24px;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 18px;font-size:14px;cursor:pointer;text-align:center;line-height:1.6}
+#nvSSHint span{display:block;font-size:11px;opacity:.75}
+#nvRot{display:none}
+@media (orientation:portrait) and (pointer:coarse){#nvRot{display:flex;position:fixed;inset:0;z-index:99;background:#0b0b10;color:#fff;align-items:center;justify-content:center;font-size:18px;letter-spacing:.1em;text-align:center;padding:20px}}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
 <div id="nvLeft"><div id="nvLoc" style="display:none"></div><div id="nvPc"><div id="nvPcHead"><span id="nvPcTitle">探索者</span><span id="nvPcTog">▸</span></div><div id="nvPcBody"></div></div><div id="nvComp"></div>
 <div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div></div>
-<div id="nvTop"><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button></div>
+<div id="nvTop"><button id="nvBtnAfter" style="display:none">あとがき</button><button id="nvBtnBack">バックログ</button><button id="nvBtnLog">ログ出力</button><button id="nvBtnMenu">メニュー</button><button id="nvBtnSS" style="display:none">スクショ</button></div>
 <div id="nvChoice"></div>
 <div id="nvBattleBar"></div>
-<div id="nvWin"><div id="nvFeed"></div><div id="nvCmd"></div><div id="nvName" style="display:none"></div><div id="nvText"></div>
+<div id="nvFoes"></div>
+<div id="nvWin"><img id="nvPcImg" alt="" style="display:none"><div id="nvFeed"></div><div id="nvCmd"></div><div id="nvName" style="display:none"></div><div id="nvText"></div>
   <div id="nvCheck"><span>技能値</span><input id="nvChkVal" inputmode="numeric"><button class="nv-btn" id="nvChkGo">判定する（CCB）</button><button class="nv-btn sub" id="nvChkSkip">判定せずに進む</button></div>
   <div id="nvWait"></div>
   <div id="nvNext">▼</div></div>
@@ -1254,14 +1295,21 @@ button{font:inherit;cursor:pointer}
 <div class="nv-ovl" id="nvBack"><div class="nv-dlg"><h2>バックログ</h2><div class="bd"><div id="nvBackList"></div></div><div class="ft"><button class="nv-btn sub" id="nvBackClose">閉じる</button></div></div></div>
 <div id="nvOrder"></div>
 <div class="nv-ovl" id="nvCard"><div class="nv-dlg nv-info nv-cardv"><button class="nv-x" id="nvCardX" title="閉じて進む">×</button><h2 id="nvCardT"></h2><div class="bd" id="nvCardB"></div></div></div>
+<div class="nv-ovl" id="nvEnd"><div class="nv-dlg nv-info nv-endc"><button class="nv-x" id="nvEndX" title="閉じる">×</button><h2 id="nvEndT"></h2><div class="bd" id="nvEndB"></div></div></div>
+<div class="nv-ovl" id="nvAfter"><div class="nv-dlg nv-info"><button class="nv-x" id="nvAfterX" title="閉じる">×</button><h2>あとがき</h2><div class="bd" id="nvAfterB"></div></div></div>
+<div id="nvSS"><img id="nvSST" alt=""><img id="nvSSC" alt=""><img id="nvSSP" alt=""><div id="nvSSHint">「Esc」で元の画面に戻る<span>（スマホはダブルタップ）・クリックでこの案内を消す</span></div></div>
+<div id="nvRot">画面を横向きにしてください</div>
 <div class="nv-ovl" id="nvInfo"><div class="nv-dlg nv-info"><button class="nv-x" id="nvInfoX" title="閉じて持ち物にしまう">×</button><h2 id="nvInfoT"></h2><div class="bd" id="nvInfoB"></div></div></div>
 <div class="nv-ovl" id="nvAbil"><div class="nv-dlg nv-info"><button class="nv-x" id="nvAbilX" title="閉じる">×</button><h2 id="nvAbilT"></h2><div class="bd" id="nvAbilB"></div></div></div>
 <div class="nv-ovl" id="nvStart"><div class="nv-dlg"><h2>はじめる</h2><div class="bd">
+  <img id="nvTrailer" alt="" style="display:none">
   <div class="nv-sec">PC設定</div>
   <div class="nv-row" style="align-items:flex-start"><label>コマ貼り付け</label><textarea id="nvKoma" rows="2" placeholder="ココフォリアに貼り付けるのと同じもの（キャラクターコマ）を貼り付けてください"></textarea></div>
   <div class="nv-hint" id="nvKomaMsg" style="margin:-4px 0 8px"></div>
   <div class="nv-row"><label>探索者</label><select id="nvPcSel"></select></div>
   <div class="nv-row"><label>名前</label><input id="nvPcName" placeholder="名前を入力して遊ぶ場合"></div>
+  <div class="nv-row"><label>探索者の画像</label><input type="file" id="nvPcImgF" accept="image/*" style="flex:1;min-width:140px;height:auto;padding:6px"><select id="nvPcImgPos" style="flex:0 0 120px;min-width:0"><option value="left">左に表示</option><option value="right">右に表示</option><option value="none">表示しない</option></select></div>
+  <div class="nv-hint" id="nvPcImgMsg" style="margin:-4px 0 8px"></div>
   <div class="nv-row"><label>ログの文字色</label><input id="nvPcColor" type="color" value="#e6e6e6" style="flex:0 0 60px;padding:2px"></div>
   <div class="nv-sec">設定</div>
   <div class="nv-row"><label>NPCの立ち絵</label><label class="nv-ck"><input type="checkbox" id="nvShowChar" checked> 登場時に表示する</label></div>
@@ -1290,16 +1338,23 @@ function addLog(n,t,c,tab){if(!String(t||"").trim())return null;var e={n:n,t:t,c
 /* NPCの立ち絵：台詞の名前と同じNPCに画像があれば中央に表示。場面（見出し）が変わると消える */
 var CH=D.chars||{};
 function charFor(nm){nm=String(nm||"").trim();if(!nm)return null;if(CH[nm])return CH[nm];for(var k in CH){if(k&&(nm.indexOf(k)>=0||k.indexOf(nm)>=0))return CH[k];}return null;}
-function paintChar(){if(st.showChar&&st.ch){charEl.src=st.ch;charEl.style.display="block";}else charEl.style.display="none";}
+function paintChar(){if(st.showChar&&st.ch&&!st.battle){charEl.src=st.ch;charEl.style.display="block";}else charEl.style.display="none";}
 var busy=null;
 function eqCond(s){var m=String(s||"").match(/『([^』]+)』を([^。\n]*?)場合/);if(!m)return null;return {name:m[1],neg:/(ない|無い|ず|せず)$/.test(m[2].replace(/\s/g,""))};}
 function eqHas(n){var it=ITEMS[n];if(st.inv.indexOf(n)<0)return false;return it&&it.equip?isEq(n):true;}
 function condSkip(step){var c=step.cond?eqCond(step.cond):null;if(!c&&(step.k==="line"||step.k==="say"))c=eqCond(txt(step.html));return !!(c&&eqHas(c.name)===c.neg);}
 function locRender(anim){var el=$("nvLoc");if(!el)return;el.textContent=st.loc||"";el.style.display=st.loc?"":"none";if(anim){el.classList.remove("in");void el.offsetWidth;el.classList.add("in");}}
+function isEnding(t){return /終幕|エンディング|\bEND\b|ＥＮＤ/i.test(String(t||""));}
+function recHTML(){var r=st.rec||{},ks=Object.keys(r),pick=function(f){return ks.filter(f);};var c=pick(function(k){return r[k].c;}),fm=pick(function(k){return r[k].f;}),sp=pick(function(k){return r[k].s&&!r[k].c;}),ok=pick(function(k){return r[k].o&&!r[k].s&&!r[k].c;});
+  var row=function(l,a){return "<div class=\"er\"><b>"+l+"</b>"+(a.length?a.map(function(x){return "《"+esc(x)+"》";}).join("、"):"なし")+"</div>";};
+  return "<div class=\"erec\"><div class=\"et\">【 判定の記録 】</div>"+row("クリティカル",c)+row("ファンブル",fm)+row("スペシャル",sp)+row("成功",ok)+"</div>";}
+function endCard(step){var i=S.indexOf(step);i=i>=0?i+1:st.pos+1;var parts=[],etx=txt(conv(step.html||""));while(i<S.length&&S[i]&&S[i].k!=="title"){var x=S[i];if(x.k==="line"||x.k==="say")parts.push((x.name?"<b>"+esc(x.name)+"</b>「"+conv(x.html)+"」":conv(x.html))+(x.img?"<img src=\""+esc(x.img)+"\" style=\"display:block;max-width:100%;margin:6px 0\">":""));else if(x.k==="card"){if(x.title)parts.push("<b>"+conv(x.title)+"</b>");(x.body||[]).forEach(function(y){parts.push(conv(y.html));});}i++;}
+  parts.forEach(function(h){addLog(st.narr,txt(h),"#888888");});var alive=/生還/.test(st.loc+" "+etx);addLog(st.narr,"【エンディング】"+(etx||st.loc),"#888888");
+  $("nvEndT").textContent=st.loc+(etx&&st.loc.indexOf(etx)<0?"　"+etx:"");$("nvEndB").innerHTML=parts.join("<br>")+(alive?recHTML():"");$("nvEnd").classList.add("show");busy="end";nextEl.style.display="none";nameEl.style.display="none";textEl.innerHTML="<b>"+esc(st.loc)+"</b>";st.pos=S.length-1;st.cur={k:"line",html:textEl.innerHTML};save();}
 function show(step,noLog){
   st.cur=step;feedClear();waitEl.style.display="none";waitEl.innerHTML="";choiceEl.style.display="none";choiceEl.innerHTML="";titleEl.style.display="none";chk.style.display="none";busy=null;win.classList.remove("dim");nextEl.style.display="";
   if(step&&condSkip(step)){busy=null;next();return;}
-  if(!step){st.done=true;nameEl.style.display="none";textEl.innerHTML="― おわり ―<br><span style=\"font-size:.85em;opacity:.75\">右上の「ログ出力」でプレイログを保存できます。</span>";nextEl.style.display="none";save();return;}
+  if(!step){st.done=true;afterBtn();nameEl.style.display="none";textEl.innerHTML="― おわり ―<br><span style=\"font-size:.85em;opacity:.75\">右上の「ログ出力」でプレイログを保存できます。</span>";nextEl.style.display="none";save();return;}
   if(step.img){imgEl.src=step.img;imgEl.style.display="block";st.img=step.img;}
   if(step.k==="title"){st.ch=null;paintChar();st.loc=txt(conv(step.html));locRender(true);if(!noLog)addLog(st.narr,"【"+st.loc+"】","#888888");save();if(!noLog){next();return;}nameEl.style.display="none";textEl.innerHTML="";return;}
   if(step.k==="pick"){busy="choice";nameEl.style.display="none";textEl.innerHTML=step.html?conv(step.html):"どうする？";nextEl.style.display="none";if(!noLog&&step.html)addLog(st.narr,txt(conv(step.html)),"#888888");choiceEl.style.display="flex";choiceEl.innerHTML=step.opts.map(function(o,i){return "<button data-i=\""+i+"\">"+conv(o.label)+"</button>";}).join("");save();return;}
@@ -1315,6 +1370,7 @@ function show(step,noLog){
   if(step.k==="card"){nameEl.style.display="none";busy="card";nextEl.style.display="none";var ct=conv(step.title||"");textEl.innerHTML=ct?"<b>"+ct+"</b>":"（情報）";
     $("nvCardT").innerHTML=ct||"情報";$("nvCardT").style.display=ct?"":"none";$("nvCardB").innerHTML=step.body.map(function(x){return (x.name?"<b>"+esc(x.name)+"</b>「"+conv(x.html)+"」":conv(x.html))+(x.img?"<img src=\""+esc(x.img)+"\" style=\"display:block;max-width:100%;margin:6px 0\">":"");}).join("<br>");$("nvCardB").scrollTop=0;$("nvCard").classList.add("show");
     if(!noLog){if(ct)addLog(st.narr,txt(ct),"#888888");step.body.forEach(function(x){addLog(x.name||st.narr,txt(conv(x.html)),"#888888");});}save();return;}
+  if(step.k==="ending"){if(!noLog)endCard(step);else{$("nvEnd").classList.add("show");busy="end";nextEl.style.display="none";}return;}
   if(step.k==="evset"){if(!noLog){st.events=st.events||[];st.events.push(JSON.parse(JSON.stringify(step.e)));}busy=null;next();return;}
   if(step.k==="eroll"){nameEl.style.display="none";if(noLog&&step._msg){textEl.innerHTML=step._msg;return;}var ok=true;if(step.rate!=null){var er=roll("CCB<="+step.rate+" 【"+step.name+"】");addLog("敵",step.hidden?er.text.replace(/<=\s*\d+/g,""):er.text,"#c0392b");ok=er.ok;}
     var eff=ok?step.ok:step.ng,emsg="《"+esc(step.name)+"》："+(step.rate!=null?(ok?"成功":"失敗"):"");if(eff){var o1=spawnText(eff),o2=statFx(eff,false);emsg+=" → "+(o1||"")+(o2?"（"+esc(o2)+"）":"")+(!o1&&!o2?esc(eff):"");}
@@ -1367,7 +1423,7 @@ function ccJudge(r,v,ccb){
 }
 function roll(cmd){
   var t=hw(cmd).trim(),m;
-  if((m=t.match(/^(CCB|CC)\s*<=\s*(\d+)(.*)$/i))){var v=+m[2],r=d(100),j;return {text:m[1].toUpperCase()+"<="+v+(m[3]?" "+m[3].trim():"")+" (1D100<="+v+") ＞ "+r+" ＞ "+(j=ccJudge(r,v,m[1].toUpperCase()==="CCB")),ok:r<=v,n:r,crit:/決定的成功/.test(j),fum:j==="致命的失敗"};}
+  if((m=t.match(/^(CCB|CC)\s*<=\s*(\d+)(.*)$/i))){var v=+m[2],r=d(100),j;return {text:m[1].toUpperCase()+"<="+v+(m[3]?" "+m[3].trim():"")+" (1D100<="+v+") ＞ "+r+" ＞ "+(j=ccJudge(r,v,m[1].toUpperCase()==="CCB")),ok:r<=v,n:r,crit:/決定的成功/.test(j),fum:j==="致命的失敗",spec:/スペシャル/.test(j)};}
   /* ダイス式：NdM・数値・+ - * / ( ) （* / は先に計算、/ は切り捨て）。最後に <= などの比較とラベル */
   var em=t.match(/^([0-9D+\-*\/()×÷\s]+)/i);if(em&&/\d*D\d+/i.test(em[1])){var ex=em[1].replace(/\s+$/,""),rest=t.slice(em[1].length);var cm=rest.match(/^\s*(<=|>=|<|>|=)\s*(\d+)/);var ev=evalDice(ex,"roll");
     if(ev){var tot=ev.v,ok=null;if(cm){var c=+cm[2],o=cm[1];ok=o==="<="?tot<=c:o===">="?tot>=c:o==="<"?tot<c:o===">"?tot>c:tot===c;}
@@ -1449,6 +1505,23 @@ function cardClose(){if(!$("nvCard").classList.contains("show"))return;$("nvCard
 $("nvCardX").addEventListener("click",function(e){e.stopPropagation();cardClose();});
 $("nvCard").addEventListener("click",function(e){e.stopPropagation();});
 document.addEventListener("keydown",function(e){if($("nvCard").classList.contains("show")&&(e.key==="Escape"||e.key==="Enter")){e.preventDefault();cardClose();}});
+$("nvEndX").addEventListener("click",function(e){e.stopPropagation();$("nvEnd").classList.remove("show");busy=null;st.q=[];st.pos=S.length;show(null);});
+$("nvEnd").addEventListener("click",function(e){e.stopPropagation();});
+$("nvBtnAfter").onclick=function(e){e.stopPropagation();$("nvAfterB").innerHTML=D.afterword||"";$("nvAfter").classList.add("show");};
+$("nvAfterX").addEventListener("click",function(e){e.stopPropagation();$("nvAfter").classList.remove("show");});
+$("nvAfter").addEventListener("click",function(e){e.stopPropagation();if(e.target.id==="nvAfter")$("nvAfter").classList.remove("show");});
+function afterBtn(){$("nvBtnAfter").style.display=(st.done&&D.afterword)?"":"none";$("nvBtnSS").style.display=st.done?"":"none";}
+function ssOpen(){var ss=$("nvSS"),t=$("nvSST"),c=$("nvSSC"),p=$("nvSSP"),pi=$("nvPcImg");t.style.display=D.trailer?"block":"none";if(D.trailer)t.src=D.trailer;
+  var ch=charEl.style.display!=="none"&&charEl.src;c.style.display=ch?"block":"none";if(ch)c.src=charEl.src;var ps=pi.style.display!=="none"&&pi.src;p.style.display=ps?"block":"none";if(ps){p.src=pi.src;p.className=pi.className;}
+  $("nvSSHint").style.display="";ss.classList.add("show");}
+function ssClose(){$("nvSS").classList.remove("show");}
+$("nvBtnSS").onclick=function(e){e.stopPropagation();ssOpen();};
+$("nvSSHint").addEventListener("click",function(e){e.stopPropagation();this.style.display="none";});
+$("nvSS").addEventListener("dblclick",function(e){e.stopPropagation();ssClose();});
+(function(){var lt=0;$("nvSS").addEventListener("touchend",function(e){var n=Date.now();if(n-lt<350){e.preventDefault();ssClose();lt=0;}else lt=n;});})();
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("nvSS").classList.contains("show")){e.preventDefault();ssClose();}},true);
+document.addEventListener("contextmenu",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault();},true);
+document.addEventListener("dragstart",function(e){if(e.target&&e.target.tagName==="IMG")e.preventDefault();},true);
 function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offsetWidth;h.classList.add("flash");}
 function invRender(){
   var openSet={};[].forEach.call(document.querySelectorAll("#nvInvBody details[open] summary span"),function(x){openSet[x.textContent]=1;});
@@ -1474,7 +1547,7 @@ function statFx(text,bare){if(!st.stat)return "";var t=hw(String(text||"")).repl
 function hpChecks(b0,a){var q=[];
   if(a<=2)q.push({k:"faint",fx:true});else if(b0>0&&(b0-a)*2>=b0)q.push({k:"check",skill:"ショックロール（CON×5）",abil:{k:"CON",m:5},shock:true,succ:[],fail:[],other:[],fx:true});
   if(q.length)st.q=q.concat(st.q.filter(function(x){return x.k!=="faint"&&!x.shock;}));}
-function battleClear(){st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();}
+function battleClear(){$("nvFoes").style.display="none";st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();}
 /* 気絶・ショック失敗の移行：見出し／敗北／エンド */
 function goRoute(w){var b=st.battle,to=b&&b.res?b.res["b"+w]:undefined;var ok=function(x){return x!==undefined&&x!==null&&x!==""&&x!==-1;};if(!ok(to))to=(D.routes||{})["b"+w];if(!ok(to))to=b?"@lose":"@end";
   if(b){if(to==="@lose"){battleEnd("lose");return;}battleClear();addLog(st.narr,"【戦闘終了】","#888888");}
@@ -1537,7 +1610,7 @@ function armorTotal(){return (st.stat?st.stat.armorFix:0)+itemBonus("armorFix");
 function atkResolve(step,kind){
   var line="";
   var fum=false,dn=unitName(step.tgt),dc=unitColor(step.tgt);
-  if(kind!=="none"){hideCmd();var v=num(kind==="dodge"?step._dg:step._pr)-madMod(step.tgt);var r=roll("CCB<="+v+" 【"+(kind==="dodge"?"回避":"受け流し")+"】");addLog(dn,r.text,dc);feedAdd(dn,r.text,dc,null,false);if(!step.tgt||step.tgt==="pc"){var cbd=condFor(kind==="dodge"?"回避":"受け流し").combo;if(cbd.length)r=comboRoll(r,cbd);}
+  if(kind!=="none"){hideCmd();var v=num(kind==="dodge"?step._dg:step._pr)-madMod(step.tgt);var r=roll("CCB<="+v+" 【"+(kind==="dodge"?"回避":"受け流し")+"】");addLog(dn,r.text,dc);feedAdd(dn,r.text,dc,null,false);if(!step.tgt||step.tgt==="pc"){recSkill(kind==="dodge"?"回避":"受け流し",r);var cbd=condFor(kind==="dodge"?"回避":"受け流し").combo;if(cbd.length)r=comboRoll(r,cbd);}
     if(r.ok){hideCmd();st.atkWait=false;if(st.battle)st.battle.phase="msg";waitEl.style.display="none";waitEl.innerHTML="";var okm=esc(dn)+(kind==="dodge"?"は攻撃をかわした！":"は攻撃を受け流した！");
       if(r.crit&&rule("defCritCounter")&&st.battle&&step.ei!=null&&st.battle.en[step.ei]&&!st.battle.en[step.ei].down&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};okm="クリティカル！ "+okm+"<br>反撃のチャンス！";}
       textEl.innerHTML=okm;busy=null;nextEl.style.display="";st.cur={k:"line",html:okm};save();return;}
@@ -1631,13 +1704,15 @@ function battleStart(step){
   battleBar();save();
 }
 function pcDex(){return num(st.pc&&st.pc.dex)||10;}
+function foesRender(){var b=st.battle,el=$("nvFoes");if(!b){el.style.display="none";el.innerHTML="";return;}var cur=b.order&&b.order[b.turn];
+  el.innerHTML=b.en.map(function(e,i){var r=e.max>0?Math.max(0,Math.min(1,e.hp/e.max)):0,im=charFor(e.base);return "<div class=\"foe"+(e.down?" dn":"")+(cur===i?" now":"")+"\">"+(im?"<img src=\""+esc(im)+"\" alt=\"\">":"")+"<div class=\"fn\">"+esc(e.name)+"</div><div class=\"fb\"><i style=\"width:"+Math.round(r*100)+"%\"></i></div></div>";}).join("");el.style.display="flex";}
 function orderRender(){var b=st.battle,el=$("nvOrder");if(!b||!b.order||!b.order.length){el.style.display="none";el.innerHTML="";return;}
   var nm=function(k){if(k==="pc")return {n:pcName(),c:"pc",d:false};if(typeof k==="string"&&k.charAt(0)==="a"){var a=(b.al||[])[+k.slice(1)];return {n:a?a.name:"?",c:"al",d:!a||a.down};}var e=b.en[k];return {n:e?e.name:"?",c:"en",d:!e||e.down};};
   el.innerHTML="<div class=\"ot\">行動順</div>"+b.order.map(function(k,i){var u=nm(k);return "<div class=\"oi "+u.c+(i===b.turn?" now":i<b.turn?" done":"")+(u.d?" dn":"")+"\"><b>"+(i+1)+"</b>"+esc(u.n)+"</div>";}).join("");el.style.display="flex";}
-function battleBar(){var b=st.battle;if(!b){barEl.style.display="none";orderRender();return;}(b.al||[]).forEach(function(x){(st.comp||[]).forEach(function(c){if(c.name===x.base){c.hp.cur=x.hp;}});});orderRender();if(st.comp&&st.comp.length)compRender();var cur=b.order[b.turn];
+function battleBar(){var b=st.battle;if(!b){barEl.style.display="none";orderRender();foesRender();return;}foesRender();(b.al||[]).forEach(function(x){(st.comp||[]).forEach(function(c){if(c.name===x.base){c.hp.cur=x.hp;}});});orderRender();if(st.comp&&st.comp.length)compRender();var cur=b.order[b.turn];
   barEl.innerHTML="<span class=\"rd\">ラウンド "+Math.max(1,b.round)+(b.limit>0?" / "+b.limit:"")+"</span>"+"<span class=\""+(cur==="pc"?"tn":"")+"\">"+esc(pcName())+"</span>"+(b.al||[]).map(function(x,i){return "<span class=\"al "+(x.down?"dn ":"")+(cur==="a"+i?"tn":"")+"\">"+esc(x.name)+"：HP "+x.hp+"/"+x.max+"</span>";}).join("")+b.en.map(function(e,i){var r=e.max>0?e.hp/e.max:0;var stt=e.down?"戦闘不能":(r>0.5?"健在":"負傷");return "<span class=\"en "+(e.down?"dn ":"")+(cur===i?"tn":"")+"\">"+esc(e.name)+"："+stt+"<i class=\"hb\"><i style=\"width:"+Math.max(0,Math.min(100,Math.round(r*100)))+"%\"></i></i></span>";}).join("");barEl.style.display="flex";}
 function battleOrder(){var b=st.battle;var o=[{k:"pc",dex:pcDex()}];b.en.forEach(function(e,i){if(!e.down)o.push({k:i,dex:e.dex});});(b.al||[]).forEach(function(x,i){if(!x.down)o.push({k:"a"+i,dex:x.dex});});o.sort(function(x,y){return y.dex-x.dex||(x.k==="pc"?-1:y.k==="pc"?1:0);});b.order=o.map(function(x){return x.k;});b.turn=-1;b.delayed=false;b.round++;addLog(st.narr,"―― ラウンド"+b.round+" ――","#888888");}
-function battleEnd(kind){var b=st.battle;st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";var to=b.res["b"+(kind==="win"?"win":kind==="lose"?"lose":kind==="limit"?"limit":"flee")];st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();
+function battleEnd(kind){var b=st.battle;$("nvFoes").style.display="none";st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";var to=b.res["b"+(kind==="win"?"win":kind==="lose"?"lose":kind==="limit"?"limit":"flee")];st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();
   var msg="【戦闘終了】";addLog(st.narr,msg,"#888888");
   if(typeof to==="number"&&to>=0){st.pos=to;show(S[st.pos]);return;}
   if(kind==="lose"&&!(typeof to==="number"&&to>=0)){nameEl.style.display="none";textEl.innerHTML=msg+"<br><span style=\"font-size:.85em;opacity:.75\">（敗北時の飛び先がないため、ここで止まります）</span>";busy="over";nextEl.style.display="none";save();return;}
@@ -1695,7 +1770,7 @@ function doAttack(a,ti){attackBy("pc",a,ti);}
 function attackBy(by,a,ti){
   var b=st.battle,e=b.en[ti];var v=a.rate!=null?a.rate:(by==="pc"?skillVal(a.skill):null);if(v==null){var iv=prompt("《"+a.skill+"》の技能値を入力してください","50");if(iv==null)return;v=num(iv);}
   var nm=unitName(by),col=unitColor(by);v=num(v)-madMod(by);var cfa=by==="pc"?condFor(a.skill):{mod:0,combo:[]};v+=cfa.mod;
-  hideCmd();var r=roll("CCB<="+v+" 【"+a.name+"】");addLog(nm,r.text,col);feedAdd(nm,r.text,col,null,false);if(cfa.combo.length)r=comboRoll(r,cfa.combo);
+  hideCmd();var r=roll("CCB<="+v+" 【"+a.name+"】");if(by==="pc")recSkill(a.skill,r);addLog(nm,r.text,col);feedAdd(nm,r.text,col,null,false);if(cfa.combo.length)r=comboRoll(r,cfa.combo);
   if(!r.ok){if(r.fum&&rule("atkFumCounter")&&e.attacks.length){b.pend={t:"enemy",ei:ti,tgt:by};pcDone("《"+esc(a.name)+"》 ファンブル！<br>"+esc(e.name)+"の反撃を受ける！");return;}
     pcDone("《"+esc(a.name)+"》 "+esc(r.text.split("＞").pop().trim())+"　攻撃は外れた。");return;}
   if(r.crit){var co=ATKC.filter(rule);if(co.length>1){b.phase="critsel";b.cs={by:by,a:a,ti:ti};textEl.innerHTML="";critPick(co,nm,col,function(k){b.cs=null;b.phase="msg";atkHit(by,a,ti,true,k);});return;}atkHit(by,a,ti,true,co[0]||"");return;}
@@ -1749,7 +1824,7 @@ function doMad(step,v){var r=roll("CCB<="+v+" 【アイデア（発狂ロール�
 function doShock(step,v){var r=roll("CCB<="+v+" 【ショックロール】");var li=addLog(pcName(),r.text,pcColor());feedAdd(pcName(),r.text,pcColor(),li,false);
   var msg="《ショックロール》 "+esc(r.text.replace(/^.*?＞\s*/,"")).replace(/＞/g,"→")+(r.ok?"<br>ショックに耐えた。":"<br><b>ショックで意識を失った……</b>");if(!r.ok)st.route={w:"shock"};
   addLog(st.narr,txt(msg),"#888888");st.lastChk=null;textEl.innerHTML=msg;st.cur={k:"line",html:msg};save();}
-function doCheck(step,v,reroll){if(step.shock){doShock(step,v);return;}if(step.sanc){doSanc(step,v);return;}if(step.mad){doMad(step,v);return;}var add=(step.other||[]).slice();var r=roll("CCB<="+v+" 【"+step.skill+"】");var li=addLog(pcName(),(reroll?"（クリチケで振り直し）":"")+r.text,pcColor());var ccb=(step.abil||step.res)?[]:condFor(step.skill).combo;if(ccb.length)r=comboRoll(r,ccb);
+function doCheck(step,v,reroll){if(step.shock){doShock(step,v);return;}if(step.sanc){doSanc(step,v);return;}if(step.mad){doMad(step,v);return;}var add=(step.other||[]).slice();var r=roll("CCB<="+v+" 【"+step.skill+"】");if(!step.abil&&!step.res)recSkill(step.skill,r);var li=addLog(pcName(),(reroll?"（クリチケで振り直し）":"")+r.text,pcColor());var ccb=(step.abil||step.res)?[]:condFor(step.skill).combo;if(ccb.length)r=comboRoll(r,ccb);
   if((step.succ&&step.succ.length)||(step.fail&&step.fail.length))add=add.concat(r.ok?step.succ:step.fail);
   else if(!r.ok)add=[{k:"line",html:"（何も得られなかった）"}];
   st.q=add.concat(st.q);st.lastChk={step:step,v:v,n:add.length};
@@ -1781,6 +1856,7 @@ function checkCmd(step,v,sec){var known=v!=null&&v!=="",its=[];
 function plainRoll(step){hideCmd();var r=roll("1D100 【"+step.skill+"】");var li=addLog(pcName(),r.text,pcColor());feedAdd(pcName(),r.text,pcColor(),li,false);
   var add=(step.other||[]).slice();if(!(step.fail&&step.fail.length))add=add.concat(step.succ||[]);st.q=add.concat(st.q);busy=null;chk.style.display="none";nextEl.style.display="";
   textEl.innerHTML="《"+esc(step.skill)+"》 1D100 → "+esc(String(r.text).split("＞").pop().trim());st.cur={k:"line",html:textEl.innerHTML};save();}
+function recSkill(nm,r){if(!nm||!r||r.n==null)return;nm=String(nm).replace(/[（(].*$/,"").trim();if(!nm)return;st.rec=st.rec||{};var o=st.rec[nm]=st.rec[nm]||{};if(r.crit)o.c=1;if(r.fum)o.f=1;if(r.spec)o.s=1;if(r.ok)o.o=1;}
 function secretOf(step){return (step&&step.secret)||null;}
 function secretTarget(ex){ex=hw(ex).replace(/\s/g,"").replace(/×/g,"*").replace(/÷/g,"/");var m=ex.match(/^(.*?)((?:[*\/+\-]\d+)*)$/),base=m[1],v=/^\d+$/.test(base)?+base:num(skillVal(base));(m[2].match(/[*\/+\-]\d+/g)||[]).forEach(function(o){var n=+o.slice(1);if(o[0]==="*")v*=n;else if(o[0]==="/")v=n?Math.floor(v/n):v;else if(o[0]==="+")v+=n;else v-=n;});return Math.floor(v);}
 $("nvChkGo").addEventListener("click",function(e){
@@ -1827,7 +1903,7 @@ function komaToPc(text){var data=null;try{var j=JSON.parse(text);if(Array.isArra
   function pk(o,ks){for(var i=0;i<ks.length;i++){if(o[ks[i]]!=null&&o[ks[i]]!=="")return o[ks[i]];}return "";}
   var n={name:String(data.name||"PC"),color:data.color||"",str:pk(P,["STR"]),con:pk(P,["CON"]),pow:pk(P,["POW"]),dex:pk(P,["DEX"]),app:pk(P,["APP"]),siz:pk(P,["SIZ"]),int:pk(P,["INT"]),edu:pk(P,["EDU"]),db:pk(P,["DB"]),hp:pk(S,["HP"]),mp:pk(S,["MP"]),san:pk(S,["SAN","正気度","SANITY"]),armor:pk(S,["装甲","ARMOR","よろい"]),idea:pk(P,["アイデア","IDEA"]),luck:pk(P,["幸運","LUCK"]),know:pk(P,["知識","KNOW"]),commands:String(data.commands||"")};
   ["idea","luck","know","hp","mp","db","san"].forEach(function(k){n[k]=String(NVLIB.pcDerivedVal(n,k));});
-  n.skills=NVLIB.parseSkills(n.commands);n.attacks=NVLIB.parseBattlePalette(n.commands,n.db).attacks;return n;}
+  n.skills=NVLIB.parseSkills(n.commands);n.attacks=NVLIB.parseBattlePalette(n.commands,n.db).attacks;n.iconUrl=String(data.iconUrl||"");return n;}
 function pcOptions(){var sel=$("nvPcSel");sel.innerHTML="<option value=\"\">（名前を入力して遊ぶ）</option>"+(st.koma?"<option value=\"koma\">"+esc(st.koma.name)+"（貼り付けたコマ）</option>":"")+pcs.map(function(p,i){return "<option value=\""+i+"\">"+esc(p.name)+"</option>";}).join("");}
 $("nvKoma").addEventListener("input",function(){var t=this.value.trim(),m=$("nvKomaMsg");if(!t){m.textContent="";return;}var pc=komaToPc(t);if(!pc){m.textContent="コマとして読み込めませんでした。ココフォリアでキャラクターをコピーしたものを貼り付けてください。";return;}
   st.koma=pc;pcOptions();$("nvPcSel").value="koma";$("nvPcName").value=pc.name;if(/^#[0-9a-f]{6}$/i.test(pc.color))$("nvPcColor").value=pc.color;
@@ -1843,7 +1919,11 @@ function rulesHTML(){var li=function(t,keys,nm,cs,md){var on=keys.filter(ruleS).
    +"<div class=\"rt\">探索のクリティカル・ファンブル</div><ul>"+li("クリティカル",["expCritTicket","expCritPlus"],X,ruleS("expCritTicket")?tk:"","pl")+li("ファンブル",["expFumTicket","expFumMinus"],X,ruleS("expFumTicket")?tk:"","all")+"</ul>"
    +"<div class=\"rn\">クリティカル＝01〜05、ファンブル＝96〜100。</div>"
    +"<div class=\"rt\">発狂の扱い</div><ul><li>一度のSANチェックで5以上減ると、発狂ロール（＜アイデア＞）を行います（※に「発狂免除」があるときは行いません）。</li><li>＜アイデア＞成功で一時的狂気。内容が決まっている場合はその内容を表示します。</li><li>決まっていない場合は内容ロール＜1d10＞（内容はルールブックを確認）。戦闘中は＜1d10+4＞ラウンドの間ダイス補正−10、探索中は次の探索のダイス補正−30。</li></ul>";}
-function fillStart(){$("nvRules").innerHTML=rulesHTML();
+function pcImgRender(){var im=$("nvPcImg"),src=st.pcImg||(st.pc&&st.pc.iconUrl)||"",pos=st.pcImgPos||"left";if(!src||pos==="none"||!st.started){im.style.display="none";win.classList.remove("pcl");return;}im.src=src;im.className=pos;im.style.display="block";win.classList.toggle("pcl",pos==="left");}
+function imgShrink(file,max,cb){var rd=new FileReader();rd.onload=function(){var g=new Image();g.onload=function(){var k=Math.min(1,max/Math.max(g.width,g.height)),c=document.createElement("canvas");c.width=Math.round(g.width*k);c.height=Math.round(g.height*k);c.getContext("2d").drawImage(g,0,0,c.width,c.height);var png=/png|gif|webp/i.test(file.type);cb(c.toDataURL(png?"image/png":"image/jpeg",.88));};g.src=rd.result;};rd.readAsDataURL(file);}
+$("nvPcImgF").addEventListener("change",function(){var f=this.files&&this.files[0];if(!f)return;imgShrink(f,700,function(u){st.pcImg=u;$("nvPcImgMsg").textContent="画像を設定しました。　立ち絵は右、駒は左がおすすめです（左はメッセージ枠の上に表示）。";save();pcImgRender();});});
+$("nvPcImgPos").addEventListener("change",function(){st.pcImgPos=this.value;save();pcImgRender();});
+function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").style.display="block";}$("nvPcImgPos").value=st.pcImgPos||"left";$("nvPcImgMsg").textContent=(st.pcImg?"画像を設定済み（ファイルを選ぶと変更）":"未設定の場合、コマに画像があればそれを使います。")+"　立ち絵は右、駒は左がおすすめです（左はメッセージ枠の上に表示）。";$("nvRules").innerHTML=rulesHTML();
   
   var sel=$("nvPcSel");pcOptions();
   if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=st.koma&&st.koma.name===st.pc.name?"koma":ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";}
@@ -1852,10 +1932,11 @@ function fillStart(){$("nvRules").innerHTML=rulesHTML();
 }
 $("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
 function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
-$("nvBegin").onclick=function(){if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
-$("nvResume").onclick=function(){st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
+function lockLand(){try{if(!window.matchMedia("(pointer:coarse)").matches)return;var el=document.documentElement,lk=function(){try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(function(){});}catch(_){}};if(el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().then(lk).catch(lk);else lk();}catch(_){}}
+$("nvBegin").onclick=function(){lockLand();setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.rec={};st.done=false;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
+$("nvResume").onclick=function(){lockLand();setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
 $("nvBtnMenu").onclick=function(){fillStart();$("nvStart").classList.add("show");};
-fillStart();invRender();locRender(false);if(st.started)pcRender();$("nvStart").classList.add("show");
+fillStart();invRender();locRender(false);afterBtn();pcImgRender();if(st.started)pcRender();$("nvStart").classList.add("show");
 })();
 </script>
 <script>
@@ -1935,7 +2016,9 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     {t:'back',    ic:'［', nm:'［戻る］',                 ph:'ボタンの文（見出しリンクで戻り先。なしなら直前の選択肢へ）'},
     {t:'leave',   ic:'［', nm:'［離脱］',                 ph:'同行をやめるNPCの名前（／で区切って複数）'},
     {t:'cond',    ic:'［', nm:'［条件］',                 ph:'条件（枠の中に複数の条件や「初めて敵に攻撃が当たった時」などのトグルも置ける）', ctn:1},
-    {t:'uncond',  ic:'［', nm:'［条件解除］',             ph:'解除する技能名（／で区切って複数。空欄ならすべて）'}
+    {t:'uncond',  ic:'［', nm:'［条件解除］',             ph:'解除する技能名（／で区切って複数。空欄ならすべて）'},
+    {t:'ending',  ic:'［', nm:'［エンディング］',         ph:'見出しの下に置く（生還／ロストなど）。次の見出しまでの内容をエンドカードに表示'},
+    {t:'afterword',ic:'［', nm:'［あとがき］',            ph:'（枠の中にあとがきを書く。シナリオ終了後に表示）', ctn:1}
   ];
   var TMAP={}; TYPES.forEach(function(x){ TMAP[x.t]=x; });
   function ph(t){ return (TMAP[t]||TMAP.p).ph; }
@@ -4549,7 +4632,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   /* ---- 書き出し（HTML / PDF） ---- */
   function skillNameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞]/g,'').trim(); }
   function skill2NameOf(html){ var d=document.createElement('div'); d.innerHTML=html||''; var nm=d.querySelector('.sknm'); if(nm) return (nm.textContent||'').replace(/​/g,'').trim(); var t=(d.textContent||'').replace(/​/g,''); var st=t.indexOf('※'); if(st>=0) t=t.slice(0,st); var lt=t.indexOf('＜'),gt=t.indexOf('＞'); if(lt>=0&&gt>lt) return t.slice(lt+1,gt).trim(); return t.replace(/[＜＞※]/g,'').trim(); }
-  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='view'){ return '■閲覧可能＜'+p+'＞'; } if(t==='viewb'){ return '［閲覧可能］'+p; } if(t==='choice'){ return '［選択肢］'+p; } if(t==='trig'){ return '［発言］'+p; } if(t==='get'){ return '［入手］'+p; } if(t==='use'){ return '［アイテム使用］'+p; } if(t==='back'){ return '［戻る］'+p; } if(t==='atk'){ return '［攻撃］'+p; } if(t==='chg'){ return '［変化］'+p; } if(t==='battle'){ return '［戦闘開始］'+p; } if(t==='bwin'){ return '［勝利］'+p; } if(t==='blose'){ return '［敗北］'+p; } if(t==='bflee'){ return '［逃走］'+p; } if(t==='blimit'){ return '［ラウンド上限］'+p; } if(t==='bfaint'){ return '［気絶］'+p; } if(t==='leave'){ return '［離脱］'+p; } if(t==='cond'){ return '［条件］'+p; } if(t==='uncond'){ return '［条件解除］'+p; } if(t==='bshock'){ return '［ショック失敗］'+p; } if(t==='bround'){ return '［ラウンド経過］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
+  function blockCopyLabel(b){ var t=b.type; var p=plainText(b.html); if(t==='skill'||t==='skcard'){ var n=skillNameOf(b.html); return n?('＜'+n+'＞'):''; } if(t==='skill2'||t==='skcard2'){ var n2=skill2NameOf(b.html); return n2?('＜'+n2+'＞'):''; } if(t==='explore'){ return '■探索箇所＜'+p+'＞'; } if(t==='act'){ return '■行動可能＜'+p+'＞'; } if(t==='exb'){ return '［探索箇所］'+p; } if(t==='actb'){ return '［行動可能］'+p; } if(t==='view'){ return '■閲覧可能＜'+p+'＞'; } if(t==='viewb'){ return '［閲覧可能］'+p; } if(t==='choice'){ return '［選択肢］'+p; } if(t==='trig'){ return '［発言］'+p; } if(t==='get'){ return '［入手］'+p; } if(t==='use'){ return '［アイテム使用］'+p; } if(t==='back'){ return '［戻る］'+p; } if(t==='atk'){ return '［攻撃］'+p; } if(t==='chg'){ return '［変化］'+p; } if(t==='battle'){ return '［戦闘開始］'+p; } if(t==='bwin'){ return '［勝利］'+p; } if(t==='blose'){ return '［敗北］'+p; } if(t==='bflee'){ return '［逃走］'+p; } if(t==='blimit'){ return '［ラウンド上限］'+p; } if(t==='bfaint'){ return '［気絶］'+p; } if(t==='leave'){ return '［離脱］'+p; } if(t==='ending'){ return '［エンディング］'+p; } if(t==='cond'){ return '［条件］'+p; } if(t==='uncond'){ return '［条件解除］'+p; } if(t==='bshock'){ return '［ショック失敗］'+p; } if(t==='bround'){ return '［ラウンド経過］'+p; } if(t==='toggle'||t==='th1'||t==='th2'||t==='th3'||t==='th4'||t==='th5'){ return '▼'+(p?(' '+p):''); } if(t==='lbox'){ return '▼'+(p?(' '+p):''); } if(t==='ev'||t==='evr'){ return p?('！'+p):''; } if(t==='nv'||t==='nvr'){ return p?('∇'+p):''; } if(t==='q'){ return p?('Q.'+p):''; } if(t==='bullet'){ return p?('・'+p):''; } return p; }
   function blockCopyText(b){ var lines=[]; var lbl=blockCopyLabel(b); if(lbl) lines.push(lbl); (b.children||[]).forEach(function(c){ var sub=blockCopyText(c); if(sub) lines.push(sub); }); return lines.join('\n'); }
   function staticBlockHTML(b){
     var h=staticBlockHTML0(b);
@@ -4585,7 +4668,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       return '<div class="block" data-type="'+b.type+'"'+did+boxStyle+'>'+boxCopy+'<div class="be lbl"'+lblStyle+'>'+lblInner+'</div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>';
     }
     if(isCtn(b.type)){ var tgCopy='<button class="npc-copy box-copy box-copy-tg" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="見出しと内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block'+(b.collapsed?' collapsed':'')+'" data-type="'+b.type+'"'+did+style+'>'+tgCopy+'<div class="chead"><span class="tri">▼</span><div class="be"'+us+'>'+(b.html||'')+'</div></div><div class="children">'+(b.children||[]).map(staticBlockHTML).join('')+'</div></div>'; }
-    if(b.type==='act'||b.type==='exb'||b.type==='actb'||b.type==='view'||b.type==='viewb'||b.type==='choice'||b.type==='trig'||b.type==='get'||b.type==='use'||b.type==='back'||b.type==='atk'||b.type==='chg'||b.type==='battle'||b.type==='bwin'||b.type==='blose'||b.type==='bflee'||b.type==='blimit'||b.type==='bround'||b.type==='bfaint'||b.type==='bshock'||b.type==='leave'||b.type==='cond'||b.type==='uncond'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act'||b.type==='view')?'<span class="asym asym-exl">'+(b.type==='act'?'■行動可能＜':'■閲覧可能＜')+'</span>':('<span class="asym asym-exl asym-exb">'+({exb:'［探索箇所］',actb:'［行動可能］',viewb:'［閲覧可能］',choice:'［選択肢］',trig:'［発言］',get:'［入手］',use:'［アイテム使用］',back:'［戻る］',atk:'［攻撃］',chg:'［変化］',battle:'［戦闘開始］',bwin:'［勝利］',blose:'［敗北］',bflee:'［逃走］',blimit:'［ラウンド上限］',bround:'［ラウンド経過］',bfaint:'［気絶］',bshock:'［ショック失敗］',leave:'［離脱］',cond:'［条件］',uncond:'［条件解除］'}[b.type])+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+((b.type==='act'||b.type==='view')?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
+    if(b.type==='act'||b.type==='exb'||b.type==='actb'||b.type==='view'||b.type==='viewb'||b.type==='choice'||b.type==='trig'||b.type==='get'||b.type==='use'||b.type==='back'||b.type==='atk'||b.type==='chg'||b.type==='battle'||b.type==='bwin'||b.type==='blose'||b.type==='bflee'||b.type==='blimit'||b.type==='bround'||b.type==='bfaint'||b.type==='bshock'||b.type==='leave'||b.type==='ending'||b.type==='cond'||b.type==='uncond'){ var exCopy2='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; var pre=(b.type==='act'||b.type==='view')?'<span class="asym asym-exl">'+(b.type==='act'?'■行動可能＜':'■閲覧可能＜')+'</span>':('<span class="asym asym-exl asym-exb">'+({exb:'［探索箇所］',actb:'［行動可能］',viewb:'［閲覧可能］',choice:'［選択肢］',trig:'［発言］',get:'［入手］',use:'［アイテム使用］',back:'［戻る］',atk:'［攻撃］',chg:'［変化］',battle:'［戦闘開始］',bwin:'［勝利］',blose:'［敗北］',bflee:'［逃走］',blimit:'［ラウンド上限］',bround:'［ラウンド経過］',bfaint:'［気絶］',bshock:'［ショック失敗］',leave:'［離脱］',ending:'［エンディング］',cond:'［条件］',uncond:'［条件解除］'}[b.type])+'</span>'); return '<div class="block" data-type="'+b.type+'"'+did+style+'>'+exCopy2+'<div class="be"'+us+'>'+pre+(b.html||'')+((b.type==='act'||b.type==='view')?'<span class="asym asym-exr">＞</span>':'')+'</div></div>'; }
     if(b.type==='explore'){ var exCopy='<button class="npc-copy box-copy box-copy-ex" data-cp="'+encodeURIComponent(blockCopyText(b))+'" title="内容をコピー">'+COPY_ICON+'</button>'; return '<div class="block" data-type="explore"'+did+style+'>'+exCopy+'<div class="be"'+us+'><span class="asym asym-exl">■探索箇所＜</span>'+(b.html||'')+'<span class="asym asym-exr">＞</span></div></div>'; }
     if(isDd(b.type)) return '<div class="block" data-type="'+b.type+'"'+did+style+'><div class="be"'+us+'>'+(b.html||'')+'</div>'+ddSelectHTML(b)+'</div>';
     var done=(b.type==='todo'&&b.done)?' done':''; var tick=(b.type==='todo')?'<div class="tick"></div>':'';
@@ -4664,7 +4747,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +' .block[data-type="lbox"]>.lbl>.lbox-h{display:inline}'
       +' .block[data-type="skill"]>.lbl>.sk-wrap,.block[data-type="skill2"]>.lbl>.sk-wrap,.block[data-type="skcard"]>.lbl>.sk-wrap,.block[data-type="skcard2"]>.lbl>.sk-wrap{display:inline}'
       +' .block[data-type="ev"]>.be::before,.block[data-type="evr"]>.be::before,.block[data-type="nv"]>.be::before,.block[data-type="nvr"]>.be::before,.block[data-type="q"]>.be::before{content:""!important;margin:0!important;display:none!important}'
-      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before,.block[data-type="choice"]>.be::before,.block[data-type="trig"]>.be::before,.block[data-type="get"]>.be::before,.block[data-type="use"]>.be::before,.block[data-type="back"]>.be::before,.block[data-type="atk"]>.be::before,.block[data-type="chg"]>.be::before,.block[data-type="battle"]>.be::before,.block[data-type="bwin"]>.be::before,.block[data-type="blose"]>.be::before,.block[data-type="bflee"]>.be::before,.block[data-type="blimit"]>.be::before,.block[data-type="bround"]>.be::before,.block[data-type="bround"]>.chead>.be::before,.block[data-type="bfaint"]>.be::before,.block[data-type="bshock"]>.be::before,.block[data-type="leave"]>.be::before,.block[data-type="cond"]>.be::before,.block[data-type="cond"]>.chead>.be::before,.block[data-type="uncond"]>.be::before,.block[data-type="chframe"]>.chead>.be::before{content:""!important;display:none!important}'
+      +' .block[data-type="explore"]>.be::before,.block[data-type="explore"]>.be::after,.block[data-type="act"]>.be::before,.block[data-type="act"]>.be::after,.block[data-type="exb"]>.be::before,.block[data-type="actb"]>.be::before,.block[data-type="view"]>.be::before,.block[data-type="view"]>.be::after,.block[data-type="viewb"]>.be::before,.block[data-type="choice"]>.be::before,.block[data-type="trig"]>.be::before,.block[data-type="get"]>.be::before,.block[data-type="use"]>.be::before,.block[data-type="back"]>.be::before,.block[data-type="atk"]>.be::before,.block[data-type="chg"]>.be::before,.block[data-type="battle"]>.be::before,.block[data-type="bwin"]>.be::before,.block[data-type="blose"]>.be::before,.block[data-type="bflee"]>.be::before,.block[data-type="blimit"]>.be::before,.block[data-type="bround"]>.be::before,.block[data-type="bround"]>.chead>.be::before,.block[data-type="bfaint"]>.be::before,.block[data-type="bshock"]>.be::before,.block[data-type="leave"]>.be::before,.block[data-type="ending"]>.be::before,.block[data-type="cond"]>.be::before,.block[data-type="cond"]>.chead>.be::before,.block[data-type="uncond"]>.be::before,.block[data-type="chframe"]>.chead>.be::before,.block[data-type="afterword"]>.chead>.be::before{content:""!important;display:none!important}'
       +' .block[data-type="lbox"]>.lbl::before{content:""!important;margin:0!important}'
       +' .block[data-type="skill"]>.lbl .sknm::before,.block[data-type="skill"]>.lbl .sknm::after,.block[data-type="skill2"]>.lbl .sknm::before,.block[data-type="skill2"]>.lbl .sknm::after,.block[data-type="skcard"]>.lbl .sknm::before,.block[data-type="skcard"]>.lbl .sknm::after,.block[data-type="skcard2"]>.lbl .sknm::before,.block[data-type="skcard2"]>.lbl .sknm::after{content:""!important}'
       +' .block .box-copy{position:absolute;top:-11px;right:3px;z-index:4;opacity:0;transition:opacity .12s;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 5px;color:var(--muted)}'
@@ -5058,7 +5141,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   }
   /* ---- ノベルゲーム形式（KPレス）で書き出し：本文を1行ずつのステップに変換して、遊べるHTMLにする ---- */
   function novelSteps(){
-    var steps=[], head={}, groutes={}, HLV={title:1,h1:1,h2:2,h3:3,h4:4,h5:5,th1:1,th2:2,th3:3,th4:4,th5:5};
+    var steps=[], head={}, groutes={}, aftw=[], HLV={title:1,h1:1,h2:2,h3:3,h4:4,h5:5,th1:1,th2:2,th3:3,th4:4,th5:5};
     var PFX={ev:['！',''],evr:['！',''],nv:['∇',''],nvr:['∇',''],q:['Q.',''],bullet:['・',''],explore:['■探索箇所＜','＞'],act:['■行動可能＜','＞'],view:['■閲覧可能＜','＞'],exb:['［探索箇所］',''],actb:['［行動可能］',''],viewb:['［閲覧可能］','']};
     function lines(html,arr,extra){ String(html||'').split(/<br\s*\/?>/i).forEach(function(h){ var img=(h.match(/<img[^>]+src="([^"]+)"/i)||[])[1]; var t=plainText(h).replace(/\u200B/g,''); if(!t.trim()&&!img) return; var o={k:'line',html:h.replace(/<img[^>]*>/gi,'').trim()}; if(img) o.img=img; if(extra) for(var k in extra) o[k]=extra[k]; if(!t.trim()) o.html=''; arr.push(o); }); }
     function walk(list,arr,top){ (list||[]).forEach(function(b){ var t=b.type;
@@ -5070,6 +5153,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         (b.children||[]).forEach(function(c){ var lb=plainText(c.html); if(ck.sanc&&isCtn(c.type)&&/発狂/.test(lb)&&!/免除/.test(lb)){ if(/発狂(し|せ)な|発狂せず|発狂しなかった/.test(lb)) walk(c.children,(ck.noMadSteps=ck.noMadSteps||[]),false); else walk(c.children,(ck.madSteps=ck.madSteps||[]),false); return; } if(isCtn(c.type)&&/失敗/.test(lb)) walk(c.children,ck.fail,false); else if(isCtn(c.type)&&/成功/.test(lb)) walk(c.children,ck.succ,false); else walk([c],ck.other,false); });
         if(!ck.succ.length&&!ck.fail.length){ ck.succ=ck.other; ck.other=[]; }
         arr.push(ck); return; }
+      if(t==='afterword'){ if(plainText(b.html)) aftw.push('<b>'+(b.html||'')+'</b>'); var awl=[]; walk(b.children,awl,false); awl.forEach(function(x){ if(x.k==='line'||x.k==='say') aftw.push((x.name?'<b>'+esc(x.name)+'</b>「'+x.html+'」':x.html)+(x.img?'<img src="'+x.img+'" style="display:block;max-width:100%;margin:6px 0">':'')); else if(x.k==='title') aftw.push('<b>'+x.html+'</b>'); else if(x.k==='card'){ if(x.title) aftw.push('<b>'+x.title+'</b>'); (x.body||[]).forEach(function(y){ aftw.push(y.html); }); } }); return; }
       if(t==='chframe'){ var pk={k:'pick',html:plainText(b.html)?(b.html||''):'',opts:[]}; (b.children||[]).forEach(function(c){ if({toggle:1,th1:1,th2:1,th3:1,th4:1,th5:1}[c.type]){ var o={label:c.html||'',steps:[]}; walk(c.children,o.steps,false); pk.opts.push(o); } else walk([c],arr,false); }); if(pk.opts.length) arr.push(pk); return; }
       if({info:1,lbox:1,cbox:1,cbox2:1,cbox3:1,ccard0:1,ccard:1,ccard2:1,ccard3:1}[t]){ var sub=[]; walk(b.children,sub,false); var bodyL=[], rest=[]; sub.forEach(function(x){ if(x.k==='line'||x.k==='say') bodyL.push({html:x.html,name:x.k==='say'?(x.name||''):'',img:x.img||''}); else if(x.k==='title') bodyL.push({html:'<b>'+x.html+'</b>'}); else rest.push(x); }); var ttl=(t!=='ccard0'&&plainText(b.html))?(b.html||''):''; if(bodyL.length||ttl) arr.push({k:'card',title:ttl,body:bodyL}); rest.forEach(function(x){ arr.push(x); }); return; }
       if(isCtn(t)&&t!=='bround'&&t!=='cond'){ var lb2=plainText(b.html); if(/『[^』]+』を[^。\n]*?場合/.test(lb2)){ var csub=[]; walk(b.children,csub,false); csub.forEach(function(x){ x.cond=lb2; arr.push(x); }); return; } if(lb2&&t!=='ccard0') arr.push({k:'line',html:'<b>'+(b.html||'')+'</b>'}); walk(b.children,arr,top); return; }
@@ -5094,6 +5178,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
         return; }
       if(t==='cond'){ var cnd=parseCond(plainText(b.html)); if(!cnd) return; var blc=arr[arr.length-1]; cnd.html=b.html||''; if(blc&&blc.k==='battle'){ (blc.conds=blc.conds||[]).push(cnd); } else arr.push({k:'cond',c:cnd,html:b.html||''}); return; }
       if(t==='uncond'){ arr.push({k:'uncond',names:plainText(b.html).split(/[／\/、,，]/).map(function(x){ return x.replace(/[＜＞<>《》]/g,'').trim(); }).filter(Boolean)}); return; }
+      if(t==='ending'){ arr.push({k:'ending',html:b.html||''}); return; }
       if(t==='leave'){ var lv=plainText(b.html).split(/[／\/、,，]/).map(function(x){ return x.trim(); }).filter(Boolean); if(lv.length) arr.push({k:'leave',names:lv}); return; }
       if(t==='bfaint'||t==='bshock'){ var rv=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]||''; if(!rv){ var rp=plainText(b.html); rv=/エンド|END|終了|おわり/i.test(rp)?'@end':/敗北/.test(rp)?'@lose':''; } if(!rv) return; var bl4=arr[arr.length-1]; if(bl4&&bl4.k==='battle'){ (bl4.res=bl4.res||{})[t]=rv; } else groutes[t]=rv; return; }
       if(t==='bwin'||t==='blose'||t==='bflee'){ var bl0=arr[arr.length-1]; if(bl0&&bl0.k==='battle'){ (bl0.res=bl0.res||{})[t]=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]||''; } return; }
@@ -5107,7 +5192,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     /* 「＜先へ進む＞が追加」と書かれた選択肢は、その文が出るまで表示しない */
     (function(){ var L={}; (function scan(bl){ (bl||[]).forEach(function(b){ var tx=plainText(b.html||''), m, re=/[＜<]([^＞>]+)[＞>]\s*(?:が|を)\s*追加/g; if(b.type!=='choice') while((m=re.exec(tx))) L[m[1].trim()]=1; scan(b.children); }); })([].concat.apply([],pages.map(function(p){ return p.blocks||[]; })));
       (function mark(arr){ (arr||[]).forEach(function(s2){ if(s2.k==='choice') s2.items.forEach(function(it){ var lb=plainText(it.html||'').trim(); if(L[lb]) it.lock=lb; }); if(s2.k==='check'){ mark(s2.succ); mark(s2.fail); mark(s2.other); } if(s2.k==='pick') s2.opts.forEach(function(o){ mark(o.steps); }); }); })(steps); })();
-    Object.keys(groutes).forEach(function(k){ var tg=groutes[k]; groutes[k]=(tg.charAt(0)==='@')?tg:head.hasOwnProperty(tg)?head[tg]:-1; }); steps.routes=groutes;
+    Object.keys(groutes).forEach(function(k){ var tg=groutes[k]; groutes[k]=(tg.charAt(0)==='@')?tg:head.hasOwnProperty(tg)?head[tg]:-1; }); steps.routes=groutes; steps.afterword=aftw.join('<br>');
     return steps;
   }
   /* チャパレから攻撃（命中率とダメージ）と回避を読み取る。「1D6+DB」のDBは値に置き換える */
@@ -5145,7 +5230,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       enemies[String(n.name).trim()]={roundActs:cp.roundActs||[],pool:+String(n.armorPool||'').replace(/[^0-9]/g,'')||0,roundHp:String(n.roundHp||'').trim(),roundPool:String(n.roundPool||'').trim(),take:String(n.take||'').trim(),mp:+(n.mp||npcMp(n.pow))||0,san:+(n.san||(n.pow!=null&&n.pow!==''?(+n.pow||0)*5:''))||0,hp:+(n.hp||npcHp(n.con,n.siz))||1,dex:+n.dex||10,armor:+String(n.armor||'').replace(/[^0-9]/g,'')||0,dodge:cp.dodge!=null?cp.dodge:null,attacks:cp.attacks,color:n.color?opaqueColor(n.color):'#c0392b'}; });
     var items=(state.items||[]).filter(function(it){ return it&&String(it.name||'').trim(); }).map(function(it){ return {name:String(it.name).trim(),kind:it.kind==='info'?'info':'item',desc:it.desc||'',useText:it.useText||'',consume:!!it.consume,mpPlus:+it.mpPlus||0,armorFix:+it.armorFix||0,armorPool:+it.armorPool||0,dur:+it.dur||0,ammo:+it.ammo||0,ignoreArmor:!!it.ignoreArmor,ignoreN:+String(it.ignoreN||'').replace(/[^0-9]/g,'')||0,wSkill:it.wSkill||'',wDmg:it.wDmg||'',lastStand:!!it.lastStand,wType:String(it.wType||'').trim(),equip:!!it.equip,equipOnly:!!(it.equip&&it.equipOnly),dmgCut:String(it.dmgCut||'').trim(),healHp:String(it.healHp||'').trim(),healMp:String(it.healMp||'').trim(),healSan:String(it.healSan||'').trim(),roundHp:String(it.roundHp||'').trim(),roundMp:String(it.roundMp||'').trim(),roundSan:String(it.roundSan||'').trim(),sub:(it.sub==='pick'||it.sub==='auto')?it.sub:''}; });
     pcs.forEach(function(pc,ix){ var src=(state.pcs||[]).filter(function(p){ return p&&p.name; })[ix]; pc.attacks=parseBattlePalette((src&&src.commands)||'',pc.db||'').attacks; pc.commands=(src&&src.commands)||''; });
-    var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items,enemies:enemies,rules:state.novelRules||{},routes:steps.routes||{}};
+    var data={title:state.name||'シナリオ',key:nameKey(),steps:steps,pcs:pcs,chars:chars,items:items,enemies:enemies,rules:state.novelRules||{},routes:steps.routes||{},afterword:steps.afterword||'',trailer:state.novelTrailer||''};
     var tpl=function(id){ var e=document.getElementById(id); return e?e.textContent:''; };
     var html='<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(state.name||'シナリオ')+'</title>'
       +'<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;700;800&display=swap" rel="stylesheet">'
@@ -5599,7 +5684,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
 
   /* ---- 右メニュー ---- */
   var hmenu=document.getElementById('hmenu');
-  document.getElementById('btnMenu').onclick=function(e){ e.stopPropagation(); hmenu.classList.toggle('show'); };
+  document.getElementById('btnMenu').onclick=function(e){ e.stopPropagation(); hmenu.classList.toggle('show'); if(window.__trailerLab) window.__trailerLab(); };
   document.addEventListener('click',function(e){ if(hmenu.classList.contains('show') && !hmenu.contains(e.target) && e.target.id!=='btnMenu') hmenu.classList.remove('show'); });
   document.getElementById('btnHtml').addEventListener('click',function(){ hmenu.classList.remove('show'); });
   document.getElementById('btnPdf').addEventListener('click',function(){ hmenu.classList.remove('show'); });
@@ -5952,6 +6037,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     };
     if(gid) run(gid); else findSharedGist().then(function(g){ if(g){ ghGist=g; run(g); } else { alert('同期先Gistが見つかりません'); saveInd.textContent='診断完了'; } });
   }
+  (function(){ var b=document.getElementById('btnNovelTrailer'); if(!b) return; function lab(){ b.textContent=state.novelTrailer?'ノベルゲームのトレーラー画像（設定済み・変更／削除）':'ノベルゲームのトレーラー画像を設定'; } lab(); window.__trailerLab=lab; b.onclick=function(){ hmenu.classList.remove('show'); if(state.novelTrailer&&confirm('トレーラー画像を削除しますか？（キャンセルで別の画像を選ぶ）')){ delete state.novelTrailer; persist(); lab(); return; } var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ var f=fi.files&&fi.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ var k=Math.min(1,1600/Math.max(im.width,im.height)); var c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); state.novelTrailer=c.toDataURL('image/jpeg',0.86); persist(); lab(); alert('トレーラー画像を設定しました。ノベルゲームの最初の画面に表示されます。'); }; im.src=rd.result; }; rd.readAsDataURL(f); }; fi.click(); }; })();
   (function(){ var b=document.getElementById('btnNovelRules'),o=document.getElementById('novelRulesOvl'); if(!b||!o) return; function fill(){ var r=state.novelRules||{}; [].forEach.call(o.querySelectorAll('[data-nr]'),function(x){ x.checked=r[x.getAttribute('data-nr')]!==false; }); } b.onclick=function(){ hmenu.classList.remove('show'); fill(); o.classList.add('show'); }; o.addEventListener('change',function(e){ var k=e.target.getAttribute&&e.target.getAttribute('data-nr'); if(!k) return; state.novelRules=state.novelRules||{}; state.novelRules[k]=e.target.checked; persist(); }); document.getElementById('novelRulesClose').onclick=function(){ o.classList.remove('show'); }; o.addEventListener('click',function(e){ if(e.target===o) o.classList.remove('show'); }); })();
   (function(){ var b=document.getElementById('btnNovelHelp'),o=document.getElementById('novelHelpOvl'); if(!b||!o) return; b.onclick=function(){ hmenu.classList.remove('show'); o.classList.add('show'); }; document.getElementById('novelHelpClose').onclick=function(){ o.classList.remove('show'); }; o.addEventListener('click',function(e){ if(e.target===o) o.classList.remove('show'); }); })();
   (function(){ var b=document.getElementById('btnDiag'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); ghDiag(); }; })();
