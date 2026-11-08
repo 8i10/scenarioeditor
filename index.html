@@ -1334,16 +1334,10 @@ function ccJudge(r,v,ccb){
 function roll(cmd){
   var t=hw(cmd).trim(),m;
   if((m=t.match(/^(CCB|CC)\s*<=\s*(\d+)(.*)$/i))){var v=+m[2],r=d(100),j;return {text:m[1].toUpperCase()+"<="+v+(m[3]?" "+m[3].trim():"")+" (1D100<="+v+") ＞ "+r+" ＞ "+(j=ccJudge(r,v,m[1].toUpperCase()==="CCB")),ok:r<=v,n:r,crit:/決定的成功/.test(j),fum:j==="致命的失敗"};}
-  if((m=t.match(/^(\d*)D(\d+)((?:\s*[+\-]\s*\d+(?:D\d+)?)*)\s*(?:(<=|>=|<|>|=)\s*(\d+))?(.*)$/i))){
-    var n=+(m[1]||1),f=+m[2];if(n<1||n>100||f<1||f>1000)return null;
-    var rs=[],sum=0,i;for(i=0;i<n;i++){var x=d(f);rs.push(x);sum+=x;}
-    var mods=(m[3]||"").replace(/\s+/g,""),extra=0,mtxt="";
-    (mods.match(/[+\-]\d+(?:D\d+)?/gi)||[]).forEach(function(p){var sg=p[0]==="-"?-1:1,b=p.slice(1),dm=b.match(/^(\d+)D(\d+)$/i);if(dm){var s2=0,a=[];for(var j=0;j<+dm[1];j++){var y=d(+dm[2]);a.push(y);s2+=y;}extra+=sg*s2;mtxt+=p[0]+s2+"["+a.join(",")+"]";}else{extra+=sg*(+b);mtxt+=p;}});
-    var tot=sum+extra,res=tot+"",ok=null;
-    if(m[4]){var c=+m[5],o=m[4];ok=o==="<="?tot<=c:o===">="?tot>=c:o==="<"?tot<c:o===">"?tot>c:tot===c;res+=" ＞ "+(ok?"成功":"失敗");}
-    var head=(n+"D"+f+mods.toUpperCase()+(m[4]?m[4]+m[5]:""));
-    return {text:t.replace(/\s+$/,"")+" ("+head+") ＞ "+sum+(n>1?"["+rs.join(",")+"]":"")+mtxt+(mtxt||n>1?" ＞ "+tot:"")+(m[4]?" ＞ "+(ok?"成功":"失敗"):""),ok:ok};
-  }
+  /* ダイス式：NdM・数値・+ - * / ( ) （* / は先に計算、/ は切り捨て）。最後に <= などの比較とラベル */
+  var em=t.match(/^([0-9D+\-*\/()×÷\s]+)/i);if(em&&/\d*D\d+/i.test(em[1])){var ex=em[1].replace(/\s+$/,""),rest=t.slice(em[1].length);var cm=rest.match(/^\s*(<=|>=|<|>|=)\s*(\d+)/);var ev=evalDice(ex,"roll");
+    if(ev){var tot=ev.v,ok=null;if(cm){var c=+cm[2],o=cm[1];ok=o==="<="?tot<=c:o===">="?tot>=c:o==="<"?tot<c:o===">"?tot>c:tot===c;}
+      var head=ex.replace(/\s+/g,"").toUpperCase()+(cm?cm[1]+cm[2]:"");return {text:t.replace(/\s+$/,"")+" ("+head+") ＞ "+(ev.s!==String(tot)?ev.s+" ＞ ":"")+tot+(cm?" ＞ "+(ok?"成功":"失敗"):""),ok:ok};}}
   return null;
 }
 /* ---- 発言・ダイス入力 ---- */
@@ -1542,7 +1536,14 @@ var EFN={atkCritNoDodge:"回避不可",atkCritMax:"ダメージ最大",atkCritDo
 function pickEff(keys,who){var on=keys.filter(rule);if(!on.length)return "";if(on.length===1)return on[0];var k=on[Math.floor(Math.random()*on.length)];var ch="choice["+on.map(function(x){return EFN[x];}).join(",")+"]";addLog(who||pcName(),ch+" ("+ch+") ＞ "+EFN[k],who?"#c0392b":pcColor());feedAdd(who||pcName(),ch+" ＞ "+EFN[k],"",null,false);return k;}
 var ATKC=["atkCritNoDodge","atkCritMax","atkCritDouble"],DEFF=["defFumMax","defFumDouble"];
 function madMod(k){return (st.madB&&st.battle&&(!k||k==="pc"))?10:0;}
-function diceMax(ex){var s=0;hw(String(ex||"")).replace(/\s/g,"").toUpperCase().replace(/([+\-]?)(\d*)D(\d+)|([+\-]?)(\d+)/g,function(m0,s1,n,f,s2,c){if(f)s+=(s1==="-"?-1:1)*(+(n||1))*(+f);else s+=(s2==="-"?-1:1)*(+c);return m0;});return s;}
+function diceMax(ex){var r=evalDice(hw(String(ex||"")).replace(/\s/g,""),"max");return r?r.v:0;}
+/* ダイス式の計算（mode="max"なら各ダイスを最大値で） */
+function evalDice(src,mode){var s=String(src).replace(/\s+/g,"").replace(/×/g,"*").replace(/÷/g,"/").toUpperCase(),p=0,cnt=0,bad=false;
+  function num_(){var m=s.slice(p).match(/^(\d*)D(\d+)|^(\d+)/);if(!m)return null;p+=m[0].length;if(m[2]){var n=+(m[1]||1),f=+m[2];if(n<1||n>100||f<1||f>1000){bad=true;return {v:0,s:"0"};}cnt++;var a=[],sm=0;for(var i=0;i<n;i++){var x=mode==="max"?f:d(f);a.push(x);sm+=x;}return {v:sm,s:n>1?sm+"["+a.join(",")+"]":String(sm)};}return {v:+m[3],s:m[3]};}
+  function fac(){if(s[p]==="-"){p++;var f=fac();return f?{v:-f.v,s:"-"+f.s}:null;}if(s[p]==="+"){p++;return fac();}if(s[p]==="("){p++;var e=expr();if(s[p]!==")")return null;p++;return e?{v:e.v,s:"("+e.s+")"}:null;}return num_();}
+  function term(){var a=fac();if(!a)return null;while(s[p]==="*"||s[p]==="/"){var op=s[p++],b=fac();if(!b)return null;a=op==="*"?{v:a.v*b.v,s:a.s+"*"+b.s}:{v:b.v?Math.floor(a.v/b.v):0,s:a.s+"/"+b.s};}return a;}
+  function expr(){var a=term();if(!a)return null;while(s[p]==="+"||s[p]==="-"){var op=s[p++],b=term();if(!b)return null;a=op==="+"?{v:a.v+b.v,s:a.s+"+"+b.s}:{v:a.v-b.v,s:a.s+"-"+b.s};}return a;}
+  var r=expr();if(!r||bad||p!==s.length)return null;return r;}
 function rollTotal(ex){ex=hw(String(ex||"")).replace(/\s/g,"");if(!ex)return {v:0,text:""};if(/^[+\-]?\d+$/.test(ex))return {v:+ex,text:ex};var neg=ex[0]==="-";var r=roll(ex.replace(/^[+\-]/,""));var v=r?parseInt(String(r.text).split("＞").pop(),10):0;if(isNaN(v))v=0;return {v:neg?-v:v,text:r?r.text:ex};}
 /* ダメージ：mx＝武器ダイス最大、dbl＝武器ダイス二倍（DBはどちらも普通に振る） */
 function dmgOf(base,dbt,mx,dbl){base=String(base||"").replace(/\s/g,"");dbt=String(dbt||"").replace(/\s/g,"");
