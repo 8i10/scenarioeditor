@@ -880,7 +880,7 @@
         <dt>描写でのHP・MP・SANの増減</dt><dd>本文に「炎が僅かにあなたの肌を焼くだろう。＜HP-1＞」のように＜HP-1＞＜MP-2＞＜SAN-1d3＞＜HP+2＞を書くと、表示したときに自動で増減します。＜HP＞-1d6 の書き方でも同じです。</dd>
         <dt>装備・所持で変わる描写</dt><dd>「・『水之羽衣』を纏っている場合＜HP＞-1d2」「・『水之羽衣』を纏っていない場合＜HP＞-1d6」のように『アイテム名』を〜している場合／〜していない場合 と書くと、条件に合う行だけを表示・反映します。装備品は装備中かどうか、それ以外は持っているかどうかで判定します。トグルの見出しに書くと中身すべてが対象です。</dd>
         <dt>対抗ロール（探索中）</dt><dd>技能ブロックを＜STR10との対抗ロール＞　※PCのSTRとの対抗 のように書くと、メッセージ枠の右上に「振る（目標値）」「振らない（探索へ戻る）」を表示します。成功率は50＋（PCの値−10）×5。「成功」「失敗」のトグルで結果を分岐できます。※がなければ同じ能力値同士の対抗です。</dd>
-        <dt>ショックロール・気絶</dt><dd>一度に現在のHPの半分以上が減るとショックロール（CON×5）を行い、失敗すると移行します。HPが2・1になると自動で気絶して移行します（0以下は戦闘では敗北）。移行先は［気絶］［ショック失敗］に見出しリンク、または「敗北」「エンド」と書いて指定します。［戦闘開始］の直後に置くとその戦闘だけ、それ以外の場所に置くとシナリオ全体の移行先になります。指定がない場合、戦闘中は敗北、戦闘外はエンドです。</dd>
+        <dt>ショックロール・気絶</dt><dd>一度に現在のHPの半分以上が減るとショックロール（CON×5）を行い、失敗すると移行します。HPが2以下になると自動で気絶して移行します（0以下になった場合も気絶の移行先を優先）。移行先は［気絶］［ショック失敗］に見出しリンク、または「敗北」「エンド」と書いて指定します。［戦闘開始］の直後に置くとその戦闘だけ、それ以外の場所に置くとシナリオ全体の移行先になります。指定がない場合、戦闘中は敗北、戦闘外はエンドです。</dd>
         <dt>エネミーの被ダメージ</dt><dd>NPCデータの「被ダメージ（ノベル用）」に「物理→1点／雷→1/2／炎→1/2」のように書くと、攻撃の種類や攻撃名ごとに受けるダメージが変わります（装甲の後に適用）。攻撃の種類はアイテムの「武器として使う」の「種類」で指定し、空欄やチャパレの攻撃は「物理」です。</dd>
         <dt>エネミーのラウンド終わり・装甲（消費）</dt><dd>NPCデータの「装甲（消費）」は受けたダメージを吸収して減っていきます（装甲の後、被ダメージ設定の前）。「ラウンド終わりHP回復」「ラウンド終わり装甲回復」に数値かダイスを書くと、各ラウンドの終わりに回復します（最大値まで。味方NPCも同じ）。</dd>
         <dt>同行NPC・［離脱］</dt><dd>［戦闘開始］の直後以外の場所に<b>青・緑</b>のNPC/エネミーデータを置くと、そこでそのNPCが同行し、PCの下にHP・MP・SANが表示されます（数値は変更できます）。同行中は以降の戦闘に味方として自動で参加し、HPは戦闘後も引き継ぎます。［離脱］にNPCの名前を書くと同行をやめます。</dd>
@@ -904,7 +904,7 @@
         <dt>ラウンド終わりに回復</dt><dd>持っている間、戦闘の各ラウンドの終わりに自動で回復します（最大値まで）。</dd>
         <dt>武器として使う</dt><dd>技能とダメージを入れると戦闘の「攻撃」に「技能(アイテム名)」の形で出ます（例：日本刀(《○○》)）。技能を「日本刀／太刀」のように書くと、技能値の高い方で振ります。装甲無視と、その上限も設定できます。</dd>
         <dt>被ダメージ：軽減</dt><dd>「タッチ→1/3／かぎ爪→-2」のように攻撃名ごとに軽減を書きます（書いていない攻撃は素のダメージ）。「1/3」「/3」で1/3、「半減」で半分、「-2」で2減少、「1点」で1点だけ、「無効」で0、「全て→-1」で全ての攻撃に効きます。敵名を書くとその敵の攻撃すべてに効きます。</dd>
-        <dt>被ダメージ：肩代わり</dt><dd>耐久値の分だけダメージを肩代わりします。「自動で優先消費」は装甲の後に自動で減り、「選んで使う」はダメージを受けるときにどれで受けるかコマンドで選べます。「HPが0になる攻撃を一度だけ肩代わり」にチェックすると、HPが0以下になる攻撃を受けたとき、そのダメージを一度だけすべて肩代わりします（発動後は効果なし。装備中のみの設定にも従います）。武器や、呪文を付与したもの（アイテムとして登録）に使えます。</dd>
+        <dt>被ダメージ：肩代わり</dt><dd>耐久値の分だけダメージを肩代わりします。「自動で優先消費」は装甲の後に自動で減り、「選んで使う」はダメージを受けるときにどれで受けるかコマンドで選べます。「気絶・HP0になる攻撃を一度だけ肩代わり」にチェックすると、HPが2以下（気絶）や0以下になる攻撃を受けたとき、そのダメージを一度だけすべて肩代わりします（優先度：肩代わり＞気絶＞HP0以下）（発動後は効果なし。装備中のみの設定にも従います）。武器や、呪文を付与したもの（アイテムとして登録）に使えます。</dd>
       </dl>
       <p class="fhint">ダメージは「攻撃別の軽減 → 装甲（固定）→ 装甲（消費）→ 肩代わり（自動）→ 肩代わり（選択）→ HP」の順に計算します。装甲無視の攻撃では装甲だけが無効になります。</p>
     </div>
@@ -1371,7 +1371,7 @@ function num(v){var n=parseInt(hw(String(v==null?"":v)),10);return isNaN(n)?0:n;
 function initStat(pc){pc=pc||{};var mk=function(v){var n=num(v);return {cur:n,max:n};};st.stat={hp:mk(pc.hp),mp:mk(pc.mp),san:mk(pc.san),extra:[],armorFix:num(pc.armor),armorPool:0};st.pools={};st.iv={};st.subWait=null;}
 function isEq(n){return !!(st.eq&&st.eq[n]);}
 function itemOn(n){var it=itemDef(n);return !(it.equip&&it.equipOnly)||isEq(n);}
-function guardFatal(dmg,parts){if(!st.stat||dmg<=0||st.stat.hp.cur-dmg>0)return dmg;var g=st.inv.filter(function(n){var it=itemDef(n);return it.kind!=="info"&&it.lastStand&&itemOn(n)&&!(st.guardUsed&&st.guardUsed[n]);})[0];if(!g)return dmg;st.guardUsed=st.guardUsed||{};st.guardUsed[g]=true;parts.push("『"+g+"』が致命傷を肩代わりした（"+dmg+"→0）");addLog(st.narr,"『"+g+"』が致命傷を肩代わりした。","#888888");invRender();return 0;}
+function guardFatal(dmg,parts){if(!st.stat||dmg<=0||st.stat.hp.cur-dmg>2)return dmg;var g=st.inv.filter(function(n){var it=itemDef(n);return it.kind!=="info"&&it.lastStand&&itemOn(n)&&!(st.guardUsed&&st.guardUsed[n]);})[0];if(!g)return dmg;st.guardUsed=st.guardUsed||{};st.guardUsed[g]=true;parts.push("『"+g+"』が致命傷を肩代わりした（"+dmg+"→0）");addLog(st.narr,"『"+g+"』が致命傷を肩代わりした。","#888888");invRender();return 0;}
 function itemBonus(k){var s=0;st.inv.forEach(function(n){if(!itemOn(n))return;var it=itemDef(n);s+=+it[k]||0;});return s;}
 var IVK=[["mp","mpPlus","保有MP"],["pool","armorPool","装甲（消費）"],["dur","dur","耐久値"],["ammo","ammo","弾数"]];
 function ivOf(n){st.iv=st.iv||{};var it=itemDef(n),v=st.iv[n];if(!v){v=st.iv[n]={};}IVK.forEach(function(k){var mx=+it[k[1]]||0;if(mx>0&&!v[k[0]]){var cur=mx;if(k[0]==="pool"&&st.pools&&st.pools[n]!=null)cur=st.pools[n];v[k[0]]={cur:cur,max:mx};}});return v;}
@@ -1438,7 +1438,7 @@ function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offs
 function invRender(){
   var openSet={};[].forEach.call(document.querySelectorAll("#nvInvBody details[open] summary span"),function(x){openSet[x.textContent]=1;});
   var box=$("nvInv");box.classList.toggle("open",!!st.invOpen);$("nvInvCnt").textContent=(st.inv.length?st.inv.length+" ":"")+(st.invOpen?"▾":"▸");
-  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\""+(openSet[i.name]?" open":"")+"><summary><span>"+esc(i.name)+"</span>"+((i.equip&&isEq(i.name)?"<em class=\"eqb\">装備中</em>":"")+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">"+(i.equip?(isEq(i.name)?"外す":"装備"):"使用")+"</button>":""))+"</summary>"+(function(){var ef=[];if(i.equip&&i.equipOnly)ef.push("装備中のみ効果を発揮");if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(i.dmgCut)ef.push("ダメージ軽減："+i.dmgCut);if(i.lastStand)ef.push("HPが0になる攻撃を一度だけ肩代わり"+(st.guardUsed&&st.guardUsed[i.name]?"（発動済み）":""));RHEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push("ラウンド終わりに"+k[2]+"回復"+i[k[1]]);});HEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push(k[2]+"回復"+i[k[1]]);});if(i.sub)ef.push("耐久値でダメージを肩代わり（"+(i.sub==="auto"?"自動":"選択")+"）");if(i.ignoreArmor)ef.push("装甲無視"+(+i.ignoreN>0?"（"+i.ignoreN+"まで）":""));var v=ivOf(i.name),rows=IVK.filter(function(k){return v[k[0]];}).map(function(k){var o=v[k[0]];return "<div class=\"nv-iv\" data-n=\""+esc(i.name)+"\" data-k=\""+k[0]+"\"><span>"+k[2]+"</span><button data-d=\"-1\">−</button><input value=\""+o.cur+"\" inputmode=\"numeric\"><span class=\"sl\">/ "+o.max+"</span><button data-d=\"1\">＋</button></div>";}).join("");return (i.desc||ef.length||rows)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>"+(rows?"<div class=\"nv-ivs\">"+rows+"</div>":""):"";})()+"</details>";}).join("");};
+  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\""+(openSet[i.name]?" open":"")+"><summary><span>"+esc(i.name)+"</span>"+((i.equip&&isEq(i.name)?"<em class=\"eqb\">装備中</em>":"")+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">"+(i.equip?(isEq(i.name)?"外す":"装備"):"使用")+"</button>":""))+"</summary>"+(function(){var ef=[];if(i.equip&&i.equipOnly)ef.push("装備中のみ効果を発揮");if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(i.dmgCut)ef.push("ダメージ軽減："+i.dmgCut);if(i.lastStand)ef.push("気絶・HP0になる攻撃を一度だけ肩代わり"+(st.guardUsed&&st.guardUsed[i.name]?"（発動済み）":""));RHEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push("ラウンド終わりに"+k[2]+"回復"+i[k[1]]);});HEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push(k[2]+"回復"+i[k[1]]);});if(i.sub)ef.push("耐久値でダメージを肩代わり（"+(i.sub==="auto"?"自動":"選択")+"）");if(i.ignoreArmor)ef.push("装甲無視"+(+i.ignoreN>0?"（"+i.ignoreN+"まで）":""));var v=ivOf(i.name),rows=IVK.filter(function(k){return v[k[0]];}).map(function(k){var o=v[k[0]];return "<div class=\"nv-iv\" data-n=\""+esc(i.name)+"\" data-k=\""+k[0]+"\"><span>"+k[2]+"</span><button data-d=\"-1\">−</button><input value=\""+o.cur+"\" inputmode=\"numeric\"><span class=\"sl\">/ "+o.max+"</span><button data-d=\"1\">＋</button></div>";}).join("");return (i.desc||ef.length||rows)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>"+(rows?"<div class=\"nv-ivs\">"+rows+"</div>":""):"";})()+"</details>";}).join("");};
   $("nvInvBody").innerHTML=(sec("item","アイテム")+sec("info","情報"))||"<div class=\"nv-hint\" style=\"padding:8px 4px\">まだ何も持っていません。</div>";
 }
 $("nvInvHead").addEventListener("click",function(){st.invOpen=!st.invOpen;invRender();save();});
@@ -1456,7 +1456,7 @@ function statFx(text,bare){if(!st.stat)return "";var t=hw(String(text||"")).repl
     var o=st.stat[k],b0=o.cur;o.cur=sg<0?o.cur-amt:(o.max>0?Math.min(o.max,o.cur+amt):o.cur+amt);addLog(pcName(),K+"："+b0+"→"+o.cur,pcColor());out.push(K+" "+b0+"→"+o.cur);if(k==="hp"&&sg<0)hpChecks(b0,o.cur);}
   if(out.length){pcRender();save();}return out.join("、");}
 /* HPが減ったあと：2以下で気絶、現在値の半分以上ならショックロール（CON×5） */
-function hpChecks(b0,a){if(a<=0&&st.battle)return;var q=[];
+function hpChecks(b0,a){var q=[];
   if(a<=2)q.push({k:"faint",fx:true});else if(b0>0&&(b0-a)*2>=b0)q.push({k:"check",skill:"ショックロール（CON×5）",abil:{k:"CON",m:5},shock:true,succ:[],fail:[],other:[],fx:true});
   if(q.length)st.q=q.concat(st.q.filter(function(x){return x.k!=="faint"&&!x.shock;}));}
 function battleClear(){st.conds=(st.conds||[]).filter(function(c){return !c.battle;});$("nvOrder").style.display="none";st.madB=null;st.q=st.q.filter(function(x){return !x.fx&&!x.mad;});chk.style.display="none";st.battle=null;barEl.style.display="none";hideCmd();st.ch=null;paintChar();}
@@ -1620,7 +1620,7 @@ function battleEnd(kind){var b=st.battle;st.conds=(st.conds||[]).filter(function
 function battleContinue(){
   var b=st.battle;if(!b)return;
   if(b.en.every(function(e){return e.down;})){battleEnd("win");return;}
-  if(st.stat&&st.stat.hp.cur<=0){battleEnd("lose");return;}
+  if(st.stat&&st.stat.hp.cur<=0&&!st.q.some(function(x){return x.k==="faint";})){battleEnd("lose");return;}
   if(st.q.length){show(st.q.shift());return;}
   if(b.pend){var p=b.pend;b.pend=null;var pe=b.en[p.ei];var pu=p.tgt&&p.tgt!=="pc"?unitOf(p.tgt):null;
     if(pe&&!pe.down&&!(pu&&pu.down)){battleBar();feedClear();if(p.t==="counter"){counterTurn(p);return;}if(enemyAttack(p.ei,p.tgt,pe.name+"の反撃！"))return;}}
@@ -4055,7 +4055,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<div class="it-fx"><span class="it-fl">被ダメージ：</span>'
       +'<label title="攻撃名（または敵名・全て）→ -数値 か /数値（半減）。／区切りで複数">軽減<input class="it-in it-w it-cut" data-i="'+i+'" data-k="dmgCut" placeholder="例：タッチ→1/3／かぎ爪→-2／全て→半減" value="'+esc(it.dmgCut||'')+'"></label>'
       +'<label title="耐久値の分だけダメージを肩代わり">肩代わり<select class="it-in it-sel" data-i="'+i+'" data-k="sub"><option value="">しない</option><option value="pick"'+(it.sub==='pick'?' selected':'')+'>選んで使う</option><option value="auto"'+(it.sub==='auto'?' selected':'')+'>自動で優先消費</option></select></label>'
-      +'<label title="HPが0以下になる攻撃を受けたとき、そのダメージを一度だけすべて肩代わり"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="lastStand"'+(it.lastStand?' checked':'')+'> HPが0になる攻撃を一度だけ肩代わり</label></div>'
+      +'<label title="HPが2以下（気絶）や0以下になる攻撃を受けたとき、そのダメージを一度だけすべて肩代わり"><input type="checkbox" class="it-in" data-i="'+i+'" data-k="lastStand"'+(it.lastStand?' checked':'')+'> 気絶・HP0になる攻撃を一度だけ肩代わり</label></div>'
       +'<div class="it-fx"><span class="it-fl">武器として使う：</span>'
       +'<label>技能<input class="it-in it-w" data-i="'+i+'" data-k="wSkill" placeholder="例：日本刀／太刀" value="'+esc(it.wSkill||'')+'"></label>'
       +'<label>ダメージ<input class="it-in it-w" data-i="'+i+'" data-k="wDmg" placeholder="例：1D4+2+DB" value="'+esc(it.wDmg||'')+'"></label>'
