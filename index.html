@@ -5320,7 +5320,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<'+'script id="novel-data" type="application/json">'+JSON.stringify(data).replace(/</g,'\\u003c')+'<\/script>'
       +'<'+'script>'+novelLib()+tpl('novelJs')+'<\/script></body></html>';
     var blob=new Blob([encodeViewerHTML(html)],{type:'text/html'});
-    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'_ノベル.html'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000);
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(state.name||'scenario')+'_KPレス.html'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000);
   }
   (function(){ var b=document.getElementById('btnNovel'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); pickExportPages('ノベルゲーム形式で保存',function(){ exportNovel(); }); }; })();
   function importScenarioHTML(text){
