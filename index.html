@@ -817,12 +817,12 @@
     <div class="hmenu" id="hmenu">
       <div class="hm-sec">出力</div>
       <button class="hm-item" id="btnHtml">HTMLで保存</button>
-      <button class="hm-item" id="btnNovel">ノベルゲーム形式で保存（KPレス）</button>
-      <button class="hm-item" id="btnNovelHelp">ノベルゲーム用メニュー（KPレス用）の使い方</button>
-      <button class="hm-item" id="btnNovelTrailer">ノベルゲームのトレーラー画像を設定</button>
-      <button class="hm-item" id="btnNovelCharPos">ノベルゲームのNPC立ち絵の表示位置：中央</button>
-      <button class="hm-item" id="btnNovelCondShow">ノベルゲームの［条件］の内容：表示する</button>
-      <button class="hm-item" id="btnNovelRules">ノベルゲームのクリティカル・ファンブル設定</button>
+      <button class="hm-item" id="btnNovel">KPレス形式で保存</button>
+      <button class="hm-item" id="btnNovelHelp">KPレス用メニューの使い方</button>
+      <button class="hm-item" id="btnNovelTrailer">KPレスのトレーラー画像を設定</button>
+      <button class="hm-item" id="btnNovelCharPos">KPレスのNPC立ち絵の表示位置：中央</button>
+      <button class="hm-item" id="btnNovelCondShow">KPレスの［条件］の内容：表示する</button>
+      <button class="hm-item" id="btnNovelRules">KPレスのクリティカル・ファンブル設定</button>
       <button class="hm-item" id="btnPdfBk">PDFで保存（しおり付き・文字選択可）</button>
       <button class="hm-item" id="btnPdf">PDFで保存（印刷・軽量／文字のみ）</button>
       <button class="hm-item" id="btnImport">HTMLを読み込んで編集</button>
@@ -5202,6 +5202,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
       +'<body class="ol-open">'+vhead+nav+body+matHTML+flagHTML+evtHTML+pcHTML+clipHTML+'<div class="send-tip" id="sendTip"></div><div class="send-toast" id="sendToast"></div>'+vjs
       +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
+      +'<'+'script>(function(){function fx(l){var b=l.parentElement;if(!b)return;b.style.removeProperty("padding-top");var cs=getComputedStyle(l);if(cs.position!=="absolute")return;var one=(parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.3)+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+parseFloat(cs.borderTopWidth)+parseFloat(cs.borderBottomWidth);var ex=l.getBoundingClientRect().height-one;if(ex>2)b.style.setProperty("padding-top",(parseFloat(getComputedStyle(b).paddingTop)+ex)+"px","important");}var ls=[].slice.call(document.querySelectorAll(".block>.lbl"));ls.forEach(fx);if(window.ResizeObserver){var ro=new ResizeObserver(function(es){es.forEach(function(e){fx(e.target);});});ls.forEach(function(l){ro.observe(l);});}})();<\/script>'
       +'</body></html>';
     var blob=new Blob([encodeViewerHTML(html)],{type:'text/html'});
     if(preview){ showPreview(blob); return; }
@@ -6152,9 +6153,10 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     };
     if(gid) run(gid); else findSharedGist().then(function(g){ if(g){ ghGist=g; run(g); } else { alert('同期先Gistが見つかりません'); saveInd.textContent='診断完了'; } });
   }
-  (function(){ var b=document.getElementById('btnNovelCondShow'); if(!b) return; function lab(){ b.textContent='ノベルゲームの［条件］の内容：'+(state.novelCondHide?'表示しない':'表示する'); } lab(); var mb=document.getElementById('btnMenu'); if(mb) mb.addEventListener('click',lab); b.onclick=function(){ state.novelCondHide=!state.novelCondHide; persist(); lab(); }; })();
-  (function(){ var b=document.getElementById('btnNovelCharPos'); if(!b) return; function lab(){ b.textContent='ノベルゲームのNPC立ち絵の表示位置：'+(state.novelCharPos==='left'?'左（メッセージ枠の左上）':'中央'); } lab(); var mb=document.getElementById('btnMenu'); if(mb) mb.addEventListener('click',lab); b.onclick=function(){ state.novelCharPos=state.novelCharPos==='left'?'center':'left'; persist(); lab(); }; })();
-  (function(){ var b=document.getElementById('btnNovelTrailer'); if(!b) return; function lab(){ b.textContent=state.novelTrailer?'ノベルゲームのトレーラー画像（設定済み・変更／削除）':'ノベルゲームのトレーラー画像を設定'; } lab(); window.__trailerLab=lab; b.onclick=function(){ hmenu.classList.remove('show'); if(state.novelTrailer&&confirm('トレーラー画像を削除しますか？（キャンセルで別の画像を選ぶ）')){ delete state.novelTrailer; persist(); lab(); return; } var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ var f=fi.files&&fi.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ var k=Math.min(1,1600/Math.max(im.width,im.height)); var c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); state.novelTrailer=c.toDataURL('image/jpeg',0.86); persist(); lab(); alert('トレーラー画像を設定しました。ノベルゲームの最初の画面に表示されます。'); }; im.src=rd.result; }; rd.readAsDataURL(f); }; fi.click(); }; })();
+  (function(){ var mb=document.getElementById('btnMenu'); function tt(){ [].forEach.call(document.querySelectorAll('#hmenu .hm-item'),function(x){ x.title=x.textContent; }); } tt(); if(mb) mb.addEventListener('click',function(){ setTimeout(tt,0); }); })();
+  (function(){ var b=document.getElementById('btnNovelCondShow'); if(!b) return; function lab(){ b.textContent='KPレスの［条件］の内容：'+(state.novelCondHide?'表示しない':'表示する'); } lab(); var mb=document.getElementById('btnMenu'); if(mb) mb.addEventListener('click',lab); b.onclick=function(){ state.novelCondHide=!state.novelCondHide; persist(); lab(); }; })();
+  (function(){ var b=document.getElementById('btnNovelCharPos'); if(!b) return; function lab(){ b.textContent='KPレスのNPC立ち絵の表示位置：'+(state.novelCharPos==='left'?'左（メッセージ枠の左上）':'中央'); } lab(); var mb=document.getElementById('btnMenu'); if(mb) mb.addEventListener('click',lab); b.onclick=function(){ state.novelCharPos=state.novelCharPos==='left'?'center':'left'; persist(); lab(); }; })();
+  (function(){ var b=document.getElementById('btnNovelTrailer'); if(!b) return; function lab(){ b.textContent=state.novelTrailer?'KPレスのトレーラー画像（設定済み・変更／削除）':'KPレスのトレーラー画像を設定'; } lab(); window.__trailerLab=lab; b.onclick=function(){ hmenu.classList.remove('show'); if(state.novelTrailer&&confirm('トレーラー画像を削除しますか？（キャンセルで別の画像を選ぶ）')){ delete state.novelTrailer; persist(); lab(); return; } var fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.onchange=function(){ var f=fi.files&&fi.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){ var k=Math.min(1,1600/Math.max(im.width,im.height)); var c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); state.novelTrailer=c.toDataURL('image/jpeg',0.86); persist(); lab(); alert('トレーラー画像を設定しました。ノベルゲームの最初の画面に表示されます。'); }; im.src=rd.result; }; rd.readAsDataURL(f); }; fi.click(); }; })();
   (function(){ var b=document.getElementById('btnNovelRules'),o=document.getElementById('novelRulesOvl'); if(!b||!o) return; function fill(){ var r=state.novelRules||{}; [].forEach.call(o.querySelectorAll('[data-nr]'),function(x){ x.checked=r[x.getAttribute('data-nr')]!==false; }); } b.onclick=function(){ hmenu.classList.remove('show'); fill(); o.classList.add('show'); }; o.addEventListener('change',function(e){ var k=e.target.getAttribute&&e.target.getAttribute('data-nr'); if(!k) return; state.novelRules=state.novelRules||{}; state.novelRules[k]=e.target.checked; persist(); }); document.getElementById('novelRulesClose').onclick=function(){ o.classList.remove('show'); }; o.addEventListener('click',function(e){ if(e.target===o) o.classList.remove('show'); }); })();
   (function(){ var b=document.getElementById('btnNovelHelp'),o=document.getElementById('novelHelpOvl'); if(!b||!o) return; b.onclick=function(){ hmenu.classList.remove('show'); o.classList.add('show'); }; document.getElementById('novelHelpClose').onclick=function(){ o.classList.remove('show'); }; o.addEventListener('click',function(e){ if(e.target===o) o.classList.remove('show'); }); })();
   (function(){ var b=document.getElementById('btnDiag'); if(b) b.onclick=function(){ hmenu.classList.remove('show'); ghDiag(); }; })();
