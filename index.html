@@ -1326,6 +1326,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
 body.hasbg #nvStage{background:transparent}
 #nvChar.bt{bottom:0;max-height:calc(100vh - 40px);max-width:min(640px,85vw);z-index:0}
 #nvChar.cabove{position:absolute;left:50%;right:auto;top:auto;bottom:calc(100% + 6px);transform:translateX(-50%);max-height:min(34vh,300px);max-width:min(40%,320px);z-index:1}
+.nv-btn.sm{height:26px;font-size:12px;padding:0 10px;border-radius:7px;font-weight:500;letter-spacing:0}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvBg"></div><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
@@ -1978,7 +1979,7 @@ function doCheck(step,v,reroll){if(step.shock){doShock(step,v);return;}if(step.s
   textEl.innerHTML=(r.parts?cdl(r):dl(step.skill,r))+(note.length?"<br><span style=\"font-size:.85em;opacity:.85\">"+(r.crit?"クリティカル。":"ファンブル。")+note.join("・")+"</span>":"");
   st.cur={k:"line",html:textEl.innerHTML};feedAdd(pcName(),r.text,pcColor(),li,false);rerollBtn();save();
   if(cpend){var base=textEl.innerHTML;critPick(cpend,pcName(),pcColor(),function(k){var nt=expCrit(k);textEl.innerHTML=base+"<br><span style=\"font-size:.85em;opacity:.85\">クリティカル。"+esc(nt)+"</span>";st.cur={k:"line",html:textEl.innerHTML};rerollBtn();save();});}}
-function rerollBtn(){var t=ticketRef(false);if(st.battle||!st.lastChk||!t||t.cur<=0){waitEl.style.display="none";waitEl.innerHTML="";return;}waitEl.innerHTML="<button class=\"nv-btn sub\" data-rr=\"1\">クリチケを使って振り直す（残り"+t.cur+"）</button>";waitEl.style.display="flex";}
+function rerollBtn(){var t=ticketRef(false);if(st.battle||!st.lastChk||!t||t.cur<=0){waitEl.style.display="none";waitEl.innerHTML="";return;}waitEl.innerHTML="<button class=\"nv-btn sub sm\" data-rr=\"1\">クリチケを使って振り直す（残り"+t.cur+"）</button>";waitEl.style.display="flex";}
 function rerollUse(){var c=st.lastChk,t=ticketRef(false);if(!c||!t||t.cur<=0)return;st.q.splice(0,c.n);ticketAdd(-1);doCheck(c.step,c.v,true);}
 function abilBase(k){var p=st.pc||{},kk=String(k).toLowerCase(),v=p[kk];if((v==null||v==="")&&typeof NVLIB!=="undefined"){try{v=NVLIB.pcDerivedVal(p,kk);}catch(_){}}var n=parseInt(v,10);return isNaN(n)?null:n;}
 function abilVal(a){var p=st.pc||{},k=String(a.k).toLowerCase(),v=p[k];if((v==null||v==="")&&typeof NVLIB!=="undefined"){try{v=NVLIB.pcDerivedVal(p,k);}catch(_){}}var n=parseInt(v,10);return isNaN(n)?null:n*(+a.m||5);}
@@ -2006,13 +2007,18 @@ function secretTarget(ex){ex=hw(ex).replace(/\s/g,"").replace(/×/g,"*").replace
 $("nvChkGo").addEventListener("click",function(e){
   e.stopPropagation();hideCmd();var step=st.cur;if(!step||step.k!=="check")return;
   var sec=secretOf(step),v,r;
-  if(sec!=null){v=secretTarget(sec);var rr=d(100);r={text:"1D100 ＞ "+rr,ok:rr<=v,n:rr};}
+  if(sec!=null){v=secretTarget(sec);var rr=d(100),scr=rr<=5,sfm=rr>=96;r={text:"1D100 ＞ "+rr+(scr?" ＞ クリティカル":sfm?" ＞ ファンブル":""),ok:scr?true:sfm?false:rr<=v,n:rr,crit:scr,fum:sfm};}
   else{v=parseInt(hw(chkIn.value),10);if(isNaN(v)){chkIn.focus();return;}busy=null;chk.style.display="none";nextEl.style.display="";doCheck(step,v,false);return;}var li=addLog(pcName(),r.text,pcColor());
   var add=(step.other||[]).slice();
   if((step.succ&&step.succ.length)||(step.fail&&step.fail.length))add=add.concat(r.ok?step.succ:step.fail);
   else if(!r.ok)add=[{k:"line",html:"（何も得られなかった）"}];
   st.q=add.concat(st.q);busy=null;chk.style.display="none";nextEl.style.display="";
-  textEl.innerHTML=sec!=null?"1D100 → "+r.n:dl(step.skill,r);st.cur={k:"line",html:textEl.innerHTML};feedAdd(pcName(),r.text,pcColor(),li,false);save();
+  textEl.innerHTML=sec!=null?"1D100 → "+r.n+(r.crit?" → クリティカル":r.fum?" → ファンブル":""):dl(step.skill,r);st.cur={k:"line",html:textEl.innerHTML};feedAdd(pcName(),r.text,pcColor(),li,false);save();
+  if(sec!=null&&(r.crit||r.fum)&&!st.battle){var note=[],cpend=null;st.nextMod=0;var expCrit=function(k1){if(k1==="expCritTicket"){ticketAdd(1);return "クリチケを1枚獲得";}if(k1==="expCritPlus"){st.nextMod=20;return "次の探索の技能+20";}return "";};
+    if(r.crit){var o1=["expCritTicket","expCritPlus"].filter(rule);if(o1.length>1)cpend=o1;else if(o1.length)note.push(expCrit(o1[0]));}
+    else{if(rule("expFumTicket")){if(ticketRef(false)&&ticketRef(false).cur>0){ticketAdd(-1);note.push("クリチケを1枚没収");}else note.push("クリチケ没収（持っていない）");}if(rule("expFumMinus")){st.nextMod=-20;note.push("次の探索の技能-20");}}
+    if(note.length){textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">"+(r.crit?"クリティカル。":"ファンブル。")+note.join("・")+"</span>";st.cur={k:"line",html:textEl.innerHTML};addLog(st.narr,(r.crit?"クリティカル：":"ファンブル：")+note.join("・"),"#888888");save();}
+    if(cpend){var base=textEl.innerHTML;critPick(cpend,pcName(),pcColor(),function(k){var nt=expCrit(k);textEl.innerHTML=base+"<br><span style=\"font-size:.85em;opacity:.85\">クリティカル。"+esc(nt)+"</span>";st.cur={k:"line",html:textEl.innerHTML};save();});}}
 });
 $("nvChkSkip").addEventListener("click",function(e){e.stopPropagation();hideCmd();/* 判定しない：判定の部分（成功・失敗の内容とも）を飛ばして次のメッセージへ */busy=null;chk.style.display="none";nextEl.style.display="";if(st.log.length&&/の判定$/.test(st.log[st.log.length-1].t))st.log.pop();next();});
 chk.addEventListener("click",function(e){e.stopPropagation();});
