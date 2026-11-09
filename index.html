@@ -1252,7 +1252,7 @@ button{font:inherit;cursor:pointer}
 .nv-cond span{display:block;font-weight:400;color:#e8d38a}
 .nv-cardv .bd{line-height:1.9;font-size:15px}
 .nv-cardv h2{font-size:16px}
-.nv-it summary .eqb{font-style:normal;font-size:10px;color:#1b1b22;background:#e8d38a;border-radius:999px;padding:1px 7px;margin-left:6px}
+.nv-it summary .eqb{font-style:normal;font-size:13px;font-weight:700;color:#f0c040;margin-left:6px}
 #nvLoc{flex:none;padding:8px 16px 8px 14px;background:linear-gradient(90deg,rgba(20,18,30,.95),rgba(20,18,30,.75) 70%,rgba(20,18,30,0));border-left:4px solid #c9a75a;color:#f3ead2;font-family:"Shippori Mincho B1","Yu Mincho",serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-shadow:0 1px 6px rgba(0,0,0,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #nvLoc.in{animation:nvloc .6s ease-out}
 @keyframes nvloc{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
@@ -1405,7 +1405,7 @@ function show(step,noLog){
   if(step.k==="talk"){if(!noLog){st.talks=(st.talks||[]).filter(function(t){return t.name!==step.name;});st.talks.push(JSON.parse(JSON.stringify(step)));}busy=null;next();return;}
   if(step.k==="evset"){if(!noLog){st.events=st.events||[];st.events.push(JSON.parse(JSON.stringify(step.e)));}busy=null;next();return;}
   if(step.k==="eroll"){nameEl.style.display="none";if(noLog&&step._msg){textEl.innerHTML=step._msg;return;}var ok=true;if(step.rate!=null){var er=roll("CCB<="+step.rate+" 【"+step.name+"】");addLog("敵",step.hidden?er.text.replace(/<=\s*\d+/g,""):er.text,"#c0392b");ok=er.ok;}
-    var eff=ok?step.ok:step.ng,emsg="《"+esc(step.name)+"》："+(step.rate!=null?(ok?"成功":"失敗"):"");if(eff){var o1=spawnText(eff),o2=statFx(eff,false),o3=enemyFx(eff);emsg+=" → "+(o1||"")+(o2?"（"+esc(o2)+"）":"")+(o3?"（"+esc(o3)+"）":"")+(!o1&&!o2&&!o3?esc(eff):"");}
+    var eff=ok?step.ok:step.ng,emsg="《"+esc(step.name)+"》："+(step.rate!=null?(ok?"成功":"失敗"):"");if(eff){var o1=spawnText(eff),o2=statFx(eff,false),o3=enemyFx(eff);emsg+=" → "+(o1||"")+(o2?fxWrap(o2):"")+(o3?"（"+esc(o3)+"）":"")+(!o1&&!o2&&!o3?esc(eff):"");}
     step._msg=emsg;textEl.innerHTML=emsg;st.cur={k:"line",html:emsg};addLog(st.narr,txt(emsg),"#888888");save();return;}
   if(step.k==="cond"){if(!noLog)condAdd(step.c);pcRender();if(step.html&&!D.condHide){nameEl.style.display="none";textEl.innerHTML=conv(step.html);if(!noLog)addLog(st.narr,txt(conv(step.html)),"#888888");save();return;}save();busy=null;next();return;}
   if(step.k==="uncond"){if(!noLog){var bf=(st.conds||[]).length;st.conds=(st.conds||[]).filter(function(c){return step.names.length&&step.names.indexOf(c.skill)<0;});if(bf!==st.conds.length)addLog(st.narr,"【条件解除】"+(step.names.join("・")||"すべて"),"#888888");}pcRender();save();busy=null;next();return;}
@@ -1417,13 +1417,13 @@ function show(step,noLog){
     textEl.innerHTML="《"+esc(step.skill)+"》<br><span style=\"font-size:.85em;opacity:.8\">PCの"+esc(rx.pk)+"（"+(pv==null?"?":pv)+"）と"+esc(rx.an)+esc(String(rx.av))+"の対抗</span>";if(!noLog)addLog(st.narr,"《"+step.skill+"》","#888888");
     showCmd("対抗ロール",[{html:"振る<small>"+(rv==null?"?":rv+"%")+"</small>",fn:function(){var v=rv;if(v==null){var iv=prompt("PCの"+rx.pk+"の値を入力してください","10");if(iv==null)return;v=Math.max(0,Math.min(100,50+(num(iv)-rx.av)*5));}hideCmd();busy=null;nextEl.style.display="";doCheck(step,v,false);}},
       {html:"振らない（探索へ戻る）",cls:"back",fn:function(){hideCmd();busy=null;nextEl.style.display="";if(st.log.length&&st.log[st.log.length-1].t==="《"+step.skill+"》")st.log.pop();next();}}]);save();return;}
-  if(step.k==="check"){var sec=secretOf(step)!=null;busy="check";nameEl.style.display="none";textEl.innerHTML=sec?"1D100を振ってください。":step.shock?"《ショックロール（CON×5）》の判定をしてください。":step.mad?"発狂ロール：《アイデア》の判定をしてください。":step.sanc?"《SANチェック》をしてください（"+esc(step.sanc.ok)+"／"+esc(step.sanc.ng)+"）。":"《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=sec?null:step.sanc?(st.stat?st.stat.san.cur:skillVal("SAN")):step.abil?abilVal(step.abil):step.res?step.res.v:skillValMod(step.skill);var md=(sec||step.sanc||step.mad||st.battle)?0:(st.nextMod||0);var cf=(sec||step.sanc||step.mad||step.shock||step.abil||step.res)?{mod:0,combo:[]}:condFor(step.skill);if(cf.mod&&v!=null&&v!==""){v=num(v)+cf.mod;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：技能値"+(cf.mod>0?"+":"")+cf.mod+"）</span>";}if(cf.combo.length)textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：《"+cf.combo.join("》《")+"》との組み合わせロール）</span>";if(md&&v!=null&&v!==""){v=num(v)+md;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（前回の判定の効果で技能値"+(md>0?"+":"")+md+"）</span>";}chkIn.value=v==null?"":v;chk.classList.toggle("secret",sec);chk.style.display="none";checkCmd(step,v,sec);if(!noLog)addLog(st.narr,sec?"1D100の判定":"《"+step.skill+"》の判定","#888888");save();return;}
+  if(step.k==="check"){var sec=secretOf(step)!=null;busy="check";nameEl.style.display="none";textEl.innerHTML=sec?"1D100を振ってください。":step.shock?"《ショックロール（CON×5）》の判定をしてください。":step.mad?"発狂ロール：《アイデア》の判定をしてください。":step.sanc?"＜SANc＞("+esc(step.sanc.ok)+"/"+esc(step.sanc.ng)+")":"《"+esc(step.skill)+"》の判定をしてください。";nextEl.style.display="none";var v=sec?null:step.sanc?(st.stat?st.stat.san.cur:skillVal("SAN")):step.abil?abilVal(step.abil):step.res?step.res.v:skillValMod(step.skill);var md=(sec||step.sanc||step.mad||st.battle)?0:(st.nextMod||0);var cf=(sec||step.sanc||step.mad||step.shock||step.abil||step.res)?{mod:0,combo:[]}:condFor(step.skill);if(cf.mod&&v!=null&&v!==""){v=num(v)+cf.mod;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：技能値"+(cf.mod>0?"+":"")+cf.mod+"）</span>";}if(cf.combo.length)textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（条件：《"+cf.combo.join("》《")+"》との組み合わせロール）</span>";if(md&&v!=null&&v!==""){v=num(v)+md;textEl.innerHTML+="<br><span style=\"font-size:.85em;opacity:.85\">（前回の判定の効果で技能値"+(md>0?"+":"")+md+"）</span>";}chkIn.value=v==null?"":v;chk.classList.toggle("secret",sec);chk.style.display="none";checkCmd(step,v,sec);if(!noLog)addLog(st.narr,sec?"1D100の判定":"《"+step.skill+"》の判定","#888888");save();return;}
   var nm=step.k==="say"?(step.name||""):"";if(nm){var ci=charFor(nm);if(ci){st.ch=ci;}paintChar();}nameEl.textContent=nm;nameEl.style.display=nm?"":"none";textEl.innerHTML=conv(step.html);
   if(!noLog)addLog(nm||st.narr,txt(conv(step.html)),step.k==="say"?(step.color||"#888888"):"#888888");
   if(!noLog){var plm=txt(conv(step.html)).match(/^■探索箇所＜([^＞]+)＞|^［探索箇所］\s*([^／\/、\n]+)/);if(plm)st.place=(plm[1]||plm[2]||"").trim();}
   if(!noLog){var ulm,ure=/[<＜]([^>＞]+)[>＞]\s*(?:が|を)\s*追加/g,utx=txt(conv(step.html));while((ulm=ure.exec(utx))){st.unlock=st.unlock||{};st.unlock[ulm[1].trim()]=true;}}
   if(!noLog&&st.battle){var spx=spawnText(txt(conv(step.html)));if(spx)textEl.innerHTML+="<br>"+spx;var efx=enemyFx(txt(conv(step.html)));if(efx)textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(efx)+"）</span>";}
-  if(!noLog){var sx=statFx(txt(conv(step.html)),!!step.bare);if(sx)textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(sx)+"）</span>";}
+  if(!noLog){var sx=statFx(txt(conv(step.html)),!!step.bare);if(sx)textEl.innerHTML+="<br><span class=\"nv-sx\">"+fxWrap(sx)+"</span>";}
   save();
 }
 function next(){
@@ -1534,7 +1534,7 @@ function infoClose(){if(!st.infoQ||!st.infoQ.length){$("nvInfo").classList.remov
 $("nvInfoX").addEventListener("click",function(e){e.stopPropagation();infoClose();});
 $("nvInfo").addEventListener("click",function(e){e.stopPropagation();});
 document.addEventListener("keydown",function(e){if($("nvInfo").classList.contains("show")&&(e.key==="Escape"||e.key==="Enter")){e.preventDefault();infoClose();}});
-function cardClose(){if(!$("nvCard").classList.contains("show"))return;$("nvCard").classList.remove("show");if(st.cur&&st.cur.k==="card"){busy=null;nextEl.style.display="";var sx=[];(st.cur.body||[]).forEach(function(x){var r=statFx(txt(conv(x.html)),false);if(r)sx.push(r);});if(sx.length){textEl.innerHTML+="<br><span class=\"nv-sx\">（"+esc(sx.join("、"))+"）</span>";save();return;}save();next();}}
+function cardClose(){if(!$("nvCard").classList.contains("show"))return;$("nvCard").classList.remove("show");if(st.cur&&st.cur.k==="card"){busy=null;nextEl.style.display="";var sx=[];(st.cur.body||[]).forEach(function(x){var r=statFx(txt(conv(x.html)),false);if(r)sx.push(r);});if(sx.length){textEl.innerHTML+="<br><span class=\"nv-sx\">"+fxWrap(sx.join("、"))+"</span>";save();return;}save();next();}}
 $("nvCardX").addEventListener("click",function(e){e.stopPropagation();cardClose();});
 $("nvCard").addEventListener("click",function(e){e.stopPropagation();});
 document.addEventListener("keydown",function(e){if($("nvCard").classList.contains("show")&&(e.key==="Escape"||e.key==="Enter")){e.preventDefault();cardClose();}});
@@ -1584,7 +1584,7 @@ function invFlash(){var h=$("nvInvHead");h.classList.remove("flash");void h.offs
 function invRender(){
   var openSet={};[].forEach.call(document.querySelectorAll("#nvInvBody details[open] summary span"),function(x){openSet[x.textContent]=1;});
   var box=$("nvInv");box.classList.toggle("open",!!st.invOpen);$("nvInvCnt").textContent=(st.inv.length?st.inv.length+" ":"")+(st.invOpen?"▾":"▸");
-  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\""+(openSet[i.name]?" open":"")+"><summary><span>"+esc(i.name)+"</span>"+((i.equip&&isEq(i.name)?"<em class=\"eqb\">装備中</em>":"")+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">"+(i.equip?(isEq(i.name)?"外す":"装備"):"使用")+"</button>":""))+"</summary>"+(function(){var ef=[];if(i.equip&&i.equipOnly)ef.push("装備中のみ効果を発揮");if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(i.dmgCut)ef.push("ダメージ軽減："+i.dmgCut);if(i.lastStand)ef.push("気絶・HP0になる攻撃を一度だけ肩代わり"+(st.guardUsed&&st.guardUsed[i.name]?"（発動済み）":""));RHEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push("ラウンド終わりに"+k[2]+"回復"+i[k[1]]);});HEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push(k[2]+"回復"+i[k[1]]);});if(i.sub)ef.push("耐久値でダメージを肩代わり（"+(i.sub==="auto"?"自動":"選択")+"）");if(i.ignoreArmor)ef.push("装甲無視"+(+i.ignoreN>0?"（"+i.ignoreN+"まで）":""));var v=ivOf(i.name),rows=IVK.filter(function(k){return v[k[0]];}).map(function(k){var o=v[k[0]];return "<div class=\"nv-iv\" data-n=\""+esc(i.name)+"\" data-k=\""+k[0]+"\"><span>"+k[2]+"</span><button data-d=\"-1\">−</button><input value=\""+o.cur+"\" inputmode=\"numeric\"><span class=\"sl\">/ "+o.max+"</span><button data-d=\"1\">＋</button></div>";}).join("");return (i.desc||ef.length||rows)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>"+(rows?"<div class=\"nv-ivs\">"+rows+"</div>":""):"";})()+"</details>";}).join("");};
+  var its=st.inv.map(itemDef),sec=function(kind,lbl){var a=its.filter(function(i){return (i.kind==="info")===(kind==="info");});if(!a.length)return "";return "<div class=\"nv-isec\">"+lbl+"</div>"+a.map(function(i){return "<details class=\"nv-it\""+(openSet[i.name]?" open":"")+"><summary><span>"+esc(i.name)+"</span>"+((i.equip&&isEq(i.name)?"<em class=\"eqb\" title=\"装備中\">E</em>":"")+(kind==="item"?"<button class=\"use\" data-n=\""+esc(i.name)+"\">"+(i.equip?(isEq(i.name)?"外す":"装備"):"使用")+"</button>":""))+"</summary>"+(function(){var ef=[];if(i.equip&&i.equipOnly)ef.push("装備中のみ効果を発揮");if(+i.armorFix)ef.push("装甲（固定）"+i.armorFix);if(i.dmgCut)ef.push("ダメージ軽減："+i.dmgCut);if(i.lastStand)ef.push("気絶・HP0になる攻撃を一度だけ肩代わり"+(st.guardUsed&&st.guardUsed[i.name]?"（発動済み）":""));RHEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push("ラウンド終わりに"+k[2]+"回復"+i[k[1]]);});HEALK.forEach(function(k){if(String(i[k[1]]||"").trim())ef.push(k[2]+"回復"+i[k[1]]);});if(i.sub)ef.push("耐久値でダメージを肩代わり（"+(i.sub==="auto"?"自動":"選択")+"）");if(i.ignoreArmor)ef.push("装甲無視"+(+i.ignoreN>0?"（"+i.ignoreN+"まで）":""));var v=ivOf(i.name),rows=IVK.filter(function(k){return v[k[0]];}).map(function(k){var o=v[k[0]];return "<div class=\"nv-iv\" data-n=\""+esc(i.name)+"\" data-k=\""+k[0]+"\"><span>"+k[2]+"</span><button data-d=\"-1\">−</button><input value=\""+o.cur+"\" inputmode=\"numeric\"><span class=\"sl\">/ "+o.max+"</span><button data-d=\"1\">＋</button></div>";}).join("");return (i.desc||ef.length||rows)?"<div class=\"ds\">"+esc(i.desc||"")+(ef.length?(i.desc?"\n":"")+"効果："+ef.join("／"):"")+"</div>"+(rows?"<div class=\"nv-ivs\">"+rows+"</div>":""):"";})()+"</details>";}).join("");};
   $("nvInvBody").innerHTML=(sec("item","アイテム")+sec("info","情報"))||"<div class=\"nv-hint\" style=\"padding:8px 4px\">まだ何も持っていません。</div>";
 }
 $("nvInvHead").addEventListener("click",function(){st.invOpen=!st.invOpen;invRender();save();});
@@ -1597,9 +1597,10 @@ function hasHeal(it){return HEALK.some(function(k){return String(it[k[1]]||"").t
 var RHEALK=[["hp","roundHp","HP"],["mp","roundMp","MP"],["san","roundSan","SAN"]];
 /* 描写の＜HP-1＞などを反映（bare＝＜＞なしの「HP-10」も読む） */
 var SFX_T=/<\s*(HP|MP|SAN)\s*(?:>\s*)?([+\-])\s*(\d+(?:D\d+)?(?:\s*[+*\/]\s*\d+(?:D\d+)?)*)(?:\s*>)?/gi,SFX_B=/(HP|MP|SAN)\s*(?:>\s*)?([+\-])\s*(\d+(?:D\d+)?(?:\s*[+*\/]\s*\d+(?:D\d+)?)*)/gi;
+function fxWrap(sx){var d=[],o=[];String(sx||"").split("、").forEach(function(p){if(!p)return;if(/ダメージを受けた/.test(p))d.push(esc(p).replace(/\n/g,"<br>"));else o.push(p);});return [o.length?"（"+esc(o.join("、"))+"）":""].concat(d).filter(Boolean).join("<br>");}
 function statFx(text,bare){if(!st.stat)return "";var t=hw(String(text||"")).replace(/[−‐―ー](?=\s*\d)/g,"-"),re=bare?SFX_B:SFX_T,m,out=[];re.lastIndex=0;
   while((m=re.exec(t))){var K=m[1].toUpperCase(),k=K.toLowerCase(),sg=m[2]==="-"?-1:1,ex=m[3].replace(/\s/g,"");var r=rollTotal(ex),amt=Math.max(0,r.v);if(/d/i.test(ex))addLog(pcName(),r.text.replace(" ("," 【"+K+(sg<0?"減少":"回復")+"】 ("),pcColor());
-    var o=st.stat[k],b0=o.cur;o.cur=sg<0?o.cur-amt:(o.max>0?Math.min(o.max,o.cur+amt):o.cur+amt);addLog(pcName(),K+"："+b0+"→"+o.cur,pcColor());out.push(K+" "+b0+"→"+o.cur);if(k==="hp"&&sg<0)hpChecks(b0,o.cur);}
+    var o=st.stat[k],b0=o.cur;o.cur=sg<0?o.cur-amt:(o.max>0?Math.min(o.max,o.cur+amt):o.cur+amt);addLog(pcName(),K+"："+b0+"→"+o.cur,pcColor());if(k==="hp"&&sg<0)out.push((b0-o.cur)+"ダメージを受けた（＜HP＞"+b0+"→＜HP＞"+o.cur+"）"+(o.cur<=0&&b0>0?"\n"+pcName()+"は倒れた。":""));else out.push(K+" "+b0+"→"+o.cur);if(k==="hp"&&sg<0)hpChecks(b0,o.cur);}
   if(out.length){pcRender();save();}return out.join("、");}
 /* HPが減ったあと：2以下で気絶、現在値の半分以上ならショックロール（CON×5） */
 function hpChecks(b0,a){var q=[];
@@ -1632,9 +1633,9 @@ function atkStart(step,noLog){
   nameEl.textContent=step.enemy;nameEl.style.display="";nextEl.style.display="none";busy="atk";
   if(noLog&&st.subWait){subChoice();return;}if(noLog&&st.atkWait){atkDefense(step);return;}
   var r=roll("CCB<="+step.rate+" 【"+step.name+"】");var rtx=step.hidden?r.text.replace(/<=\s*\d+/g,""):r.text;addLog(step.enemy,rtx,step.color||"#c0392b");feedAdd(step.enemy,rtx,step.color||"#c0392b",null,false);
-  step.cx="";if(r.ok&&r.crit)step.cx=pickEff(ATKC,step.enemy);
-  if(!r.ok&&r.fum&&rule("atkFumCounter")&&st.battle&&step.ei!=null&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};st.battle.phase="msg";textEl.innerHTML=(step.pre?esc(step.pre)+"<br>":"")+"《"+esc(step.name)+"》 ファンブル。<br>"+esc(unitName(step.tgt))+"の反撃のチャンス。";busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};return;}
-  if(!r.ok){if(st.battle)st.battle.phase="msg";textEl.innerHTML=(step.pre?esc(step.pre)+"<br>":"")+"《"+esc(step.name)+"》→"+esc(unitName(step.tgt))+" "+esc(r.text.replace(/^.*?＞\s*/,"")).replace(/＞/g,"→")+"<br>攻撃は外れた。";busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};return;}
+  step.cx="";if(r.ok&&r.crit)step.cx=pickEff(ATKC,step.enemy);step.head=(step.pre?esc(step.pre)+"<br>":"")+atkHead(step.enemy,step.name,{text:rtx})+(step.cx?"<br>"+(pickEff.last?esc(pickEff.last):"クリティカルの効果："+EFN[step.cx]):"");
+  if(!r.ok&&r.fum&&rule("atkFumCounter")&&st.battle&&step.ei!=null&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};st.battle.phase="msg";textEl.innerHTML=step.head+"<br>"+esc(unitName(step.tgt))+"の反撃のチャンス。";busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};return;}
+  if(!r.ok){if(st.battle)st.battle.phase="msg";textEl.innerHTML=step.head+"<br>攻撃は外れた。";busy=null;nextEl.style.display="";st.cur={k:"line",html:textEl.innerHTML};return;}
   st.atkWait=true;if(step.cx==="atkCritNoDodge"){atkResolve(step,"none");return;}atkDefense(step);
 }
 function pcSkill(names){for(var i=0;i<names.length;i++){var v=skillVal(names[i]);if(v!=null&&v!=="")return v;}return null;}
@@ -1648,7 +1649,7 @@ function atkDefense(step){
   var al=unitOf(step.tgt),dodge,parry=null;
   if(al){dodge=al.dodge!=null?al.dodge:(al.dex||0)*2;}
   else{dodge=pcSkill(["回避"]);if(dodge==null&&st.pc&&st.pc.dex)dodge=num(st.pc.dex)*2;parry=pcSkill(["受け流し","マーシャルアーツ","こぶし","キック"]);var cfd=condFor("回避"),cfp=condFor("受け流し");if(dodge!=null&&cfd.mod)dodge=num(dodge)+cfd.mod;if(parry!=null&&cfp.mod)parry=num(parry)+cfp.mod;}
-  textEl.innerHTML=(step.pre?esc(step.pre)+"<br>":"")+"《"+esc(step.name)+"》が"+esc(unitName(step.tgt))+"に命中しそうだ。どうする？";step._dg=dodge;step._pr=parry;
+  textEl.innerHTML=(step.head?step.head+"<br>":(step.pre?esc(step.pre)+"<br>":"")+"《"+esc(step.name)+"》が")+esc(unitName(step.tgt))+"に命中しそうだ。どうする？";step._dg=dodge;step._pr=parry;
   var its=[{html:"回避する<small>"+(dodge==null?"技能値?":dodge+"%")+"</small>",fn:function(){atkResolve(step,"dodge");}}];
   var pops=al?[]:(step.parry&&step.parry.length?parryOpts(step.parry):(parry!=null?[{label:"",sk:"受け流し",v:parry}]:[]));
   pops.forEach(function(o){its.push({html:"受け流す"+(o.label?"："+esc(o.label):"")+"<small>"+(o.v==null||o.v===""?"技能値?":o.v+"%")+"</small>",fn:function(){atkResolve(step,"parry",o);}});});
@@ -1679,14 +1680,14 @@ function atkResolve(step,kind,opt){var forced=null;
     var wdur=(r.ok&&kind==="parry"&&opt&&opt.item)?ivOf(opt.item).dur:null,wmsg="";
     if(wdur&&wdur.cur>0){var wp=dmgParts(step,"enemy"),wd=dmgOf(wp.base,wp.dbt,step.cx==="atkCritMax",step.cx==="atkCritDouble");addLog(step.enemy,"ダメージ "+wd.text,step.color||"#c0392b");var ab=Math.min(wdur.cur,wd.v),w0=wdur.cur;wdur.cur-=ab;var over=wd.v-ab;wmsg=esc(dn)+"は『"+esc(opt.item)+"』で受け流した。ダメージ "+wd.v+" → 『"+esc(opt.item)+"』の耐久 "+w0+"→"+wdur.cur+(wdur.cur<=0?"（耐久が尽きた）":"");addLog(st.narr,txt(wmsg),"#888888");invRender();if(over>0){forced=over;line=wmsg+"<br>受けきれなかった"+over+"ダメージが通る。";}}
     if(r.ok&&forced==null){hideCmd();st.atkWait=false;if(st.battle)st.battle.phase="msg";waitEl.style.display="none";waitEl.innerHTML="";var okm=wmsg||(esc(dn)+(kind==="dodge"?"は攻撃をかわした。":"は攻撃を受け流した。"));
-      if(r.crit&&rule("defCritCounter")&&st.battle&&step.ei!=null&&st.battle.en[step.ei]&&!st.battle.en[step.ei].down&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};okm="クリティカル。"+okm+"<br>反撃のチャンス。";}
+      if(r.crit&&rule("defCritCounter")&&st.battle&&step.ei!=null&&st.battle.en[step.ei]&&!st.battle.en[step.ei].down&&unitAttacks(step.tgt||"pc").length){st.battle.pend={t:"counter",by:step.tgt||"pc",ei:step.ei};okm="クリティカル。"+okm+"<br>反撃のチャンス。";}if(step.head)okm=step.head+"<br>"+okm;
       textEl.innerHTML=okm;busy=null;nextEl.style.display="";st.cur={k:"line",html:okm};save();return;}
     if(forced==null){line=(kind==="dodge"?"回避":"受け流し")+"に失敗した。"+(r.combo?"（組み合わせ："+esc(r.combo)+"）":"");if(r.fum){var fks=DEFF.filter(rule);fum=fks.join(",");line="ファンブル"+(fks.length?"（"+fks.map(function(k){return EFN[k];}).join("・")+"）":"")+"。"+line;}}}
-  if(step.cx)line="《"+esc(step.name)+"》クリティカル（"+EFN[step.cx]+"）。"+(line?"<br>"+line:"");
+  if(step.cx&&!step.head)line="《"+esc(step.name)+"》クリティカル（"+EFN[step.cx]+"）。"+(line?"<br>"+line:"");
   var dmg;if(forced!=null){dmg=forced;}else{var dp=dmgParts(step,"enemy");var dd=dmgOf(dp.base,dp.dbt,String(fum||"").indexOf("defFumMax")>=0||step.cx==="atkCritMax",String(fum||"").indexOf("defFumDouble")>=0||step.cx==="atkCritDouble");dmg=dd.v;
   addLog(step.enemy,"ダメージ "+dd.text,step.color||"#c0392b");}
-  var alu=unitOf(step.tgt);if(alu){hideCmd();st.atkWait=false;var ac=step.ignore?0:Math.min(alu.armor||0,dmg),al2=dmg-ac;alu.hp-=al2;if(alu.hp<=0){alu.hp=0;alu.down=true;}if(st.battle)st.battle.phase="msg";
-    var am=(line?esc(dn)+"の"+line+"<br>":"")+"ダメージ "+dmg+(ac?"（装甲で"+ac+"軽減）":"")+" → "+esc(dn)+"に"+al2+"ダメージ（残りHP "+alu.hp+"）"+(alu.down?"<br><b>"+esc(dn)+"は倒れた。</b>":"");
+  var alu=unitOf(step.tgt);if(alu){hideCmd();st.atkWait=false;var ac=step.ignore?0:Math.min(alu.armor||0,dmg),al2=dmg-ac;var ah0=alu.hp;alu.hp-=al2;if(alu.hp<=0){alu.hp=0;alu.down=true;}if(st.battle)st.battle.phase="msg";
+    var am=(step.head?step.head+"<br>":"")+(line?esc(dn)+"の"+line+"<br>":"")+esc(dn)+"は"+al2+"ダメージを受けた（＜HP＞"+ah0+"→＜HP＞"+alu.hp+"）"+(ac?"<br><span class=\"nv-sx\">（装甲で"+ac+"軽減）</span>":"")+(alu.down?"<br>"+esc(dn)+"は倒れた。":"");
     textEl.innerHTML=am;addLog(st.narr,txt(am),"#888888");busy=null;nextEl.style.display="";st.cur={k:"line",html:am};battleBar();save();return;}
   var left=dmg,parts=[];
   left=applyCuts(step,left,parts);
@@ -1710,13 +1711,13 @@ function atkFinish(step,dmg,left,parts,line){
   hideCmd();waitEl.style.display="none";waitEl.innerHTML="";if(st.battle)st.battle.phase="msg";
   left=guardFatal(left,parts);var hb0=st.stat?st.stat.hp.cur:0;if(left>0){changeStat("hp",-left,false);hpChecks(hb0,st.stat.hp.cur);fireEv("damaged");}
   var hp=st.stat?st.stat.hp.cur:0;
-  var msg=(line?line+"<br>":"")+"ダメージ "+dmg+(parts.length?"（"+parts.join("、")+"）":"")+" → HP −"+left+"（残り "+hp+"）"+(hp<=0?"<br><b>HPが0になった……</b>":"");
+  var msg=(step.head?step.head+"<br>":"")+(line?line+"<br>":"")+(left>0?left+"ダメージを受けた（＜HP＞"+hb0+"→＜HP＞"+hp+"）":"ダメージを受けなかった。")+(parts.length?"<br><span class=\"nv-sx\">（"+esc(parts.join("、"))+"）</span>":"")+(hp<=0&&left>0?"<br>"+esc(pcName())+"は倒れた。":"");
   textEl.innerHTML=msg;addLog(st.narr,txt(msg),"#888888");busy=null;nextEl.style.display="";st.cur={k:"line",html:msg};pcRender();invRender();save();
 }
 /* ---- クリティカル／ファンブルのルール（エディタで設定。未設定はすべて有効） ---- */
 var RU=D.rules||{};function ruleS(k){return RU[k]!==false;}function rule(k){if((k==="expCritTicket"||k==="expFumTicket")&&st.useTicket===false)return false;return RU[k]!==false;}
 var EFN={atkCritNoDodge:"回避不可",atkCritMax:"ダメージ最大",atkCritDouble:"ダメージ二倍",defFumMax:"ダメージ最大",defFumDouble:"ダメージ二倍",expCritTicket:"クリチケ獲得",expCritPlus:"次回+20",expFumTicket:"クリチケ没収",expFumMinus:"次回-20"};
-function pickEff(keys,who){var on=keys.filter(rule);if(!on.length)return "";if(on.length===1)return on[0];var k=on[Math.floor(Math.random()*on.length)];var ch="choice["+on.map(function(x){return EFN[x];}).join(",")+"]";addLog(who||pcName(),ch+" ("+ch+") ＞ "+EFN[k],who?"#c0392b":pcColor());feedAdd(who||pcName(),ch+" ＞ "+EFN[k],"",null,false);return k;}
+function pickEff(keys,who){pickEff.last="";var on=keys.filter(rule);if(!on.length)return "";if(on.length===1)return on[0];var k=on[Math.floor(Math.random()*on.length)];var ch="choice["+on.map(function(x){return EFN[x];}).join(",")+"]";pickEff.last=ch+" → "+EFN[k];addLog(who||pcName(),ch+" ("+ch+") ＞ "+EFN[k],who?"#c0392b":pcColor());feedAdd(who||pcName(),ch+" ＞ "+EFN[k],"",null,false);return k;}
 var ATKC=["atkCritNoDodge","atkCritMax","atkCritDouble"],DEFF=["defFumMax","defFumDouble"];
 var EFP={healPlus:"追加で1回復",healTicket:"クリチケを1枚獲得",atkCritNoDodge:"回避不可<small>敵は回避できない</small>",atkCritMax:"ダメージ最大<small>DBは除く</small>",atkCritDouble:"ダメージ二倍<small>DBは除く</small>",expCritTicket:"クリチケを1枚獲得",expCritPlus:"次の探索の技能+20"};
 function critPick(opts,who,col,cb){busy="cmd";nextEl.style.display="none";nameEl.textContent=who;nameEl.style.display="";textEl.innerHTML+=(textEl.innerHTML?"<br>":"")+"<b>クリティカル。</b> 効果を選んでください。";
@@ -1768,7 +1769,7 @@ function roundActs(ms){var b=st.battle;b.en.slice().forEach(function(u){if(u.dow
     if(a.rate!=null){var r=roll("CCB<="+Math.max(0,a.rate+emod(u,a.name))+" 【"+a.name+"】");var rt=a.hidden?r.text.replace(/<=\s*\d+/g,""):r.text;addLog(u.name,rt,u.color||"#c0392b");ok=r.ok;}
     var eff=ok?a.ok:a.ng,line=esc(u.name)+"の《"+esc(a.name)+"》"+(a.rate!=null?"："+(ok?"成功":"失敗"):"");
     if(eff){var out=[],sm,re=/『([^』]+)』\s*([0-9０-９]+)?\s*(?:体|匹|人)?\s*(?:を)?\s*追加/g;while((sm=re.exec(eff))){var cnt=parseInt(hw(sm[2]||"1"),10)||1,nn=[];for(var i=0;i<cnt;i++)nn.push(spawnEnemy(sm[1]).name);out.push(nn.map(function(x){return "『"+esc(x)+"』";}).join("、")+"が現れた。");addLog(st.narr,"【増援】"+nn.join("、"),"#888888");}
-      var sx=statFx(eff,false);if(sx)out.push("（"+esc(sx)+"）");var ex2=enemyFx(eff);if(ex2)out.push("（"+esc(ex2)+"）");line+=" → "+(out.length?out.join(" "):esc(eff));}
+      var sx=statFx(eff,false);if(sx)out.push(fxWrap(sx));var ex2=enemyFx(eff);if(ex2)out.push("（"+esc(ex2)+"）");line+=" → "+(out.length?out.join(" "):esc(eff));}
     ms.push(line);});});}
 function battleStart(step){
   var cnt={},list=[];step.enemies.forEach(function(n){cnt[n]=(cnt[n]||0)+1;});var seen={};
@@ -1808,7 +1809,7 @@ function battleContinue(){
         if(hv&&hv.v>0){if(/d/i.test(u.roundHp))addLog(u.name,hv.text.replace(" ("," 【ラウンド回復】 ("),u.color||"#888888");var h0=u.hp;u.hp=Math.min(u.max,u.hp+hv.v);if(u.hp>h0)out.push("HP"+(b.en.indexOf(u)>=0?"が"+(u.hp-h0)+"回復":" "+h0+"→"+u.hp));}
         if(pv&&pv.v>0&&u.poolMax>0){if(/d/i.test(u.roundPool))addLog(u.name,pv.text.replace(" ("," 【装甲回復】 ("),u.color||"#888888");var p0=u.pool||0;u.pool=Math.min(u.poolMax,p0+pv.v);if(u.pool>p0)out.push("装甲（消費）が"+(u.pool-p0)+"回復");}
         if(out.length)ms.push(esc(u.name)+"："+out.join("、"));});
-      (st.conds||[]).forEach(function(c){if(!c.round)return;var ec=eqCond(c.round);if(ec&&eqHas(ec.name)===ec.neg)return;var r=statFx(c.round,false);if(r)ms.push("【条件】"+esc(r));});if(st.madB){st.madB.left--;if(st.madB.left<=0){st.madB=null;ms.push("一時的狂気のダイス補正が終わった。");}else ms.push("一時的狂気：残り"+st.madB.left+"ラウンド（ダイス補正−10）");}(b.evs||[]).forEach(function(ev){if(ev.n===b.round&&ev.text)ms.push(esc(ev.text).replace(/\n/g,"<br>"));});var lim=b.limit>0&&b.round>=b.limit;
+      (st.conds||[]).forEach(function(c){if(!c.round)return;var ec=eqCond(c.round);if(ec&&eqHas(ec.name)===ec.neg)return;var r=statFx(c.round,false);if(r)ms.push(fxWrap(r));});if(st.madB){st.madB.left--;if(st.madB.left<=0){st.madB=null;ms.push("一時的狂気のダイス補正が終わった。");}else ms.push("一時的狂気：残り"+st.madB.left+"ラウンド（ダイス補正−10）");}(b.evs||[]).forEach(function(ev){if(ev.n===b.round&&ev.text)ms.push(esc(ev.text).replace(/\n/g,"<br>"));});var lim=b.limit>0&&b.round>=b.limit;
       if(ms.length){b.rEnd=true;b.limHit=lim;b.turn--;hideCmd();nameEl.style.display="none";var rm="【ラウンド"+b.round+"終了】"+ms.filter(Boolean).map(function(x){return "<br>"+x;}).join("");textEl.innerHTML=rm;st.cur={k:"line",html:rm};addLog(st.narr,txt(rm),"#888888");b.phase="msg";battleBar();pcRender();invRender();save();return;}
       if(lim){battleEnd("limit");return;}}
     if(b.rEnd){b.rEnd=false;if(b.limHit){b.limHit=false;battleEnd("limit");return;}}
@@ -1833,6 +1834,8 @@ function pcTurn(){
   if(!b.noFlee)its.push({html:"逃げる<small>"+(b.fleeRes?"DEX対抗":"DEX×5")+"</small>",fn:cmdFlee});
   showCmd("コマンド",its);save();
 }
+function diceOut(r){return esc(String(r.text).replace(/^.*?＞\s*/,"")).replace(/＞/g,"→");}
+function atkHead(who,name,r){return esc(who)+"の《"+esc(name)+"》<br>"+diceOut(r);}
 function pcDone(msg){hideCmd();busy=null;st.battle.phase="msg";nextEl.style.display="";textEl.innerHTML=msg;st.cur={k:"line",html:msg};addLog(st.narr,txt(msg),"#888888");battleBar();save();}
 function bestSkill(s){var a=String(s||"").split(/[／\/、,]/).map(function(x){return x.trim();}).filter(Boolean);if(!a.length)return "";var b=a[0],bv=-1;a.forEach(function(x){var v=skillVal(x);v=(v==null||v==="")?-1:num(v);if(v>bv){bv=v;b=x;}});return b;}
 function pcAttacks(){var out=[];st.inv.forEach(function(n){var it=itemDef(n);if(!itemOn(n))return;var bs=bestSkill(it.wSkill);if(it.wDmg)out.push({name:bs?bs+"("+n+")":n,item:n,type:it.wType||"",skill:bs||n,dmg:it.wDmg,ignore:!!it.ignoreArmor,ignoreN:+it.ignoreN||0});});
@@ -1847,22 +1850,22 @@ function doAttack(a,ti){attackBy("pc",a,ti);}
 function attackBy(by,a,ti){
   var b=st.battle,e=b.en[ti];var v=a.rate!=null?a.rate:(by==="pc"?skillVal(a.skill):null);if(v==null){var iv=prompt("《"+a.skill+"》の技能値を入力してください","50");if(iv==null)return;v=num(iv);}
   var nm=unitName(by),col=unitColor(by);v=num(v)-madMod(by);var cfa=by==="pc"?condFor(a.skill):{mod:0,combo:[]};v+=cfa.mod;
-  hideCmd();var r=roll("CCB<="+v+" 【"+a.name+"】");if(by==="pc")recSkill(a.skill,r);addLog(nm,r.text,col);feedAdd(nm,r.text,col,null,false);if(cfa.combo.length)r=comboRoll(r,cfa.combo);
-  if(!r.ok){if(r.fum&&rule("atkFumCounter")&&e.attacks.length){b.pend={t:"enemy",ei:ti,tgt:by};pcDone("《"+esc(a.name)+"》 ファンブル。<br>"+esc(e.name)+"の反撃を受ける。");return;}
-    pcDone("《"+esc(a.name)+"》 "+esc(r.text.split("＞").pop().trim())+"　攻撃は外れた。");return;}
-  if(r.crit){var co=ATKC.filter(rule);if(co.length>1){b.phase="critsel";b.cs={by:by,a:a,ti:ti};textEl.innerHTML="";critPick(co,nm,col,function(k){b.cs=null;b.phase="msg";atkHit(by,a,ti,true,k);});return;}atkHit(by,a,ti,true,co[0]||"");return;}
+  hideCmd();var r=roll("CCB<="+v+" 【"+a.name+"】");if(by==="pc")recSkill(a.skill,r);addLog(nm,r.text,col);feedAdd(nm,r.text,col,null,false);var hd=atkHead(nm,a.name,r);if(cfa.combo.length){r=comboRoll(r,cfa.combo);hd+=r.combo?"<br>組み合わせ："+esc(r.combo)+" → "+(r.ok?"成功":"失敗"):"";}b.ahead=hd;
+  if(!r.ok){if(r.fum&&rule("atkFumCounter")&&e.attacks.length){b.pend={t:"enemy",ei:ti,tgt:by};b.ahead=null;pcDone(hd+"<br>"+esc(e.name)+"の反撃を受ける。");return;}
+    b.ahead=null;pcDone(hd+"<br>攻撃は外れた。");return;}
+  if(r.crit){var co=ATKC.filter(rule);if(co.length>1){b.phase="critsel";b.cs={by:by,a:a,ti:ti};textEl.innerHTML=hd;critPick(co,nm,col,function(k){b.cs=null;b.phase="msg";atkHit(by,a,ti,true,k);});return;}atkHit(by,a,ti,true,co[0]||"");return;}
   atkHit(by,a,ti,false,"");
 }
 function enemyTake(e,a,dmg,parts){if(!e.take)return dmg;var ty=a.type||"物理",keys=[ty,a.name,a.skill,a.item].filter(Boolean);cutRules(e.take).forEach(function(r){if(dmg<=0)return;var hit=/^(全て|すべて|全部|\*|＊)$/.test(r.key)||keys.some(function(k){return k===r.key||String(k).indexOf(r.key)>=0;});if(!hit)return;var b=dmg;dmg=cutApply(r.op,dmg);if(b!==dmg)parts.push(r.key+"→"+r.raw+"（"+b+"→"+dmg+"）");});return dmg;}
-function atkHit(by,a,ti,crit,ce){var b=st.battle,e=b.en[ti],nm=unitName(by),col=unitColor(by);
+function atkHit(by,a,ti,crit,ce){var b=st.battle,e=b.en[ti],nm=unitName(by),col=unitColor(by);var P=(b.ahead?b.ahead+"<br>":"")+(ce?"クリティカルの効果："+EFN[ce]+"<br>":"");b.ahead=null;
   var ef=ce?"（"+EFN[ce]+"）":"",fe="";
   if(e.dodge!=null&&ce!=="atkCritNoDodge"){var dr=roll("CCB<="+Math.max(0,e.dodge+emod(e,"回避"))+" 【回避】");addLog(e.name,dr.text,e.color);feedAdd(e.name,dr.text,e.color,null,false);
-    if(dr.ok){if(dr.crit&&rule("defCritCounter")&&e.attacks.length){b.pend={t:"enemy",ei:ti,tgt:by};pcDone((crit?"クリティカル"+ef+"。":"")+esc(e.name)+"のクリティカル。攻撃をかわされた。<br>"+esc(e.name)+"の反撃を受ける。");return;}
-      pcDone((crit?"クリティカル"+ef+"。":"")+esc(e.name)+"は攻撃をかわした。");return;}
+    if(dr.ok){if(dr.crit&&rule("defCritCounter")&&e.attacks.length){b.pend={t:"enemy",ei:ti,tgt:by};pcDone(P+esc(e.name)+"のクリティカル。攻撃をかわされた。<br>"+esc(e.name)+"の反撃を受ける。");return;}
+      pcDone(P+esc(e.name)+"は攻撃をかわした。");return;}
     if(dr.fum){fe=pickEff(DEFF,e.name);}}
   var dp=dmgParts(a,by);var dd=dmgOf(dp.base,dp.dbt,ce==="atkCritMax"||fe==="defFumMax",ce==="atkCritDouble"||fe==="defFumDouble");var dmg=dd.v;addLog(nm,"ダメージ "+dd.text,col);
   /* 装甲無視：最大値があればその分だけ無視（0・空欄はすべて無視） */var ign=a.ignore?(a.ignoreN>0?Math.min(a.ignoreN,e.armor):e.armor):0;var eff=Math.max(0,e.armor-ign);var cut=eff>0?Math.min(eff,dmg):0;var left=dmg-cut;var tparts=[];if(!a.ignore&&e.pool>0&&left>0){var pc=Math.min(e.pool,left);e.pool-=pc;left-=pc;tparts.push("装甲（消費）で"+pc+"吸収（残り"+e.pool+"）");}left=enemyTake(e,a,left,tparts);e.hp-=left;var down=e.hp<=0;if(down)e.down=true;fireEv("hit");if(down)fireEv("kill");
-  pcDone((crit?"クリティカル"+ef+"。":"")+(fe?esc(e.name)+"の回避ファンブル（"+EFN[fe]+"）。":"")+"《"+esc(a.name)+"》命中。ダメージ "+dmg+((ign?"（装甲無視"+(eff?"："+ign+"無視":"")+(cut?"、装甲で"+cut+"軽減":"")+"）":(cut?"（装甲で"+cut+"軽減）":"")))+(tparts.length?"（"+esc(e.name)+"："+esc(tparts.join("、"))+"）":"")+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
+  pcDone(P+(fe?esc(e.name)+"の回避ファンブル（"+EFN[fe]+"）。":"")+"命中。ダメージ "+dmg+((ign?"（装甲無視"+(eff?"："+ign+"無視":"")+(cut?"、装甲で"+cut+"軽減":"")+"）":(cut?"（装甲で"+cut+"軽減）":"")))+(tparts.length?"（"+esc(e.name)+"："+esc(tparts.join("、"))+"）":"")+" → "+esc(e.name)+"に"+left+"ダメージ"+(down?"<br><b>"+esc(e.name)+"は倒れた。</b>":""));
 }
 /* 回避クリティカル後の反撃 */
 function counterTurn(p){var b=st.battle;b.phase="counter";b.cp=p;busy="cmd";nextEl.style.display="none";var nm=unitName(p.by),e=b.en[p.ei];nameEl.textContent=nm;nameEl.style.display="";textEl.innerHTML=esc(nm)+"の反撃。"+esc(e.name)+"への攻撃方法を選んでください。";
@@ -5240,6 +5243,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       if(t==='branch'){ (b.children||[]).forEach(function(c){ var lb=plainText(c.html); if(isCtn(c.type)&&/『[^』]+』を[^。\n]*?場合/.test(lb)){ var sub=[]; walk(c.children||[],sub,false); sub.forEach(function(x){ x.cond=lb; arr.push(x); }); } else if(isCtn(c.type)) walk(c.children||[],arr,false); else walk([c],arr,false); }); return; }
       if(t==='talk'){ var tk={k:'talk',name:plainText(b.html)||'NPC',topics:[]}; (b.children||[]).forEach(function(c){ if(!{toggle:1,th1:1,th2:1,th3:1,th4:1,th5:1}[c.type]) return; var kids=(c.children||[]).slice(), cond=''; if(kids.length&&kids[0].type==='cond'){ var k0=kids.shift(); cond=[plainText(k0.html)].concat((k0.children||[]).map(function(x){ return plainText(x.html); })).join(' '); } var tp={label:c.html||'',cond:cond,steps:[]}; walk(kids,tp.steps,false); tk.topics.push(tp); }); if(tk.topics.length) arr.push(tk); return; }
       if(t==='chframe'){ var pk={k:'pick',html:plainText(b.html)?(b.html||''):'',opts:[]}; (b.children||[]).forEach(function(c){ if({toggle:1,th1:1,th2:1,th3:1,th4:1,th5:1}[c.type]){ var o={label:c.html||'',steps:[]}; walk(c.children,o.steps,false); pk.opts.push(o); } else walk([c],arr,false); }); if(pk.opts.length) arr.push(pk); return; }
+      if({info:1,lbox:1,cbox:1,cbox2:1,cbox3:1,ccard0:1,ccard:1,ccard2:1,ccard3:1}[t]&&rawL){ var ttn=(t!=='ccard0'&&plainText(b.html))?(b.html||''):''; if(ttn) arr.push({k:'title',html:ttn}); walk(b.children,arr,false); return; }
       if({info:1,lbox:1,cbox:1,cbox2:1,cbox3:1,ccard0:1,ccard:1,ccard2:1,ccard3:1}[t]){ var sub=[], rw0=rawL; rawL=true; try{ walk(b.children,sub,false); } finally { rawL=rw0; } var bodyL=[], rest=[]; sub.forEach(function(x){ if(x.k==='line'||x.k==='say') bodyL.push({html:x.html,name:x.k==='say'?(x.name||''):'',img:x.img||''}); else if(x.k==='title') bodyL.push({html:'<b>'+x.html+'</b>'}); else rest.push(x); }); var ttl=(t!=='ccard0'&&plainText(b.html))?(b.html||''):''; if(bodyL.length||ttl) arr.push({k:'card',title:ttl,body:bodyL}); rest.forEach(function(x){ arr.push(x); }); return; }
       if(isCtn(t)&&t!=='bround'&&t!=='cond'){ var lb2=plainText(b.html); if(/『[^』]+』を[^。\n]*?場合/.test(lb2)){ var csub=[]; walk(b.children,csub,false); csub.forEach(function(x){ x.cond=lb2; arr.push(x); }); return; } if(lb2&&t!=='ccard0') arr.push({k:'line',html:'<b>'+(b.html||'')+'</b>'}); walk(b.children,arr,top); return; }
       if(t==='choice'){ var cto=((b.html||'').match(/data-h="([^"]+)"/)||[])[1]; var citem={html:(b.html||'').replace(/<a\b[^>]*>|<\/a>/gi,''),target:cto}; var clast=arr[arr.length-1]; if(clast&&clast.k==='choice') clast.items.push(citem); else arr.push({k:'choice',items:[citem]}); return; }
