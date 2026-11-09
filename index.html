@@ -887,6 +887,7 @@
         <dt>情報枠・カード</dt><dd>情報（囲い）・情報（左+下線）・色変えボックス・カードの中身は、ノベルゲームでは画面中央の専用の枠に全文を表示し、右上の×で閉じると先へ進みます。</dd>
         <dt>探索中の「回復」</dt><dd>探索中はメッセージ枠の右上に「回復」が出ます。＜応急手当＞・＜医学＞・その組み合わせロールから選び、1つの探索箇所（■探索箇所／［探索箇所］、なければ見出し）につき1回行えます。成功で＜1d3＞、組み合わせで両方成功なら＜1d3+1＞回復。クリティカル時は追加で1回復か、クリチケ採用時はクリチケ獲得から選べます。</dd>
         <dt>［分岐］</dt><dd>枠の中にトグルを置き、見出しに「『水之羽衣』を纏っている場合」「『水之羽衣』を纏っていない場合」のように書くと、その条件に合うトグルの中身だけを実行します（見出しの文は表示しません）。条件は「『○○』を～場合」の形で、「～ない場合」なら持っていない（装備品なら装備していない）とき。中には文・＜HP＞-1d6・判定なども置けます。</dd>
+        <dt>{PC}・{苗字}・{名前}</dt><dd>本文・アイテムの説明・カード・あとがきなどに書いた{PC}は探索者の名前に置き換えます。{苗字}{名前}を使っていると、はじめる画面の名前の下に「苗字・名前」の欄が出ます（名前を空白で区切って自動で入ります。書き換え可）。</dd>
         <dt>［終了条件］</dt><dd>［戦闘開始］の後に置き、「『牛鬼』の撃破」のように書くと、その敵を倒した時点で（他の敵が残っていても）戦闘に勝利して終わります。</dd>
         <dt>［回復可能］［回復不可］</dt><dd>探索中にメッセージ枠の右上に出る「回復」を、［回復不可］を置いた場所から使えなくし、［回復可能］を置いた場所から再び使えるようにします（はじめは使える状態）。</dd>
         <dt>［NPCとの会話］</dt><dd>見出しにNPCの名前を書き、中にトグルで話題を作ります（トグルの見出しが選択肢、中身が描写）。この枠に来ると、次の見出しまでメッセージ枠右上の「NPCと会話」から話題を選べます。トグルの直下に［条件］（例：『古い鍵』を持っている場合／＜先へ進む＞が追加されている場合）を置くと、条件を満たすときだけ選択肢に出ます。</dd>
@@ -1133,8 +1134,10 @@ button{font:inherit;cursor:pointer}
 .nv-dlg .bd{padding:16px 20px;overflow:auto}
 .nv-dlg .ft{padding:12px 20px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .nv-row{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
-.nv-row label{min-width:90px;font-size:13px;color:#bbb}
-.nv-row input,.nv-row select{flex:1;min-width:140px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;padding:0 10px;font:inherit}
+.nv-row label{min-width:90px;font-size:12px;color:#bbb}
+.nv-row input,.nv-row select{flex:1;min-width:120px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:#fff;padding:0 8px;font:inherit;font-size:13px}
+.nv-row input[type=file]{font-size:12px;padding:3px 6px!important}
+.nv-row{margin-bottom:9px}
 .nv-row select option{color:#000}
 .nv-hint{font-size:12px;color:#999;line-height:1.7}
 #nvBackList p{margin:0 0 8px;font-size:14px;line-height:1.7;word-break:break-word}
@@ -1347,6 +1350,7 @@ img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none;-webkit-tou
   <div class="nv-hint" id="nvKomaMsg" style="margin:-4px 0 8px"></div>
   <div class="nv-row"><label>探索者</label><select id="nvPcSel"></select></div>
   <div class="nv-row"><label>名前</label><input id="nvPcName" placeholder="名前を入力して遊ぶ場合"></div>
+  <div class="nv-row" id="nvSmRow" style="display:none"><label>苗字・名前</label><input id="nvPcSei" placeholder="苗字"><input id="nvPcMei" placeholder="名前"></div>
   <div class="nv-row"><label>探索者の画像</label><input type="file" id="nvPcImgF" accept="image/*" style="flex:1;min-width:140px;height:auto;padding:6px"><select id="nvPcImgPos" style="flex:0 0 120px;min-width:0"><option value="left">左に表示</option><option value="right">右に表示</option><option value="none">表示しない</option></select></div>
   <div class="nv-hint" id="nvPcImgMsg" style="margin:-4px 0 8px"></div>
   <div class="nv-row"><label>ログの文字色</label><input id="nvPcColor" type="color" value="#e6e6e6" style="flex:0 0 60px;padding:2px"></div>
@@ -1368,10 +1372,11 @@ if(st.narr){var oldN=st.narr;(st.log||[]).forEach(function(l){if(l.n===oldN&&l.c
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}if(typeof expBarRender==="function")expBarRender();}
 function $(id){return document.getElementById(id);}
 var cmdEl=$("nvCmd"),barEl=$("nvBattleBar"),waitEl=$("nvWait"),charEl=$("nvChar"),win=$("nvWin"),nameEl=$("nvName"),textEl=$("nvText"),choiceEl=$("nvChoice"),titleEl=$("nvTitle"),imgEl=$("nvImg"),chk=$("nvCheck"),chkIn=$("nvChkVal"),nextEl=$("nvNext");
-function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function nmRep(s){s=String(s==null?"":s);if(!/[{｛]/.test(s))return s;var pc=(typeof st!=="undefined"&&st.pc)||{},nm=pc.name||"PC";return s.replace(/[{｛]\s*(PC|ＰＣ)\s*[}｝]/g,nm).replace(/[{｛]\s*苗字\s*[}｝]/g,pc.sei||nm).replace(/[{｛]\s*名前\s*[}｝]/g,pc.mei||nm);}
+function esc(s){return nmRep(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function pcName(){return (st.pc&&st.pc.name)||"PC";}
 function pcColor(){return (st.pc&&st.pc.color)||"#e6e6e6";}
-function conv(h){return String(h||"").replace(/[{｛]\s*(PC|ＰＣ)\s*[}｝]/g,esc(pcName()));}
+function conv(h){var pc=st.pc||{},nm=pcName();return String(h||"").replace(/[{｛]\s*(PC|ＰＣ)\s*[}｝]/g,esc(nm)).replace(/[{｛]\s*苗字\s*[}｝]/g,esc(pc.sei||nm)).replace(/[{｛]\s*名前\s*[}｝]/g,esc(pc.mei||nm));}
 function txt(h){var d=document.createElement("div");d.innerHTML=String(h||"").replace(/<br\s*\/?>/gi,"\n");return (d.textContent||"").replace(/​/g,"").replace(/\s+$/,"");}
 function addLog(n,t,c,tab){if(!String(t||"").trim())return null;var e={n:n,t:t,c:c||"#888888",tab:tab||"main"};st.log.push(e);if(/\([0-9D+\-*\/()<>=]*D[0-9D+\-*\/()<>=]*\)\s*＞/i.test(t)&&typeof feedAdd==="function")feedAdd(n,t,c,null,false);return st.log.length-1;}
 /* NPCの立ち絵：台詞の名前と同じNPCに画像があれば中央に表示。場面（見出し）が変わると消える */
@@ -1556,7 +1561,7 @@ document.addEventListener("keydown",function(e){if($("nvCard").classList.contain
 $("nvEndX").addEventListener("click",function(e){e.stopPropagation();$("nvEnd").classList.remove("show");if(st.done)return;busy=null;st.q=[];st.pos=S.length;show(null);});
 $("nvEnd").addEventListener("click",function(e){e.stopPropagation();});
 var DOCS=D.docs||{};if(D.afterword&&!DOCS.afterword)DOCS.afterword=D.afterword;
-function docOpen(k,t){$("nvAfterT").textContent=t;$("nvAfterB").innerHTML=DOCS[k]||"";$("nvAfterB").scrollTop=0;$("nvAfter").classList.add("show");}
+function docOpen(k,t){$("nvAfterT").textContent=t;$("nvAfterB").innerHTML=conv(DOCS[k]||"");$("nvAfterB").scrollTop=0;$("nvAfter").classList.add("show");}
 $("nvBtnAfter").onclick=function(e){e.stopPropagation();docOpen("afterword","あとがき");};
 $("nvBtnTruth").onclick=function(e){e.stopPropagation();docOpen("truth","真相");};
 $("nvBtnGimmick").onclick=function(e){e.stopPropagation();docOpen("gimmick","ギミック解説");};
@@ -2024,7 +2029,7 @@ function komaToPc(text){var data=null;try{var j=JSON.parse(text);if(Array.isArra
   n.skills=NVLIB.parseSkills(n.commands);n.attacks=NVLIB.parseBattlePalette(n.commands,n.db).attacks;n.iconUrl=String(data.iconUrl||"");return n;}
 function pcOptions(){var sel=$("nvPcSel");sel.innerHTML="<option value=\"\">（名前を入力して遊ぶ）</option>"+(st.koma?"<option value=\"koma\">"+esc(st.koma.name)+"（貼り付けたコマ）</option>":"")+pcs.map(function(p,i){return "<option value=\""+i+"\">"+esc(p.name)+"</option>";}).join("");}
 $("nvKoma").addEventListener("input",function(){var t=this.value.trim(),m=$("nvKomaMsg");if(!t){m.textContent="";return;}var pc=komaToPc(t);if(!pc){m.textContent="コマとして読み込めませんでした。ココフォリアでキャラクターをコピーしたものを貼り付けてください。";return;}
-  st.koma=pc;pcOptions();$("nvPcSel").value="koma";$("nvPcName").value=pc.name;if(/^#[0-9a-f]{6}$/i.test(pc.color))$("nvPcColor").value=pc.color;
+  st.koma=pc;pcOptions();$("nvPcSel").value="koma";$("nvPcName").value=pc.name;smFill();if(/^#[0-9a-f]{6}$/i.test(pc.color))$("nvPcColor").value=pc.color;
   m.textContent="『"+pc.name+"』を読み込みました（HP"+(pc.hp||"-")+"・MP"+(pc.mp||"-")+"・SAN"+(pc.san||"-")+"・技能"+pc.skills.length+"個）";this.value="";});
 $("nvKoma").addEventListener("keydown",function(e){e.stopPropagation();});
 function rulesHTML(){var li=function(t,keys,nm,cs,md){var on=keys.filter(ruleS).map(function(k){return nm[k];});var sfx=md==="pl"?"（PLが1つ選択）":md==="all"?"（すべて適用）":"（choiceで1つ）";return "<li><b>"+t+"</b>："+(on.length?on.join("／")+(on.length>1?"<span class=\"cs\">"+sfx+"</span>":""):"なし")+(cs||"")+"</li>";};
@@ -2044,12 +2049,15 @@ $("nvPcImgPos").addEventListener("change",function(){st.pcImgPos=this.value;save
 function fillStart(){if(D.trailer){$("nvTrailer").src=D.trailer;$("nvTrailer").style.display="block";}if(DOCS.summary){$("nvSummary").innerHTML=DOCS.summary;$("nvSummary").style.display="block";}$("nvPcImgPos").value=st.pcImgPos||"left";$("nvPcImgMsg").textContent=(st.pcImg?"画像を設定済み（ファイルを選ぶと変更）":"未設定の場合、コマに画像があればそれを使います。")+"　立ち絵は右、駒は左がおすすめです（左はメッセージ枠の上に表示）。";$("nvRules").innerHTML=rulesHTML();
   
   var sel=$("nvPcSel");pcOptions();
-  if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=st.koma&&st.koma.name===st.pc.name?"koma":ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";}
+  if(st.pc){var ix=-1;pcs.forEach(function(p,i){if(p.name===st.pc.name)ix=i;});sel.value=st.koma&&st.koma.name===st.pc.name?"koma":ix>=0?String(ix):"";$("nvPcName").value=st.pc.name||"";$("nvPcColor").value=st.pc.color||"#e6e6e6";smFill();if(st.pc.sei!=null)$("nvPcSei").value=st.pc.sei;if(st.pc.mei!=null)$("nvPcMei").value=st.pc.mei;}
   $("nvShowChar").checked=st.showChar!==false;$("nvUseTicket").checked=st.useTicket!==false;
   $("nvResume").style.display=st.started?"":"none";
 }
-$("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;}});
-function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";base.color=$("nvPcColor").value||base.color;return base;}
+$("nvPcSel").addEventListener("change",function(){var p=this.value==="koma"?st.koma:pcs[+this.value];if(p){$("nvPcName").value=p.name;if(p.color)$("nvPcColor").value=p.color;smFill();}});
+$("nvPcName").addEventListener("input",smFill);$("nvSmRow").style.display=/[{｛]\s*(苗字|名前)\s*[}｝]/.test(document.getElementById("novel-data").textContent)?"":"none";
+var USE_SM=/[{｛]\s*(苗字|名前)\s*[}｝]/.test(document.getElementById("novel-data").textContent);
+function smFill(){var n=$("nvPcName").value.trim(),pp=n.split(/[\s　]+/).filter(Boolean);$("nvPcSei").value=pp.length>1?pp[0]:"";$("nvPcMei").value=pp.length>1?pp.slice(1).join(" "):n;}
+function readPc(){var i=$("nvPcSel").value,src=i==="koma"?st.koma:(i!==""?pcs[+i]:null),base=src?JSON.parse(JSON.stringify(src)):{skills:[]};base.name=$("nvPcName").value.trim()||base.name||"PC";if(USE_SM){base.sei=$("nvPcSei").value.trim();base.mei=$("nvPcMei").value.trim();}base.color=$("nvPcColor").value||base.color;return base;}
 function lockLand(){try{if(!window.matchMedia("(pointer:coarse)").matches)return;var el=document.documentElement,lk=function(){try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(function(){});}catch(_){}};if(el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().then(lk).catch(lk);else lk();}catch(_){}}
 $("nvBegin").onclick=function(){lockLand();setTimeout(pcImgRender,0);if(st.started&&!confirm("最初から始めますか？（今のログと進行状況は消えます）"))return;st.healed={};st.healOff=false;st.pdone={};st.pvis={};st.place="";st.talks=[];st.place="";st.rec={};st.done=false;st.endCard=null;afterBtn();$("nvEnd").classList.remove("show");st.events=[];st.guardUsed={};st.loc="";locRender(false);st.unlock={};st.eq={};$("nvCard").classList.remove("show");st.comp=[];st.conds=[];st.useTicket=$("nvUseTicket").checked;st.inv=[];st.infoQ=null;$("nvInfo").classList.remove("show");st.lastChoice=-1;invRender();st.pc=readPc();initStat(st.pc);if(st.useTicket)ticketRef(true);st.atkWait=false;st.battle=null;barEl.style.display="none";invRender();hideCmd();pcRender();st.showChar=$("nvShowChar").checked;st.charPos=D.charPos||"center";st.ch=null;paintChar();st.pos=-1;st.q=[];st.log=[];st.cur=null;st.img=null;st.done=false;st.started=true;imgEl.style.display="none";$("nvStart").classList.remove("show");save();next();};
 $("nvResume").onclick=function(){lockLand();setTimeout(pcImgRender,0);st.useTicket=$("nvUseTicket").checked;if(st.useTicket&&st.stat)ticketRef(true);st.pc=Object.assign(st.pc||{},readPc());if(!st.stat)initStat(st.pc);pcRender();st.showChar=$("nvShowChar").checked;st.charPos=D.charPos||"center";paintChar();$("nvStart").classList.remove("show");if(st.img){imgEl.src=st.img;imgEl.style.display="block";}save();show(st.cur,true);};
