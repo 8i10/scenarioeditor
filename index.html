@@ -3881,12 +3881,12 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     });
     return h;
   }
-  function outlineInnerHTML(){
+  function outlineInnerHTML(pl){
     var h='<div class="ol-ttl">しおり<button class="ol-x" id="olX" title="閉じる">×</button></div>';
     h+='<div class="ol-addrow"><button class="ol-add" id="olAdd">＋ ページを追加</button><button class="ol-ruby" id="olRuby">ルビ設定</button><button class="ol-ruby" id="olMat">データ</button></div>';
     h+='<div class="ol-list">';
-    (state.pages||[]).forEach(function(p){
-      var cur=(p.id===state.curPage), open=!!olOpen[p.id];
+    (pl||state.pages||[]).forEach(function(p,pi){
+      var cur=pl?(pi===0):(p.id===state.curPage), open=!!olOpen[p.id];
       h+='<div class="ol-pgroup'+(open?' open':'')+'">';
       h+='<div class="ol-page'+(cur?' cur':'')+'" data-page="'+p.id+'"><span class="ol-tw" data-ptw="'+p.id+'">▸</span><span class="ol-pname">'+esc(p.name||'ページ')+'</span>'
         +'<button class="ol-pmv" data-pup="'+p.id+'" title="上へ移動">▲</button>'
@@ -4930,7 +4930,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   function exportHTML(preview){ var EXP=preview?(state.pages||[]):expPages();
     (state.embedFonts ? collectFontFaces() : Promise.resolve('')).then(function(faceCss){
     var css=document.querySelector('style').textContent;
-    var olHTML=outlineInnerHTML();
+    var olHTML=outlineInnerHTML(EXP);
     var cdefs=[]; (state.counterGroups||[]).forEach(function(g){ (g&&g.items||[]).forEach(function(c){ cdefs.push({id:c.id,name:c.name,init:c.init,max:c.max,steps:c.steps,names:c.names,group:g.name||'',gopen:g.vopen!==false,iopen:c.vopen!==false}); }); });
     cdefs=cdefs.filter(function(c){ return c&&c.name&&String(c.name).trim(); }).map(function(c){ return {id:c.id,name:String(c.name).trim(),init:c.init,max:c.max,steps:c.steps,names:c.names,group:c.group,gopen:c.gopen,iopen:c.iopen}; });
     var fsXs='', fsSm='', fsSm2=' class="on"', fsMd=''; /* 閲覧用HTMLの初期文字サイズは「やや小」 */
@@ -5352,7 +5352,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
       +webFontLinks(webFontsUsed((state.font||'')+body+matHTML+flagHTML+evtHTML+pcHTML))
       +'<style>'+faceCss+css+' .head,.fbar,.menu,.ovl{display:none!important}'+vcss+(state.bgColor?(' :root{--bg:'+state.bgColor+'!important}'):'')+'</style></head>'
       +'<body class="ol-open">'+vhead+nav+body+matHTML+flagHTML+evtHTML+pcHTML+clipHTML+'<div class="send-tip" id="sendTip"></div><div class="send-toast" id="sendToast"></div>'+vjs
-      +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(state).replace(/</g,'\\u003c')+'<\/script>'
+      +'<'+'script id="scn-data" type="application/json">'+JSON.stringify(preview?state:Object.assign({},state,{pages:EXP,curPage:(EXP[0]||{}).id})).replace(/</g,'\\u003c')+'<\/script>'
       +'<'+'script>(function(){function fx(l){var b=l.parentElement;if(!b)return;b.style.removeProperty("padding-top");var cs=getComputedStyle(l);if(cs.position!=="absolute")return;var one=(parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.3)+parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom)+parseFloat(cs.borderTopWidth)+parseFloat(cs.borderBottomWidth);var ex=l.getBoundingClientRect().height-one;if(ex>2)b.style.setProperty("padding-top",(parseFloat(getComputedStyle(b).paddingTop)+ex)+"px","important");}var ls=[].slice.call(document.querySelectorAll(".block>.lbl"));ls.forEach(fx);if(window.ResizeObserver){var ro=new ResizeObserver(function(es){es.forEach(function(e){fx(e.target);});});ls.forEach(function(l){ro.observe(l);});}})();<\/script>'
       +'</body></html>';
     var blob=new Blob([encodeViewerHTML(html)],{type:'text/html'});
