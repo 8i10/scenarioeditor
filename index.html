@@ -2417,7 +2417,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     idb.set(K_CUR(), state.id).catch(function(){});
     /* localStorage（従来・容量制限あり） */
     var lsOk=true;
-    try{ localStorage.setItem(K_DOC(state.id), json); }catch(err){ lsOk=false; }
+    try{ localStorage.setItem(K_DOC(state.id), json); }catch(err){ lsOk=false; try{ localStorage.removeItem(K_DOC(state.id)); }catch(_){} }
     writeIndex(idx);
     try{ localStorage.setItem(K_CUR(), state.id); }catch(e2){}
     saveInd.textContent=(lsOk?'保存済み ':'保存済み（端末DB） ')+now();
@@ -2489,11 +2489,13 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     try{ var o=JSON.parse(localStorage.getItem(K_DOC(id))); if(o&&(o.pages||o.blocks)){ state=normalizeState(o); state.id=id; return true; } }catch(e){}
     return false;
   }
+  /* 2つの保存先（localStorage・端末DB）のうち新しい方のJSONを返す */
+  function newestJson(a,b){ var pa=null,pb=null; try{ pa=a?JSON.parse(a):null; }catch(_){} try{ pb=b?JSON.parse(b):null; }catch(_){} if(!pa||!(pa.pages||pa.blocks)) return (pb&&(pb.pages||pb.blocks))?b:(a||b||null); if(!pb||!(pb.pages||pb.blocks)) return a; var ua=pa.updated||0, ub=pb.updated||0; if(ub!==ua) return ub>ua?b:a; return (pb.rev||0)>(pa.rev||0)?b:a; }
   function openDoc(id, cb){
     var applyDoc=function(raw){ try{ var o=JSON.parse(raw); if(o&&(o.pages||o.blocks)){ state=normalizeState(o); state.id=id; try{localStorage.setItem(K_CUR(),id);}catch(e){} render(); applyOutline(); updateDocName(); if(typeof cb==='function') setTimeout(cb,0); return true; } }catch(e){} return false; };
     var raw=null; try{ raw=localStorage.getItem(K_DOC(id)); }catch(e){}
-    if(raw && applyDoc(raw)) return;
-    try{ if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v){ if(v&&applyDoc(v)){ } else if(v){ alert('この作品のデータを開けませんでした（破損の可能性）。'); } else { alert('この作品の本体データが端末にありません。「同期し直し」で取得してから開いてください。'); } }).catch(function(){ alert('データの読み込みに失敗しました。'); }); return; } }catch(e){}
+    if(!(idb&&idb.get) && raw && applyDoc(raw)) return;
+    try{ if(idb&&idb.get){ idb.get(K_DOC(id)).then(function(v0){ var v=newestJson(raw,v0); if(v&&v!==raw&&raw){ try{ localStorage.removeItem(K_DOC(id)); }catch(_){} } if(v&&applyDoc(v)){ } else if(v){ alert('この作品のデータを開けませんでした（破損の可能性）。'); } else { alert('この作品の本体データが端末にありません。「同期し直し」で取得してから開いてください。'); } }).catch(function(){ if(raw&&applyDoc(raw)) return; alert('データの読み込みに失敗しました。'); }); return; } }catch(e){}
     if(!raw && !(idb&&idb.get)) alert('この作品の本体データが見つかりません。「同期し直し」をお試しください。');
   }
   function exportDoc(id, kind){
@@ -5988,7 +5990,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
     var folders=[]; try{ folders=JSON.parse(localStorage.getItem('scn_folders::'+account)||'[]'); }catch(_){}
     return JSON.stringify({v:2, index:idx, folders:folders});
   }
-  function getDocJson(id){ var j=null; try{ j=localStorage.getItem(K_DOC(id)); }catch(_){} if(j) return Promise.resolve(j); if(idb&&idb.get) return idb.get(K_DOC(id)).then(function(v){ return v||null; }).catch(function(){ return null; }); return Promise.resolve(null); }
+  function getDocJson(id){ var j=null; try{ j=localStorage.getItem(K_DOC(id)); }catch(_){} if(idb&&idb.get) return idb.get(K_DOC(id)).then(function(v){ return newestJson(j,v)||null; }).catch(function(){ return j||null; }); return Promise.resolve(j||null); }
   function readGistNamed(gd,name){ var f=gd&&gd.files&&gd.files[name]; if(!f) return Promise.resolve(null); if(f.truncated&&f.raw_url){ return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.ok?r.text():null; }).catch(function(){ return null; }); } return Promise.resolve(f.content!=null?f.content:null); }
   var PUSH_DEBOUNCE=2000, MIN_PUSH_GAP=5000;
   function statusMsg(s){ return s===401?'トークン無効':s===403?'権限不足かレート制限':s===404?'Gistが見つからない':s===422?'データ不正':('エラー'+s); }
@@ -6508,6 +6510,7 @@ try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }cat
   (function(){ try{ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); } }catch(e){} })();
   render(); applyOutline(); applyRightMenu(); updateDocName(); updateAcct(); setTopbar(); ghRefresh(); saveInd.textContent=(ghConnected()?'自動同期 有効（30秒ごと）':'自動保存 有効');
   reconcileFromIdb();
+  (function(){ try{ if(!(idb&&idb.get)) return; readIndex().forEach(function(e){ var lj=null; try{ lj=localStorage.getItem(K_DOC(e.id)); }catch(_){} if(!lj) return; idb.get(K_DOC(e.id)).then(function(v){ if(v&&v!==lj&&newestJson(lj,v)===v){ try{ localStorage.removeItem(K_DOC(e.id)); }catch(_){} } }).catch(function(){}); }); }catch(_){} })();
 
   window.__ed={ state:state, TYPES:TYPES, newBlock:newBlock, render:render, persist:persist, load:load,
     IDX:IDX, DOCP:DOCP, CUR:CUR, readIndex:readIndex, openDoc:openDoc, newDoc:newDoc, deleteDoc:deleteDoc,
