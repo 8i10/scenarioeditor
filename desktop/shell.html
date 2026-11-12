@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>シナリオ送信ビューア</title>
+<style>
+  :root{--bg:#2b2622;--fg:#f3efe9;--muted:#b9b0a5;--line:rgba(255,255,255,.18);--ok:#2a9d74;--err:#e05a4f}
+  html,body{margin:0;height:100%;background:#f5f3ef;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif}
+  .bar{height:44px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--bg);color:var(--fg);font-size:12px;white-space:nowrap;overflow:hidden}
+  button{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+  button:hover{background:rgba(255,255,255,.1)}
+  select{font:inherit;font-size:12px;height:26px;border:1px solid var(--line);border-radius:7px;background:#3a332e;color:var(--fg);max-width:190px}
+  input[type=text]{font:inherit;font-size:12px;height:26px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.08);color:var(--fg);padding:0 8px;width:200px;min-width:100px;flex:0 1 200px}
+  .bconn{color:#8a8178;font-size:11px}.bconn.on{color:#7fe0b8}
+  .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+  .file{color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  .grow{flex:1}
+  .st{flex:1 1 auto;min-width:0;max-width:40vw;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+  .st.ok{color:#7fe0b8}.st.err{color:#ffb0a8}
+  label{display:flex;align-items:center;gap:4px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <button id="open" title="閲覧用HTMLを開く（Ctrl+O）">📂 HTMLを開く</button>
+  <button id="reload" title="HTMLを再読み込み">↻</button>
+  <button id="pdf" title="開いているHTMLをPDFに書き出す（しおり付き・文字選択可／Ctrl+P）">📄 PDF</button>
+  <span class="file" id="file" style="max-width:140px">（未選択）</span>
+  <span class="sep"></span>
+  <input type="text" id="url" placeholder="ココフォリアの部屋URL（https://ccfolia.com/rooms/…）">
+  <button id="gob" title="Chrome / Edge（連携用）で部屋を開く。開いている部屋へ送信できます">🌐 ブラウザ</button>
+  <span class="bconn" id="bconn" title="連携ブラウザの接続状態">●</span>
+  <span class="sep"></span>
+  <label title="送信先の部屋">送信先<select id="target"></select></label>
+  <button id="front" title="送信先の部屋を前面に表示">⤴</button>
+  <label title="送信した文章をクリップボードにも残す"><input type="checkbox" id="keep">コピーも残す</label>
+  <button id="tabs" title="チャットタブ名・キャラクター名を手動で設定">⚙ タブ・キャラ</button>
+  <button id="scenes" title="シーン名を手動で設定">🎬 シーン</button>
+  <button id="diag" title="ココフォリアのチャット欄が認識できるか確認">🩺 確認</button>
+  <span class="st" id="st">準備完了</span>
+  <button id="ver" title="アップデートを確認">v-</button>
+</div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let hideT = null;
+  $('open').onclick = () => shellApi.openHtml();
+  $('reload').onclick = () => shellApi.reload();
+  $('pdf').onclick = () => shellApi.exportPdf();
+  $('gob').onclick = () => shellApi.openBrowser($('url').value);
+  $('url').addEventListener('keydown', (e) => { if (e.key === 'Enter') shellApi.openBrowser($('url').value); });
+  $('target').onchange = () => shellApi.target($('target').value);
+  $('ver').onclick = () => shellApi.checkUpdate();
+  $('front').onclick = () => shellApi.focusRoom();
+  $('keep').onchange = () => shellApi.keepClipboard($('keep').checked);
+  $('tabs').onclick = () => shellApi.openTabs();
+  $('scenes').onclick = () => shellApi.openTabs('scenes');
+  $('diag').onclick = () => shellApi.diagnose();
+  shellApi.onState((s) => {
+    if (s.version) $('ver').textContent = 'v' + s.version;
+    const sel = $('target'); const rooms = s.rooms || [];
+    sel.innerHTML = '';
+    const o0 = document.createElement('option'); o0.value = ''; o0.textContent = rooms.length ? '自動（開いている部屋が1つのとき）' : '（部屋が開かれていません）'; sel.appendChild(o0);
+    rooms.forEach((r) => { const o = document.createElement('option'); o.value = r.key; o.textContent = '🌐 ' + (r.title || r.url); sel.appendChild(o); });
+    sel.value = rooms.some((r) => r.key === s.target) ? s.target : '';
+    $('bconn').className = 'bconn' + (s.browserOn ? ' on' : '');
+    $('bconn').title = s.browserOn ? '連携ブラウザ：接続中' : '連携ブラウザ：未接続（「🌐 ブラウザで開く」で起動）';
+    $('file').textContent = s.html ? s.html.split(/[\\/]/).pop() : '（未選択）';
+    $('file').title = s.html || '';
+    if (document.activeElement !== $('url')) $('url').value = s.room || '';
+    $('keep').checked = !!s.keepClipboard;
+  });
+  shellApi.onStatus((s) => {
+    const el = $('st'); el.textContent = s.msg; el.className = 'st ' + (s.level || '');
+    clearTimeout(hideT); hideT = setTimeout(() => { el.className = 'st'; }, 4000);
+  });
+  shellApi.onMenu((m) => { if (m === 'open') shellApi.openHtml(); });
+</script>
+</body>
+</html>
