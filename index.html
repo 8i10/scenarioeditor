@@ -1175,7 +1175,7 @@ button{font:inherit;cursor:pointer}
 @keyframes nvblink{0%,100%{opacity:.15}50%{opacity:.75}}
 @media (max-width:600px){#nvWin{padding:24px 18px 18px;bottom:64px}#nvStage{padding-bottom:220px}}
 #nvLeft{position:fixed;left:10px;top:10px;z-index:7;width:max-content;min-width:min(200px,calc(72*var(--vw,1vw)));max-width:min(320px,calc(72*var(--vw,1vw)));max-height:calc(calc(100*var(--vh,1vh)) - 290px);display:flex;flex-direction:column;gap:8px;overflow:auto}
-#nvInv{position:fixed;right:calc(50% - min(980px,calc(95*var(--vw,1vw)))/2);bottom:62px;z-index:9;width:min(440px,calc(92*var(--vw,1vw)));max-height:min(calc(100*var(--vh,1vh) - 90px),520px);box-shadow:0 10px 30px rgba(0,0,0,.6);display:none;flex-direction:column;background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;font-size:13px}
+#nvInv{position:fixed;left:calc(50% - min(980px,calc(95*var(--vw,1vw)))/2);bottom:62px;z-index:9;width:min(360px,calc(90*var(--vw,1vw)));max-height:min(calc(100*var(--vh,1vh) - 90px),520px);box-shadow:0 10px 30px rgba(0,0,0,.6);display:none;flex-direction:column;background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;font-size:13px}
 #nvInvHead{padding:8px 12px;cursor:pointer;font-weight:700;display:flex;justify-content:space-between;gap:8px;-webkit-user-select:none;user-select:none}
 #nvInvHead.flash{animation:nvflash 1.2s}
 #nvInvBody{overflow:auto;padding:0 8px 8px;flex:1;min-height:0}
@@ -1283,7 +1283,7 @@ button{font:inherit;cursor:pointer}
 .nv-cp{background:rgba(12,12,18,.86);border:1px solid rgba(74,143,216,.45);border-radius:10px;font-size:13px;padding:6px 10px 6px}
 .nv-cp .cph{font-weight:700;display:flex;justify-content:space-between;align-items:center;padding:2px 2px 2px}
 .nv-cp .cph small{font-weight:400;color:#8fb6e8;font-size:11px}
-#nvOrder{position:fixed;left:290px;top:10px;display:none;flex-direction:column;gap:4px;z-index:6;min-width:120px;max-width:180px}
+#nvOrder{position:fixed;right:12px;top:54px;display:none;flex-direction:column;gap:4px;z-index:6;min-width:120px;max-width:180px}
 #nvOrder .ot{font-size:11px;color:#bbb;letter-spacing:.1em;text-align:center;margin-bottom:2px}
 #nvOrder .oi{display:flex;gap:6px;align-items:center;background:rgba(12,12,18,.86);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 10px;font-size:12px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #nvOrder .oi b{font-weight:400;color:#888;min-width:14px;text-align:right}
@@ -1407,7 +1407,7 @@ body.compact #nvChoice{gap:8px;top:38%}
 body.compact #nvChoice button{padding:8px 14px;font-size:13px}
 body.compact #nvExpBar{bottom:calc(100% + 4px)}
 body.compact #nvExpBar button{height:24px;font-size:11px}
-
+body.compact #nvOrder{top:32px}
 body.compact #nvFoes{top:30px}
 body.compact .nv-dlg{max-height:94%}
 body.compact .nv-dlg h2{padding:8px 14px;font-size:14px}
@@ -1434,6 +1434,13 @@ body.compact .nv-armor input{width:26px;height:18px}
 *::-webkit-scrollbar-corner{background:transparent}
 .nv-row input.nv-vol{flex:1;min-width:120px;height:auto;padding:0;border:0;background:none;accent-color:#8a7cc8}
 .nv-volv{width:2.5em;text-align:right;font-size:12px;color:#bbb}
+
+#nvPcBody .nv-sts{display:grid;grid-template-columns:repeat(2,max-content);column-gap:14px}
+#nvPcBody .nv-sts .nv-st .lb{min-width:30px}
+#nvLeft{max-width:min(560px,calc(72*var(--vw,1vw)))}
+body.compact #nvLeft{width:max-content;max-width:min(460px,60%)}
+body.compact #nvPcBody .nv-sts{column-gap:8px}
+body.compact #nvPcBody .nv-sts .nv-st .lb{min-width:22px}
 </script>
 <script type="text/plain" id="novelBody"><div id="nvBg"></div><div id="nvFx"></div><div id="nvStage"><img id="nvImg" alt=""></div><img id="nvChar" alt="">
 <div id="nvTitle" class="nv-title" style="display:none"></div>
@@ -1449,7 +1456,7 @@ body.compact .nv-armor input{width:26px;height:18px}
   <div id="nvWait"></div>
   <div id="nvNext">▼</div></div>
 <div id="nvPal"></div>
-<div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div><form id="nvBar" autocomplete="off"><button type="button" id="nvPalBtn" title="チャットパレットを開く">チャパレ</button><input id="nvIn" placeholder="発言・ダイス（例：CCB<=70　1d100　2d6+3　1d3）"><button class="nv-btn" type="submit">送信</button><button type="button" id="nvInvBtn" title="持ち物・情報を開く">持ち物<span id="nvInvBadge"></span></button></form>
+<div id="nvInv"><div id="nvInvHead"><span>持ち物・情報</span><span id="nvInvCnt">0</span></div><div id="nvInvBody"></div></div><form id="nvBar" autocomplete="off"><button type="button" id="nvInvBtn" title="持ち物・情報を開く">持ち物<span id="nvInvBadge"></span></button><button type="button" id="nvPalBtn" title="チャットパレットを開く">チャパレ</button><input id="nvIn" placeholder="発言・ダイス（例：CCB<=70　1d100　2d6+3　1d3）"><button class="nv-btn" type="submit">送信</button></form>
 <div class="nv-ovl" id="nvBack"><div class="nv-dlg"><h2>バックログ</h2><div class="bd"><div id="nvBackList"></div></div><div class="ft"><button class="nv-btn sub" id="nvBackClose">閉じる</button></div></div></div>
 <div id="nvOrder"></div>
 <div class="nv-ovl" id="nvCard"><div class="nv-dlg nv-info nv-cardv"><button class="nv-x" id="nvCardX" title="閉じて進む">×</button><h2 id="nvCardT"></h2><div class="bd" id="nvCardB"></div></div></div>
@@ -1667,7 +1674,7 @@ function compRender(){var b=st.battle;var ph=isMulti()?st.party.map(function(p,i
 function pcRender(){compRender();
   if(!st.stat)initStat(st.pc);var s=st.stat;$("nvPcTitle").textContent=pcName();$("nvPc").classList.toggle("open",!!st.pcOpen);$("nvPcTog").textContent=st.pcOpen?"▾":"▸";
   var mpB=itemMpTotal(),afB=itemBonus("armorFix"),poolItems=st.inv.filter(function(n){return +itemDef(n).armorPool;});
-  var h=stRow("hp","HP",s.hp)+stRow("mp","MP",s.mp)+(mpB?"<div class=\"nv-hint\" style=\"margin:-2px 0 4px 52px\">アイテムの保有MP：計"+mpB+"</div>":"")+stRow("san","SAN",s.san)+s.extra.map(function(x,i){return stRow("x"+i,x.name,x,true);}).join("");
+  var h="<div class=\"nv-sts\">"+stRow("hp","HP",s.hp)+stRow("mp","MP",s.mp)+stRow("san","SAN",s.san)+s.extra.map(function(x,i){return stRow("x"+i,x.name,x,true);}).join("")+"</div>"+(mpB?"<div class=\"nv-hint\" style=\"margin:0 0 4px\">アイテムの保有MP：計"+mpB+"</div>":"");
   h+="<button class=\"nv-addst\">＋ ステータスを追加</button>";
   if(+s.armorFix||+s.armorPool||afB||poolItems.length)h+="<div class=\"nv-armor\"><span class=\"alb\">装甲</span>固定<input data-a=\"armorFix\" value=\""+s.armorFix+"\" inputmode=\"numeric\">"+(afB?"＋"+afB:"")+"　消費<input data-a=\"armorPool\" value=\""+s.armorPool+"\" inputmode=\"numeric\">"+poolItems.map(function(n){return "　"+esc(n)+"："+poolLeft(n);}).join("")+"</div>"+(function(){var cs=(st.conds||[]).map(function(c){var ec=c.round?eqCond(c.round):null;if(ec&&eqHas(ec.name)===ec.neg)return "";return "<span>"+esc(ec&&c.off?c.off:condText(c))+"</span>";}).filter(Boolean);return cs.length?"<div class=\"nv-cond\">条件"+cs.join("")+"</div>":"";})();
   $("nvPcBody").innerHTML=h;
@@ -1980,8 +1987,6 @@ function battleStart(step){
 function pcDex(){return num(st.pc&&st.pc.dex)||10;}
 function foesRender(){var b=st.battle,el=$("nvFoes");if(!b){el.style.display="none";el.innerHTML="";return;}var cur=b.order&&b.order[b.turn];
   el.innerHTML=b.en.map(function(e,i){var r=e.max>0?Math.max(0,Math.min(1,e.hp/e.max)):0,im=charFor(e.base);return "<div class=\"foe"+(e.down?" dn":"")+(cur===i?" now":"")+"\">"+(im?"<img src=\""+esc(im)+"\" alt=\"\">":"")+"<div class=\"fn\">"+esc(e.name)+"</div><div class=\"fb\"><i style=\"width:"+Math.round(r*100)+"%\"></i></div></div>";}).join("");el.style.display="flex";}
-function orderPos(){var o=$("nvOrder"),L=$("nvLeft"),P=$("nvPc");if(!o||!L||!P)return;o.style.left=(L.offsetLeft+P.offsetLeft+P.offsetWidth+8)+"px";o.style.top=(L.offsetTop+P.offsetTop)+"px";}
-if(window.ResizeObserver)new ResizeObserver(orderPos).observe($("nvLeft"));
 function orderRender(){var b=st.battle,el=$("nvOrder");if(!b||!b.order||!b.order.length){el.style.display="none";el.innerHTML="";return;}
   var nm=function(k){if(isMulti()&&(k==="pc"||(typeof k==="string"&&k.indexOf("pc:")===0))){var pp=st.party[k==="pc"?0:+k.slice(3)];return {n:pp?pp.pc.name:"?",c:"pc",d:!pp||pp.stat.hp.cur<=0};}if(k==="pc")return {n:pcName(),c:"pc",d:false};if(typeof k==="string"&&k.charAt(0)==="a"){var a=(b.al||[])[+k.slice(1)];return {n:a?a.name:"?",c:"al",d:!a||a.down};}var e=b.en[k];return {n:e?e.name:"?",c:"en",d:!e||e.down};};
   el.innerHTML="<div class=\"ot\">行動順</div>"+b.order.map(function(k,i){var u=nm(k);return "<div class=\"oi "+u.c+(i===b.turn?" now":i<b.turn?" done":"")+(u.d?" dn":"")+"\"><b>"+(i+1)+"</b>"+esc(u.n)+"</div>";}).join("");el.style.display="flex";}
